@@ -4,9 +4,7 @@ from tkinter import *
 import tkinter.font as font #This will import the font changing part of tkinter and will assgin it to just the attribute "font"
 # Will import everything from the tkinter library
 
-
-def DisplayMenu():
-	windowMenu = Tk() #Creates a window
+def SetUpMenu(windowMenu):
 	windowMenu.geometry("500x500")#Sets the size of the window
 	windowMenu.title("Menu") #Sets the title of the window currently
 
@@ -29,7 +27,7 @@ def DisplayMenu():
 	btnScoreboard['font'] = fontButtons
 
 
-	btnClose = Button(windowMenu,text = "Close")
+	btnClose = Button(windowMenu,text = "Close",command = windowMenu.destroy) #This binds the command to close the screen to this button. We can instead specify procedures here
 	btnClose.place(relx = 0.5, rely = 0.9, anchor = CENTER)
 	btnClose['font'] = fontButtons
 
@@ -39,9 +37,14 @@ def DisplayMenu():
 	lbTitle['font'] = fontTitle
 
 
+def BeginGame():
+	windowMenu = Tk() #Creates a window
+	SetUpMenu(windowMenu) #Will run the procedure and set up the menu correctly
 	windowMenu.mainloop() #Will put the window into a listening mode so that it waits for an event to happen. Without it will instantly close, this ensures the program remains open
 
-DisplayMenu()
+BeginGame()#Needed here at the end for the full program to be run. Must be specified last otherwise the other things won't have been declared yet
+
+
 
 
 
