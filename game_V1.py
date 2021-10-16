@@ -78,7 +78,7 @@ def SetUpScoreboard(windowScoreboard):
 
 	scores = []#Creates a blank list to put players into
 	LoadInScoreboard(scores)#Will fill in the scores list, putting in the players on the scoreboard
-	SortScores(scores)#Ensures to order the data incase it isn't currently in order
+	SortScores(scores,0,(len(scores) -1))#Ensures to order the data incase it isn't currently in order
 
 	scoreText = ""
 	for i in range(0 ,len(scores)):#Loops through every single score in the scorebaord and displays them. This way incase the number of scores on the board changes
@@ -90,9 +90,36 @@ def SetUpScoreboard(windowScoreboard):
 
 
 
-def SortScores(scores):
+def SortScores(scores,low,high):
+	tempLow = low
+	tempHigh = high
+	pivot = scores[int((low + high)/2)].score
+	while(tempLow <= tempHigh):
+		while(scores[tempLow].score < pivot and tempLow < high):
+			tempLow += 1
+		while(scores[tempHigh].score > pivot and tempHigh > low):
+			tempHigh -= 1
+		if (tempLow < tempHigh):
+			tempPlayer = scores[tempLow]
+			scores[tempLow] = scores[tempHigh]
+			scores[tempHigh] = tempPlayer
+			tempLow += 1
+			tempHigh -= 1
+	if (low < tempHigh):
+		SortScores(scores,low,tempHigh)
+	if (tempLow < high):
+		SortScores(scores,tempLow,high)
+
+		
+
+def SaveScoreboard(scores):
+	file = open("gameFiles/scoreboard.txt","wt")#Opens the scorebaord file to write into. Will rewrite the full thing
+	file.writeline(len(scores))
 	for i in range(0,len(scores)):
-		continue
+		file.writeline(scores[i].name)
+		file.writeline(scores[i].score)
+		file.writeline()#Leaves a line for readability
+	file.close()
 
 def LoadInScoreboard(scores):
 	file = open("gameFiles/scoreboard.txt","rt")
