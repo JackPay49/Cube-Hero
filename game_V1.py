@@ -75,12 +75,12 @@ class player:
 	# playerSnake = snake()
 
 	def LoadPlayer(self,nValue):
-		name = nValue
+		self.name = nValue
 		file = open("gameFiles/" + name + ".txt","rt")#This will open a file for reading in the text format based on the input name of the user
 		
 		file.readline()#Used to skip the name which is written into the file for readability
-		level = int(file.readline())#Gets their level and score & converts them into integers
-		score = int(file.readline())
+		self.level = int(file.readline())#Gets their level and score & converts them into integers
+		self.score = int(file.readline())
 		file.close()#Must close the file afterwards!
 
 	# def SavePlayer():
