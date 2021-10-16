@@ -88,18 +88,16 @@ def SetUpScoreboard(windowScoreboard):
 		for j in range(0,3):
 			scoreBox.insert(INSERT, "\n")#Will insert 3 lines between text to ensure each player entry is really spaced out
 
-
-
 def SortScores(scores,low,high):
 	tempLow = low
 	tempHigh = high
 	pivot = scores[int((low + high)/2)].score
 	while(tempLow <= tempHigh):
-		while(scores[tempLow].score < pivot and tempLow < high):
+		while(scores[tempLow].score > pivot and tempLow < high):
 			tempLow += 1
-		while(scores[tempHigh].score > pivot and tempHigh > low):
+		while(scores[tempHigh].score < pivot and tempHigh > low):
 			tempHigh -= 1
-		if (tempLow < tempHigh):
+		if (tempLow <= tempHigh):
 			tempPlayer = scores[tempLow]
 			scores[tempLow] = scores[tempHigh]
 			scores[tempHigh] = tempPlayer
@@ -109,8 +107,6 @@ def SortScores(scores,low,high):
 		SortScores(scores,low,tempHigh)
 	if (tempLow < high):
 		SortScores(scores,tempLow,high)
-
-		
 
 def SaveScoreboard(scores):
 	file = open("gameFiles/scoreboard.txt","wt")#Opens the scorebaord file to write into. Will rewrite the full thing
