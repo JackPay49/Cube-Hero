@@ -1,9 +1,12 @@
-3
+4
 Jack
 1000
+
+Kal
+200
 
 Phil
 100
 
-Mark 
+Mark
 10

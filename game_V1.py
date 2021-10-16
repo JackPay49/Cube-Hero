@@ -29,18 +29,18 @@ class Scoreboard:
 				tempLow += 1
 				tempHigh -= 1
 		if (low < tempHigh):
-			SortScores(self.scores,low,tempHigh)
+			self.SortScores(low,tempHigh)
 		if (tempLow < high):
-			SortScores(self.scores,tempLow,high)
+			self.SortScores(tempLow,high)
 
 	def SaveScoreboard(self):
-		SortScores(self.scores,0,(len(self.scores) - 1))#Sort the scoreboard before saving it so that we know it's in order
-		file = open("gameFiles/scoreboard.txt","wt")#Opens the scorebaord file to write into. Will rewrite the full thing
-		file.writeline(len(self.scores))
+		self.SortScores(0,(self.numberOfScores - 1))#Sort the scoreboard before saving it so that we know it's in order
+		file = open("gameFiles/scoreboard.txt","w")#Opens the scorebaord file to write into. Will rewrite the full thing
+		file.write(str(self.numberOfScores))
 		for i in range(0,len(self.scores)):
-			file.writeline(self.scores[i].name)
-			file.writeline(self.scores[i].score)
-			file.writeline()#Leaves a line for readability
+			file.write("\n" + self.scores[i].name)
+			file.write("\n" + str(self.scores[i].score))
+			file.write("\n")#Leaves a line for readability
 		file.close()
 
 	def LoadInScoreboard(self):
@@ -59,12 +59,14 @@ class Scoreboard:
 		if (len(self.scores) >= self.maxNumberOfScores):#If there are 10 scores then it is full, check lowest score
 			if (newPlayer.score > self.scores[maxNumberOfScores - 1].score):#If their score is higher than the lowest score saved then replace it. Must still reorder incase its still larger than another score
 				self.scores[maxNumberOfScores - 1] = newPlayer
-				SortScores(scores,0,(self.numberOfScores - 1))
-				SaveScoreboard(self.scores)#Save these changes
+				self.numberOfScores += 1
+				self.SortScores(0,(self.numberOfScores - 1))
+				self.SaveScoreboard()#Save these changes
 		else: #else then the new score can just be added onto the end of the scoreboard
 			self.scores.append(newPlayer)#adds onto the end
-			SortScores(self.scores,0,(self.numberOfScores - 1))#sorts it again
-			SaveScoreboard(self.scores)#Save these changes
+			self.numberOfScores += 1
+			self.SortScores(0,(self.numberOfScores - 1))#sorts it again
+			self.SaveScoreboard()#Save these changes
 
 class player:
 	name = ""#All variables or attributes of players
@@ -146,9 +148,6 @@ def SetUpScoreboard(windowScoreboard):
 		for j in range(0,3):
 			scoreBox.insert(INSERT, "\n")#Will insert 3 lines between text to ensure each player entry is really spaced out
 
-
-
-
 def OpenScoreboard():
 	windowScoreboard = Tk()#Creates the scoreboard window
 	SetUpScoreboard(windowScoreboard)#Will run and set up all textboxes for the scoreboard, Will also load in all of the players on the scoreboard
@@ -163,9 +162,15 @@ def BeginGame():
 
 	SetUpMenu(windowMenu) #Will run the procedure and set up the menu correctly
 
-	newPlayer = player()
-	newPlayer.name = "Kal"
-	newPlayer.score = 200
+	#Below is a test for adding a new player to a scoreboard
+	# newPlayer = player()
+	# newPlayer.name = "Kal"
+	# newPlayer.score = 200
+
+	# scoreboard = Scoreboard()
+	# scoreboard.LoadInScoreboard()
+
+	# scoreboard.AddScoreToScoreboard(newPlayer)
 
 	windowMenu.mainloop() #Will put the window into a listening mode so that it waits for an event to happen. Without it will instantly close, this ensures the program remains open
 
