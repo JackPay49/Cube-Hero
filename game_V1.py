@@ -7,6 +7,65 @@ import tkinter.font as font #This will import the font changing part of tkinter 
 #Classes
 # class snake:
 
+class Scoreboard:
+
+	scores = []
+	maxNumberOfScores = 10
+	numberOfScores = 0
+
+	def SortScores(self,low,high):
+		tempLow = low
+		tempHigh = high
+		pivot = self.scores[int((low + high)/2)].score#Must specify self so that it changes the attribute of the class
+		while(tempLow <= tempHigh):
+			while(self.scores[tempLow].score > pivot and tempLow < high):
+				tempLow += 1
+			while(self.scores[tempHigh].score < pivot and tempHigh > low):
+				tempHigh -= 1
+			if (tempLow <= tempHigh):
+				tempPlayer = self.scores[tempLow]
+				self.scores[tempLow] = self.scores[tempHigh]
+				self.scores[tempHigh] = tempPlayer
+				tempLow += 1
+				tempHigh -= 1
+		if (low < tempHigh):
+			SortScores(self.scores,low,tempHigh)
+		if (tempLow < high):
+			SortScores(self.scores,tempLow,high)
+
+	def SaveScoreboard(self):
+		SortScores(self.scores,0,(len(self.scores) - 1))#Sort the scoreboard before saving it so that we know it's in order
+		file = open("gameFiles/scoreboard.txt","wt")#Opens the scorebaord file to write into. Will rewrite the full thing
+		file.writeline(len(self.scores))
+		for i in range(0,len(self.scores)):
+			file.writeline(self.scores[i].name)
+			file.writeline(self.scores[i].score)
+			file.writeline()#Leaves a line for readability
+		file.close()
+
+	def LoadInScoreboard(self):
+		file = open("gameFiles/scoreboard.txt","rt")
+		self.numberOfScores = int(file.readline())
+		for i in range(0,self.numberOfScores):
+			tempPlayer = player()#Will create a dumby player to store within the scores list
+			tempPlayer.name = file.readline().strip()#Loads in their name and score, on two separate lines. Strip is used to get rid of any leading or trailing white space.
+			tempPlayer.score = int(file.readline())
+			file.readline()#Will then skip one line, each player record has a space in between for readability
+			self.scores.append(tempPlayer)#Will add the player to the scoreboard
+		file.close()#Must close file!
+
+	def AddScoreToScoreboard(self,newPlayer):
+		#2 cases. Either the scoreboard is full or not. if not then we can just add the new score to the end and sort it. If it is full then we must check the lowest score
+		if (len(self.scores) >= self.maxNumberOfScores):#If there are 10 scores then it is full, check lowest score
+			if (newPlayer.score > self.scores[maxNumberOfScores - 1].score):#If their score is higher than the lowest score saved then replace it. Must still reorder incase its still larger than another score
+				self.scores[maxNumberOfScores - 1] = newPlayer
+				SortScores(scores,0,(self.numberOfScores - 1))
+				SaveScoreboard(self.scores)#Save these changes
+		else: #else then the new score can just be added onto the end of the scoreboard
+			self.scores.append(newPlayer)#adds onto the end
+			SortScores(self.scores,0,(self.numberOfScores - 1))#sorts it again
+			SaveScoreboard(self.scores)#Save these changes
+
 class player:
 	name = ""#All variables or attributes of players
 	level = 0
@@ -76,57 +135,19 @@ def SetUpScoreboard(windowScoreboard):
 	scoreBox = Text(windowScoreboard,height = 30, width = 80)#This makes a simple textbox for the scoreboard with the attributes mentioned
 	scoreBox.place(relx = 0.5,rely = 0.5,anchor = CENTER)
 
-	scores = []#Creates a blank list to put players into
-	LoadInScoreboard(scores)#Will fill in the scores list, putting in the players on the scoreboard
-	SortScores(scores,0,(len(scores) -1))#Ensures to order the data incase it isn't currently in order
+	scoreboard = Scoreboard()#Load in the scoreboard to use
+	scoreboard.LoadInScoreboard()
 
 	scoreText = ""
-	for i in range(0 ,len(scores)):#Loops through every single score in the scorebaord and displays them. This way incase the number of scores on the board changes
+	for i in range(0 ,scoreboard.numberOfScores):#Loops through every single score in the scorebaord and displays them. This way incase the number of scores on the board changes
 		scoreBox.insert(INSERT,str(i + 1) + ".")#Will add the scoreboard text to the text box. The INSERT is the location of where to insert the text. This means to just insert it to the end
 		#The part above will add the 1. or 2. or n. to each score to signify where they are in the rank
-		scoreBox.insert(INSERT,scores[i].name + " : " + str(scores[i].score))#Will print their name and then score
+		scoreBox.insert(INSERT,scoreboard.scores[i].name + " : " + str(scoreboard.scores[i].score))#Will print their name and then score
 		for j in range(0,3):
 			scoreBox.insert(INSERT, "\n")#Will insert 3 lines between text to ensure each player entry is really spaced out
 
-def SortScores(scores,low,high):
-	tempLow = low
-	tempHigh = high
-	pivot = scores[int((low + high)/2)].score
-	while(tempLow <= tempHigh):
-		while(scores[tempLow].score > pivot and tempLow < high):
-			tempLow += 1
-		while(scores[tempHigh].score < pivot and tempHigh > low):
-			tempHigh -= 1
-		if (tempLow <= tempHigh):
-			tempPlayer = scores[tempLow]
-			scores[tempLow] = scores[tempHigh]
-			scores[tempHigh] = tempPlayer
-			tempLow += 1
-			tempHigh -= 1
-	if (low < tempHigh):
-		SortScores(scores,low,tempHigh)
-	if (tempLow < high):
-		SortScores(scores,tempLow,high)
 
-def SaveScoreboard(scores):
-	file = open("gameFiles/scoreboard.txt","wt")#Opens the scorebaord file to write into. Will rewrite the full thing
-	file.writeline(len(scores))
-	for i in range(0,len(scores)):
-		file.writeline(scores[i].name)
-		file.writeline(scores[i].score)
-		file.writeline()#Leaves a line for readability
-	file.close()
 
-def LoadInScoreboard(scores):
-	file = open("gameFiles/scoreboard.txt","rt")
-	numberOfScores = int(file.readline())
-	for i in range(0,numberOfScores):
-		tempPlayer = player()#Will create a dumby player to store within the scores list
-		tempPlayer.name = file.readline().strip()#Loads in their name and score, on two separate lines. Strip is used to get rid of any leading or trailing white space.
-		tempPlayer.score = int(file.readline())
-		file.readline()#Will then skip one line, each player record has a space in between for readability
-		scores.append(tempPlayer)#Will add the player to the scoreboard
-	file.close()#Must close file!
 
 def OpenScoreboard():
 	windowScoreboard = Tk()#Creates the scoreboard window
@@ -139,7 +160,13 @@ def OpenScoreboard():
 #Main sub that runs the program
 def BeginGame():
 	windowMenu = Tk() #Creates a window
+
 	SetUpMenu(windowMenu) #Will run the procedure and set up the menu correctly
+
+	newPlayer = player()
+	newPlayer.name = "Kal"
+	newPlayer.score = 200
+
 	windowMenu.mainloop() #Will put the window into a listening mode so that it waits for an event to happen. Without it will instantly close, this ensures the program remains open
 
 
