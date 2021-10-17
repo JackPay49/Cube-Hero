@@ -1,5 +1,7 @@
 import tkinter
 from tkinter import *
+from tkinter import messagebox
+
 
 # Will import everything from the tkinter library
 
@@ -76,15 +78,21 @@ class player:
 
 	def LoadPlayer(self,nValue):
 		self.name = nValue
-		file = open("gameFiles/" + name + ".txt","rt")#This will open a file for reading in the text format based on the input name of the user
+		file = open("gameFiles/" + self.name + ".txt","rt")#This will open a file for reading in the text format based on the input name of the user
 		
 		file.readline()#Used to skip the name which is written into the file for readability
+		self.password = (file.readline()).strip()#Gets rid of white space too
 		self.level = int(file.readline())#Gets their level and score & converts them into integers
 		self.score = int(file.readline())
 		file.close()#Must close the file afterwards!
 
-	# def SavePlayer():
-		#Code to write a text file for the player
+	def SavePlayer(self):
+		file = open("gameFiles/" + self.name + ".txt","wt")#Remakes the file
+		file.write(self.name + "\n")
+		file.write(str(self.password) + "\n")
+		file.write(str(self.level) + "\n")
+		file.write(str(self.score) + "\n")
+		file.close()
 
 #Setting up Windows
 def SetUpMenu(windowMenu):
@@ -142,6 +150,8 @@ def SetUpScoreboard(windowScoreboard):
 		scoreBox.insert(INSERT,scoreboard.scores[i].name + " : " + str(scoreboard.scores[i].score))#Will print their name and then score
 		for j in range(0,3):
 			scoreBox.insert(INSERT, "\n")#Will insert 3 lines between text to ensure each player entry is really spaced out
+	scoreBox.configure(state = 'disabled')#Makes the textbox read-only so that the user cannot edit it. Does this now as the text has been set
+
 
 def OpenScoreboard():
 	windowScoreboard = Tk()#Creates the scoreboard window
@@ -167,31 +177,57 @@ def SetUpLoginScreen(windowLogin,newGame):
 	windowLogin.title(titleText)
 
 
-	fontTitle = ("Default",30,"bold")
+	fontTitle = ("Default",30,"bold","underline")
 	fontNormal = ("Default",12)
+	fontBold = ("Default",12,"bold")
 
 
 	lbTitle = Label(windowLogin, text = titleText, font = fontTitle)
-	lbTitle.place(relx = 0.5,rely = 0.2,anchor = CENTER)
+	lbTitle.place(relx = 0.5,rely = 0.05,anchor = CENTER)
+
+	lbName = Label(windowLogin,text = "Name:",font = fontBold)
+	lbName.place(relx = 0.2,rely = 0.2)
+	txtName = Entry(windowLogin,font = fontNormal)
+	txtName.place(relx = 0.4,rely = 0.2)
+
+	lbPassword = Label(windowLogin,text = "Password:",font = fontBold)
+	lbPassword.place(relx = 0.2,rely = 0.3)
+	txtPassword = Entry(windowLogin,show = "*",font = fontNormal)#show will changed this entry so that instead of actual text just * will be displayed for each character on screen for privacy
+	txtPassword.place(relx = 0.4,rely = 0.3)
+
+	if (newGame):#If its a new game then make it a create account button
+		btnLogin = Button(windowLogin,text = "Create new game",font = fontBold, command = lambda: CreateNewGame(txtName.get(),txtPassword.get()))#lambda used here otherwise the command will be initiated as soon as the button is made
+	else:#Else if it is just loading a game then make a login button
+		btnLogin = Button(windowLogin,text = "Login",font = fontBold, command = lambda: Login(txtName.get(),txtPassword.get()) )
+	btnLogin.place(relx = 0.5,rely = 0.4)
+
+def Login(name,password):
+	myPlayer = player()
+	myPlayer.LoadPlayer(name)
+	if (myPlayer.password == password):#If there password is correct
+		messagebox.showinfo("Login","Logged in!")
+
+	else:
+		messagebox.showinfo("Login","Password incorrect, try again!")
 
 
+def CreateNewGame(name,password):
+	try:
+		file = open("gameFiles/" + name + ".txt","xt")#Creates the file for the user. If it exists then this will cause and erorr thus triggering the Except statement
+		file.close()
+		newPlayer = player()
+		newPlayer.name = name
+		newPlayer.password = password
+		newPlayer.SavePlayer()
+		messagebox.showinfo("Login","Account has been made!")
+	except FileExistsError:
+		messagebox.showinfo("Login","User already exists!")
 
 
 #Main sub that runs the program
 def BeginGame():
 	windowMenu = Tk() #Creates a window
-
 	SetUpMenu(windowMenu) #Will run the procedure and set up the menu correctly
-
-	#Below is a test for adding a new player to a scoreboard
-	# newPlayer = player()
-	# newPlayer.name = "Kal"
-	# newPlayer.score = 200
-
-	# scoreboard = Scoreboard()
-	# scoreboard.LoadInScoreboard()
-
-	# scoreboard.AddScoreToScoreboard(newPlayer)
 
 	windowMenu.mainloop() #Will put the window into a listening mode so that it waits for an event to happen. Without it will instantly close, this ensures the program remains open
 
