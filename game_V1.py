@@ -93,7 +93,11 @@ class player:
 		file.write(str(self.level) + "\n")
 		file.write(str(self.score) + "\n")
 		file.close()
-
+	def CreatePlayer(self,nValue,pValue):#Will create an object for the player with the values and will create their file & save it
+		self.name = nValue
+		self.password = pValue
+		self.SavePlayer()
+		
 #Setting up Windows
 def SetUpMenu(windowMenu):
 	windowMenu.geometry("500x500")#Sets the size of the window
@@ -205,9 +209,9 @@ def Login(name,password):
 	myPlayer = player()
 	myPlayer.LoadPlayer(name)
 	if (myPlayer.password == password):#If there password is correct
-		messagebox.showinfo("Login","Logged in!")
+		messagebox.showinfo("Login","Logged in!")#Log them in, don't start game yet as they may want to do something else
 
-	else:
+	else:#Do nothing if it is wrong, let them enter it again
 		messagebox.showinfo("Login","Password incorrect, try again!")
 
 
@@ -215,13 +219,11 @@ def CreateNewGame(name,password):
 	try:
 		file = open("gameFiles/" + name + ".txt","xt")#Creates the file for the user. If it exists then this will cause and erorr thus triggering the Except statement
 		file.close()
-		newPlayer = player()
-		newPlayer.name = name
-		newPlayer.password = password
-		newPlayer.SavePlayer()
+		newPlayer = player()#This will create a new player object and will save it. Only does this if this user doesn't already exists
+		newPlayer.CreatePlayer(name,password)
 		messagebox.showinfo("Login","Account has been made!")
-	except FileExistsError:
-		messagebox.showinfo("Login","User already exists!")
+	except FileExistsError:#do nothing other than tell them that the name exists, let them reenter details
+		messagebox.showinfo("Login","User already exists! Please use a different name")
 
 
 #Main sub that runs the program
