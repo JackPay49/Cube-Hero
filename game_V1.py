@@ -1,7 +1,6 @@
 import tkinter
 from tkinter import *
 
-import tkinter.font as font #This will import the font changing part of tkinter and will assgin it to just the attribute "font"
 # Will import everything from the tkinter library
 
 #Classes
@@ -72,6 +71,7 @@ class player:
 	name = ""#All variables or attributes of players
 	level = 0
 	score = 0
+	password = ""#Stores their password to be used to login and out
 	# playerSnake = snake()
 
 	def LoadPlayer(self,nValue):
@@ -92,49 +92,44 @@ def SetUpMenu(windowMenu):
 	windowMenu.title("Menu") #Sets the title of the window currently
 
 	#fonts
-	fontTitle = tkinter.font.Font(size = 30) #This creates a new font called fontTitle that has the font size of 30
-	fontButtons = tkinter.font.Font(size = 12) #This creates a new font called fontTitle that has the font size of 30
+	fontTitle = ("Default",30,"bold")
+	fontNormal = ("Default",12)
 
 	#Buttons
-	btnLoadGame = Button(windowMenu,text = "Load Game")#Creates a basic button displaying text
+	btnLoadGame = Button(windowMenu,text = "Load Game", command = LoadGame,font = fontNormal)#Creates a basic button displaying text
 	btnLoadGame.place(relx = 0.5, rely = 0.3, anchor = CENTER)#Will place the button relative to 0.1 of the width of the screen, 0,5 of the height of the screen and in the center
-	btnLoadGame['font'] = fontButtons #Will set the font of the button to the standard button font
 
-	btnCreateNewGame = Button(windowMenu,text = "Create new Game")
+	btnCreateNewGame = Button(windowMenu,text = "Create new Game",command = NewGame,font = fontNormal)
 	btnCreateNewGame.place(relx = 0.5, rely = 0.5, anchor = CENTER)
-	btnCreateNewGame['font'] = fontButtons
 
 
-	btnScoreboard = Button(windowMenu,text = "Scoreboard",command = OpenScoreboard)
+	btnScoreboard = Button(windowMenu,text = "Scoreboard",command = OpenScoreboard,font = fontNormal)
 	btnScoreboard.place(relx = 0.5, rely = 0.7, anchor = CENTER)
-	btnScoreboard['font'] = fontButtons
 
 
-	btnClose = Button(windowMenu,text = "Close",command = windowMenu.destroy) #This binds the command to close the screen to this button. We can instead specify procedures here
+	btnClose = Button(windowMenu,text = "Close",command = windowMenu.destroy,font = fontNormal) #This binds the command to close the screen to this button. We can instead specify procedures here
 	btnClose.place(relx = 0.5, rely = 0.9, anchor = CENTER)
-	btnClose['font'] = fontButtons
 
 	#labels
-	lbTitle = Label(windowMenu,text = "Game Name!")#Creates a label, just the same type of commands as making a button
+	lbTitle = Label(windowMenu,text = "Game Name!",font = fontTitle)#Creates a label, just the same type of commands as making a button
 	lbTitle.place(relx = 0.5, rely = 0.1, anchor = CENTER)
-	lbTitle['font'] = fontTitle
 
 #All scoreboard stuff
 def SetUpScoreboard(windowScoreboard):
 	windowScoreboard.geometry("1000x700")
 	windowScoreboard.title("Scoreboard")
 
-	fontTitle = tkinter.font.Font(size = 50) 
+	fontTitle = ("Default",30,"bold")
+	fontNormal = ("Default",12)
 
-	lbTitle = Label(windowScoreboard,text = "Scoreboard")
+	lbTitle = Label(windowScoreboard,text = "Scoreboard", font = fontTitle)
 	lbTitle.place(relx = 0.5, rely = 0.1, anchor = CENTER)
-	lbTitle['font'] = fontTitle
 
 
-	btnClose = Button(windowScoreboard,text = "Back",command = windowScoreboard.destroy)
+	btnClose = Button(windowScoreboard,text = "Back",command = windowScoreboard.destroy, font = fontNormal)
 	btnClose.place(relx = 0.5, rely = 0.9, anchor = CENTER)
 
-	scoreBox = Text(windowScoreboard,height = 30, width = 80)#This makes a simple textbox for the scoreboard with the attributes mentioned
+	scoreBox = Text(windowScoreboard, font = fontNormal)#This makes a simple textbox for the scoreboard with the attributes mentioned
 	scoreBox.place(relx = 0.5,rely = 0.5,anchor = CENTER)
 
 	scoreboard = Scoreboard()#Load in the scoreboard to use
@@ -152,6 +147,32 @@ def OpenScoreboard():
 	windowScoreboard = Tk()#Creates the scoreboard window
 	SetUpScoreboard(windowScoreboard)#Will run and set up all textboxes for the scoreboard, Will also load in all of the players on the scoreboard
 	windowScoreboard.mainloop()
+
+def LoadGame():
+	windowLogin = Tk()
+	SetUpLoginScreen(windowLogin,False)#Will set up all of the labels and textboxes for the login screen. False is whether it is a new game or not
+	windowLogin.mainloop()
+
+def NewGame():
+	windowLogin = Tk()
+	SetUpLoginScreen(windowLogin,True)#Will set up all of the labels and textboxes for the login screen. True is whether it is a new game or not
+	windowLogin.mainloop()
+
+def SetUpLoginScreen(windowLogin,newGame):
+	windowLogin.geometry("600x600")
+	if (newGame):#If its a new game then say instead to create a new account
+		titleText = "Create a new Game"
+	else:
+		titleText = "Login"#Otherwise it should just say to load a game
+	windowLogin.title(titleText)
+
+
+	fontTitle = ("Default",30,"bold")
+	fontNormal = ("Default",12)
+
+
+	lbTitle = Label(windowLogin, text = titleText, font = fontTitle)
+	lbTitle.place(relx = 0.5,rely = 0.2,anchor = CENTER)
 
 
 
