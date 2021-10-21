@@ -99,7 +99,6 @@ class player:
 		self.password = pValue
 		self.SavePlayer()
 
-#Setting up Windows
 class Menu(Tk):
 	def __init__(self):
 		super().__init__()
@@ -121,9 +120,7 @@ class Menu(Tk):
 		btnScoreboard = Button(self,text = "Scoreboard",command = lambda: (self.destroy(),OpenScoreboard()),font = fontNormal)
 		btnScoreboard.place(relx = 0.5, rely = 0.7, anchor = CENTER)
 
-
-		btnClose = Button(self,text = "Close",command = self.destroy,font = fontNormal) #This binds the command to close the screen to this button. We can instead specify procedures here
-		btnClose.place(relx = 0.5, rely = 0.9, anchor = CENTER)
+		btnClose = BackButton(self,"Close",False)
 
 		#labels
 		lbTitle = Label(self,text = "Game Name!",font = fontTitle)#Creates a label, just the same type of commands as making a button
@@ -164,9 +161,9 @@ class LoginScreen(Tk):
 		txtPassword.place(relx = 0.5,rely = 0.3, anchor = CENTER)
 
 		if (newGame):#If its a new game then make it a create account button
-			btnLogin = Button(self,text = "Create new game",font = fontBold, command = lambda: CreateNewPlayer(myPlayer,txtName.get(),txtPassword.get()))#lambda used here otherwise the command will be initiated as soon as the button is made
+			btnLogin = Button(self,text = "Create new game",font = fontBold, command = lambda: self.CreateNewPlayer(myPlayer,txtName.get(),txtPassword.get()))#lambda used here otherwise the command will be initiated as soon as the button is made
 		else:#Else if it is just loading a game then make a login button
-			btnLogin = Button(self,text = "Login",font = fontBold, command = lambda: Login(myPlayer,txtName.get(),txtPassword.get()) )
+			btnLogin = Button(self,text = "Login",font = fontBold, command = lambda: self.Login(myPlayer,txtName.get(),txtPassword.get()) )
 		btnLogin.place(relx = 0.5,rely = 0.4, anchor = CENTER)
 
 		btnBeginGame = Button(self,text = "Begin Game",command = lambda:(self.destroy(),OpenGameScreen(myPlayer)), font = fontBold)
@@ -175,11 +172,25 @@ class LoginScreen(Tk):
 		btnControls = Button(self,text = "Controls",command = lambda:(OpenControlsScreen(myPlayer)), font = fontBold)
 		btnControls.place(relx = 0.3,rely = 0.8, anchor = CENTER)
 
-		btnClose = Button(self,text = "Back",command = lambda: (self.destroy(), BeginGame()), font = fontBold)
-		btnClose.place(relx = 0.7, rely = 0.8, anchor = CENTER)
+		btnClose = BackButton(self,"Back",True)
 		self.mainloop()
 
-#All scoreboard stuff
+	def Login(self,myPlayer,name,password):
+		myPlayer.LoadPlayer(name)
+		if (myPlayer.password == password):#If there password is correct
+			messagebox.showinfo("Login","Logged in!")#Log them in, don't start game yet as they may want to do something else
+		else:#Do nothing if it is wrong, let them enter it again
+			messagebox.showinfo("Login","Password incorrect, try again!")
+	def CreateNewPlayer(self,myPlayer,name,password):
+		try:
+			file = open("gameFiles/" + name + ".txt","xt")#Creates the file for the user. If it exists then this will cause and erorr thus triggering the Except statement
+			file.close()
+			myPlayer.CreatePlayer(name,password)
+			messagebox.showinfo("Login","Account has been made!")
+
+		except FileExistsError:#do nothing other than tell them that the name exists, let them reenter details
+			messagebox.showinfo("Login","User already exists! Please use a different name")
+
 class ScoreboardScreen(Tk):
 	def __init__(self):
 		super().__init__()
@@ -193,8 +204,7 @@ class ScoreboardScreen(Tk):
 		lbTitle.place(relx = 0.5, rely = 0.1, anchor = CENTER)
 
 
-		btnClose = Button(self,text = "Back",command = lambda: (self.destroy(),BeginGame()), font = fontNormal)
-		btnClose.place(relx = 0.5, rely = 0.9, anchor = CENTER)
+		btnClose = BackButton(self,"Back",True)
 
 		scoreBox = Text(self, font = fontNormal)#This makes a simple textbox for the scoreboard with the attributes mentioned
 		scoreBox.place(relx = 0.5,rely = 0.5,anchor = CENTER)
@@ -214,28 +224,14 @@ class ScoreboardScreen(Tk):
 def OpenScoreboard():
 	windowScoreboard = ScoreboardScreen()
 
-	
-
-def Login(myPlayer,name,password):
-	myPlayer.LoadPlayer(name)
-	if (myPlayer.password == password):#If there password is correct
-		messagebox.showinfo("Login","Logged in!")#Log them in, don't start game yet as they may want to do something else
-	else:#Do nothing if it is wrong, let them enter it again
-		messagebox.showinfo("Login","Password incorrect, try again!")
-def CreateNewPlayer(myPlayer,name,password):
-	try:
-		file = open("gameFiles/" + name + ".txt","xt")#Creates the file for the user. If it exists then this will cause and erorr thus triggering the Except statement
-		file.close()
-		myPlayer.CreatePlayer(name,password)
-		messagebox.showinfo("Login","Account has been made!")
-
-	except FileExistsError:#do nothing other than tell them that the name exists, let them reenter details
-		messagebox.showinfo("Login","User already exists! Please use a different name")
-
+class GameScreen(Tk):
+	def __init__(self):
+		super().__init__()
+		self.title("Game screen")
+		self.geometry("1000x1000")
 def OpenGameScreen(myPlayer):
-	print("Open Game screen")
+	gameScreen = GameScreen()
 
-#All control screen stuff below
 class ControlsScreen(Tk):
 	def __init__(self,myPlayer):
 		super().__init__()
@@ -289,14 +285,24 @@ class ControlsScreen(Tk):
 		btnResetControls = Button(self,text = "Reset Controls" ,font = fontBold)
 		btnResetControls.place(relx = 0.3,rely = 0.8,anchor = CENTER)
 
-		btnClose = Button(self,text = "Back",command = lambda: (self.destroy()), font = fontBold)
-		btnClose.place(relx = 0.5, rely = 0.9, anchor = CENTER)
+		btnClose = BackButton(self,"Back",False)
 		self.mainloop()
 def OpenControlsScreen(myPlayer):
 	if (myPlayer.name == ""):
 		messagebox.showinfo("Error","Please Login first!")
 	else:
 		windowControlsScreen = ControlsScreen(myPlayer)
+
+#Classees for general controls
+class BackButton(Button):
+	def __init__(self,parentWindow,textValue,openMenu):
+		super().__init__()
+		self = Button(parentWindow,text = textValue,command = lambda:(parentWindow.destroy(),ReOpenMenu(openMenu)),font = ("Default",12))
+		self.place(relx = 0.5, rely = 0.9, anchor = CENTER)
+
+def ReOpenMenu(openMenu):
+	if (openMenu):
+		BeginGame()
 
 #General Procedures
 def ConvertToList(string):#This is used to convert a string containing a list to an actual list variable
