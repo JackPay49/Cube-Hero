@@ -99,126 +99,123 @@ class player:
 		self.password = pValue
 		self.SavePlayer()
 
-def ConvertToList(string):#This is used to convert a string containing a list to an actual list variable
-	Mylist = []
-	for i in range(0,len(string)):
-		if ((string[i] != "[") and (string[i] != ",") and (string[i] != "]") and (string[i] != "'")):
-			Mylist.append(string[i])
-	return Mylist
-
 #Setting up Windows
-def SetUpMenu(windowMenu):
-	windowMenu.geometry("500x500")#Sets the size of the window
-	windowMenu.title("Menu") #Sets the title of the window currently
+class Menu(Tk):
+	def __init__(self):
+		super().__init__()
+		self.geometry("500x500")#Sets the size of the window
+		self.title("Menu") #Sets the title of the window currently
 
-	#fonts
-	fontTitle = ("Default",30,"bold")
-	fontNormal = ("Default",12)
+		#fonts
+		fontTitle = ("Default",30,"bold")
+		fontNormal = ("Default",12)
 
-	#Buttons
-	btnLoadGame = Button(windowMenu,text = "Load Game", command = lambda: (windowMenu.destroy(),LoadGame()),font = fontNormal)#Creates a basic button displaying text
-	btnLoadGame.place(relx = 0.5, rely = 0.3, anchor = CENTER)#Will place the button relative to 0.1 of the width of the screen, 0,5 of the height of the screen and in the center
+		#Buttons
+		btnLoadGame = Button(self,text = "Load Game", command = lambda: (self.destroy(),LoadGame()),font = fontNormal)#Creates a basic button displaying text
+		btnLoadGame.place(relx = 0.5, rely = 0.3, anchor = CENTER)#Will place the button relative to 0.1 of the width of the screen, 0,5 of the height of the screen and in the center
 
-	btnCreateNewGame = Button(windowMenu,text = "Create new Game",command = lambda: (windowMenu.destroy(),NewGame()),font = fontNormal)
-	btnCreateNewGame.place(relx = 0.5, rely = 0.5, anchor = CENTER)
-
-
-	btnScoreboard = Button(windowMenu,text = "Scoreboard",command = lambda: (windowMenu.destroy(),OpenScoreboard()),font = fontNormal)
-	btnScoreboard.place(relx = 0.5, rely = 0.7, anchor = CENTER)
+		btnCreateNewGame = Button(self,text = "Create new Game",command = lambda: (self.destroy(),NewGame()),font = fontNormal)
+		btnCreateNewGame.place(relx = 0.5, rely = 0.5, anchor = CENTER)
 
 
-	btnClose = Button(windowMenu,text = "Close",command = windowMenu.destroy,font = fontNormal) #This binds the command to close the screen to this button. We can instead specify procedures here
-	btnClose.place(relx = 0.5, rely = 0.9, anchor = CENTER)
+		btnScoreboard = Button(self,text = "Scoreboard",command = lambda: (self.destroy(),OpenScoreboard()),font = fontNormal)
+		btnScoreboard.place(relx = 0.5, rely = 0.7, anchor = CENTER)
 
-	#labels
-	lbTitle = Label(windowMenu,text = "Game Name!",font = fontTitle)#Creates a label, just the same type of commands as making a button
-	lbTitle.place(relx = 0.5, rely = 0.1, anchor = CENTER)
+
+		btnClose = Button(self,text = "Close",command = self.destroy,font = fontNormal) #This binds the command to close the screen to this button. We can instead specify procedures here
+		btnClose.place(relx = 0.5, rely = 0.9, anchor = CENTER)
+
+		#labels
+		lbTitle = Label(self,text = "Game Name!",font = fontTitle)#Creates a label, just the same type of commands as making a button
+		lbTitle.place(relx = 0.5, rely = 0.1, anchor = CENTER)
+		self.mainloop()
+def LoadGame():
+	windowLogin = LoginScreen(False)#Opens the login screen. NewGame variable is set to false as we are loading a game
+def NewGame():
+	windowLogin = LoginScreen(True)#Opens the login screen. NewGame variable is set to true as we are making a new game
+class LoginScreen(Tk):
+	def __init__(self,newGame):
+		super().__init__()
+		myPlayer = player()
+		self.geometry("600x600")
+		if (newGame):#If its a new game then say instead to create a new account
+			titleText = "Create a new Game"
+		else:
+			titleText = "Login"#Otherwise it should just say to load a game
+		self.title(titleText)
+
+
+		fontTitle = ("Default",30,"bold","underline")
+		fontNormal = ("Default",12)
+		fontBold = ("Default",12,"bold")
+
+
+		lbTitle = Label(self, text = titleText, font = fontTitle)
+		lbTitle.place(relx = 0.5,rely = 0.05,anchor = CENTER)
+
+		lbName = Label(self,text = "Name:",font = fontBold)
+		lbName.place(relx = 0.2,rely = 0.2, anchor = CENTER)
+		txtName = Entry(self,font = fontNormal)
+		txtName.place(relx = 0.5,rely = 0.2, anchor = CENTER)
+
+		lbPassword = Label(self,text = "Password:",font = fontBold)
+		lbPassword.place(relx = 0.2,rely = 0.3, anchor = CENTER)
+		txtPassword = Entry(self,show = "*",font = fontNormal)#show will changed this entry so that instead of actual text just * will be displayed for each character on screen for privacy
+		txtPassword.place(relx = 0.5,rely = 0.3, anchor = CENTER)
+
+		if (newGame):#If its a new game then make it a create account button
+			btnLogin = Button(self,text = "Create new game",font = fontBold, command = lambda: CreateNewPlayer(myPlayer,txtName.get(),txtPassword.get()))#lambda used here otherwise the command will be initiated as soon as the button is made
+		else:#Else if it is just loading a game then make a login button
+			btnLogin = Button(self,text = "Login",font = fontBold, command = lambda: Login(myPlayer,txtName.get(),txtPassword.get()) )
+		btnLogin.place(relx = 0.5,rely = 0.4, anchor = CENTER)
+
+		btnBeginGame = Button(self,text = "Begin Game",command = lambda:(self.destroy(),OpenGameScreen(myPlayer)), font = fontBold)
+		btnBeginGame.place(relx = 0.5,rely = 0.6,anchor = CENTER)
+
+		btnControls = Button(self,text = "Controls",command = lambda:(OpenControlsScreen(myPlayer)), font = fontBold)
+		btnControls.place(relx = 0.3,rely = 0.8, anchor = CENTER)
+
+		btnClose = Button(self,text = "Back",command = lambda: (self.destroy(), BeginGame()), font = fontBold)
+		btnClose.place(relx = 0.7, rely = 0.8, anchor = CENTER)
+		self.mainloop()
 
 #All scoreboard stuff
-def SetUpScoreboard(windowScoreboard):
-	windowScoreboard.geometry("1000x700")
-	windowScoreboard.title("Scoreboard")
+class ScoreboardScreen(Tk):
+	def __init__(self):
+		super().__init__()
+		self.geometry("1000x700")
+		self.title("Scoreboard")
 
-	fontTitle = ("Default",30,"bold")
-	fontNormal = ("Default",12)
+		fontTitle = ("Default",30,"bold")
+		fontNormal = ("Default",12)
 
-	lbTitle = Label(windowScoreboard,text = "Scoreboard", font = fontTitle)
-	lbTitle.place(relx = 0.5, rely = 0.1, anchor = CENTER)
+		lbTitle = Label(self,text = "Scoreboard", font = fontTitle)
+		lbTitle.place(relx = 0.5, rely = 0.1, anchor = CENTER)
 
 
-	btnClose = Button(windowScoreboard,text = "Back",command = lambda: (windowScoreboard.destroy(),BeginGame()), font = fontNormal)
-	btnClose.place(relx = 0.5, rely = 0.9, anchor = CENTER)
+		btnClose = Button(self,text = "Back",command = lambda: (self.destroy(),BeginGame()), font = fontNormal)
+		btnClose.place(relx = 0.5, rely = 0.9, anchor = CENTER)
 
-	scoreBox = Text(windowScoreboard, font = fontNormal)#This makes a simple textbox for the scoreboard with the attributes mentioned
-	scoreBox.place(relx = 0.5,rely = 0.5,anchor = CENTER)
+		scoreBox = Text(self, font = fontNormal)#This makes a simple textbox for the scoreboard with the attributes mentioned
+		scoreBox.place(relx = 0.5,rely = 0.5,anchor = CENTER)
 
-	scoreboard = Scoreboard()#Load in the scoreboard to use
-	scoreboard.LoadInScoreboard()
+		scoreboard = Scoreboard()#Load in the scoreboard to use
+		scoreboard.LoadInScoreboard()
 
-	scoreText = ""
-	for i in range(0 ,scoreboard.numberOfScores):#Loops through every single score in the scorebaord and displays them. This way incase the number of scores on the board changes
-		scoreBox.insert(INSERT,str(i + 1) + ".")#Will add the scoreboard text to the text box. The INSERT is the location of where to insert the text. This means to just insert it to the end
-		#The part above will add the 1. or 2. or n. to each score to signify where they are in the rank
-		scoreBox.insert(INSERT,scoreboard.scores[i].name + " : " + str(scoreboard.scores[i].score))#Will print their name and then score
-		for j in range(0,3):
-			scoreBox.insert(INSERT, "\n")#Will insert 3 lines between text to ensure each player entry is really spaced out
-	scoreBox.configure(state = 'disabled')#Makes the textbox read-only so that the user cannot edit it. Does this now as the text has been set
+		scoreText = ""
+		for i in range(0 ,scoreboard.numberOfScores):#Loops through every single score in the scorebaord and displays them. This way incase the number of scores on the board changes
+			scoreBox.insert(INSERT,str(i + 1) + ".")#Will add the scoreboard text to the text box. The INSERT is the location of where to insert the text. This means to just insert it to the end
+			#The part above will add the 1. or 2. or n. to each score to signify where they are in the rank
+			scoreBox.insert(INSERT,scoreboard.scores[i].name + " : " + str(scoreboard.scores[i].score))#Will print their name and then score
+			for j in range(0,3):
+				scoreBox.insert(INSERT, "\n")#Will insert 3 lines between text to ensure each player entry is really spaced out
+		scoreBox.configure(state = 'disabled')#Makes the textbox read-only so that the user cannot edit it. Does this now as the text has been set
+		self.mainloop()
 def OpenScoreboard():
-	windowScoreboard = Tk()#Creates the scoreboard window
-	SetUpScoreboard(windowScoreboard)#Will run and set up all textboxes for the scoreboard, Will also load in all of the players on the scoreboard
-	windowScoreboard.mainloop()
+	windowScoreboard = ScoreboardScreen()
 
-def LoadGame():
-	windowLogin = Tk()
-	SetUpLoginScreen(windowLogin,False)#Will set up all of the labels and textboxes for the login screen. False is whether it is a new game or not
-	windowLogin.mainloop()
-def NewGame():
-	windowLogin = Tk()
-	SetUpLoginScreen(windowLogin,True)#Will set up all of the labels and textboxes for the login screen. True is whether it is a new game or not
-	windowLogin.mainloop()
+	
 
-def SetUpLoginScreen(windowLogin,newGame):
-	myPlayer = player()
-	windowLogin.geometry("600x600")
-	if (newGame):#If its a new game then say instead to create a new account
-		titleText = "Create a new Game"
-	else:
-		titleText = "Login"#Otherwise it should just say to load a game
-	windowLogin.title(titleText)
-
-
-	fontTitle = ("Default",30,"bold","underline")
-	fontNormal = ("Default",12)
-	fontBold = ("Default",12,"bold")
-
-
-	lbTitle = Label(windowLogin, text = titleText, font = fontTitle)
-	lbTitle.place(relx = 0.5,rely = 0.05,anchor = CENTER)
-
-	lbName = Label(windowLogin,text = "Name:",font = fontBold)
-	lbName.place(relx = 0.2,rely = 0.2, anchor = CENTER)
-	txtName = Entry(windowLogin,font = fontNormal)
-	txtName.place(relx = 0.5,rely = 0.2, anchor = CENTER)
-
-	lbPassword = Label(windowLogin,text = "Password:",font = fontBold)
-	lbPassword.place(relx = 0.2,rely = 0.3, anchor = CENTER)
-	txtPassword = Entry(windowLogin,show = "*",font = fontNormal)#show will changed this entry so that instead of actual text just * will be displayed for each character on screen for privacy
-	txtPassword.place(relx = 0.5,rely = 0.3, anchor = CENTER)
-
-	if (newGame):#If its a new game then make it a create account button
-		btnLogin = Button(windowLogin,text = "Create new game",font = fontBold, command = lambda: CreateNewPlayer(myPlayer,txtName.get(),txtPassword.get()))#lambda used here otherwise the command will be initiated as soon as the button is made
-	else:#Else if it is just loading a game then make a login button
-		btnLogin = Button(windowLogin,text = "Login",font = fontBold, command = lambda: Login(myPlayer,txtName.get(),txtPassword.get()) )
-	btnLogin.place(relx = 0.5,rely = 0.4, anchor = CENTER)
-
-	btnBeginGame = Button(windowLogin,text = "Begin Game",command = lambda:(windowLogin.destroy(),OpenGameScreen(myPlayer)), font = fontBold)
-	btnBeginGame.place(relx = 0.5,rely = 0.6,anchor = CENTER)
-
-	btnControls = Button(windowLogin,text = "Controls",command = lambda:(OpenControlsScreen(myPlayer)), font = fontBold)
-	btnControls.place(relx = 0.3,rely = 0.8, anchor = CENTER)
-
-	btnClose = Button(windowLogin,text = "Back",command = lambda: (windowLogin.destroy(), BeginGame()), font = fontBold)
-	btnClose.place(relx = 0.7, rely = 0.8, anchor = CENTER)
 def Login(myPlayer,name,password):
 	myPlayer.LoadPlayer(name)
 	if (myPlayer.password == password):#If there password is correct
@@ -239,74 +236,79 @@ def OpenGameScreen(myPlayer):
 	print("Open Game screen")
 
 #All control screen stuff below
+class ControlsScreen(Tk):
+	def __init__(self,myPlayer):
+		super().__init__()
+		self.geometry("600x500")
+		self.title("Controls")
+
+		fontTitle = ("Default",30,"bold","underline")
+		fontNormal = ("Default",12)
+		fontBold = ("Default",12,"bold")
+
+		lbTitle = Label(self,text = "Controls", font = fontTitle)
+		lbTitle.place(relx = 0.5, rely = 0.1, anchor = CENTER)
+
+		lbUpControl = Label(self,text = "Up Control:",font = fontBold)
+		lbUpControl.place(relx = 0.2,rely = 0.2, anchor = CENTER)
+		txtUpControl = Entry(self,font = fontNormal)
+		txtUpControl.place(relx = 0.5,rely = 0.2, anchor = CENTER)
+		txtUpControl.insert(0,myPlayer.controls[0])
+
+		lbLeftControl = Label(self,text = "Left Control:",font = fontBold)
+		lbLeftControl.place(relx = 0.2,rely = 0.3, anchor = CENTER)
+		txtLeftControl = Entry(self,font = fontNormal)
+		txtLeftControl.place(relx = 0.5,rely = 0.3, anchor = CENTER)
+		txtLeftControl.insert(0,myPlayer.controls[1])
+
+
+		lbDownControl = Label(self,text = "Down Control:",font = fontBold)
+		lbDownControl.place(relx = 0.2,rely = 0.4, anchor = CENTER)
+		txtDownControl = Entry(self,font = fontNormal)
+		txtDownControl.place(relx = 0.5,rely = 0.4, anchor = CENTER)
+		txtDownControl.insert(0,myPlayer.controls[2])
+
+		lbRightControl = Label(self,text = "Right Control:",font = fontBold)
+		lbRightControl.place(relx = 0.2,rely = 0.5, anchor = CENTER)
+		txtRightControl = Entry(self,font = fontNormal)
+		txtRightControl.place(relx = 0.5,rely = 0.5, anchor = CENTER)
+		txtRightControl.insert(0,myPlayer.controls[2])
+
+		lbPauseControl = Label(self,text = "Pause Control:",font = fontBold)
+		lbPauseControl.place(relx = 0.2,rely = 0.6, anchor = CENTER)
+		txtPauseControl = Entry(self,font = fontNormal)
+		txtPauseControl.place(relx = 0.5,rely = 0.6, anchor = CENTER)
+		txtPauseControl.insert(0,myPlayer.controls[3])
+
+		lbBossControl = Label(self,text = "Boss Control:",font = fontBold)
+		lbBossControl.place(relx = 0.2,rely = 0.7, anchor = CENTER)
+		txtBossControl = Entry(self,font = fontNormal)
+		txtBossControl.place(relx = 0.5,rely = 0.7, anchor = CENTER)
+		txtBossControl.insert(0,myPlayer.controls[4])
+
+		btnResetControls = Button(self,text = "Reset Controls" ,font = fontBold)
+		btnResetControls.place(relx = 0.3,rely = 0.8,anchor = CENTER)
+
+		btnClose = Button(self,text = "Back",command = lambda: (self.destroy()), font = fontBold)
+		btnClose.place(relx = 0.5, rely = 0.9, anchor = CENTER)
+		self.mainloop()
 def OpenControlsScreen(myPlayer):
 	if (myPlayer.name == ""):
 		messagebox.showinfo("Error","Please Login first!")
 	else:
-		windowControlsScreen = Tk()
-		SetUpControlsScreen(windowControlsScreen,myPlayer)
-		windowControlsScreen.mainloop()
-def SetUpControlsScreen(windowControlsScreen,myPlayer):
-	windowControlsScreen.geometry("600x500")
-	windowControlsScreen.title("Controls")
+		windowControlsScreen = ControlsScreen(myPlayer)
 
-	fontTitle = ("Default",30,"bold","underline")
-	fontNormal = ("Default",12)
-	fontBold = ("Default",12,"bold")
-
-	lbTitle = Label(windowControlsScreen,text = "Controls", font = fontTitle)
-	lbTitle.place(relx = 0.5, rely = 0.1, anchor = CENTER)
-
-	lbUpControl = Label(windowControlsScreen,text = "Up Control:",font = fontBold)
-	lbUpControl.place(relx = 0.2,rely = 0.2, anchor = CENTER)
-	txtUpControl = Entry(windowControlsScreen,font = fontNormal)
-	txtUpControl.place(relx = 0.5,rely = 0.2, anchor = CENTER)
-	txtUpControl.insert(0,myPlayer.controls[0])
-
-	lbLeftControl = Label(windowControlsScreen,text = "Left Control:",font = fontBold)
-	lbLeftControl.place(relx = 0.2,rely = 0.3, anchor = CENTER)
-	txtLeftControl = Entry(windowControlsScreen,font = fontNormal)
-	txtLeftControl.place(relx = 0.5,rely = 0.3, anchor = CENTER)
-	txtLeftControl.insert(0,myPlayer.controls[1])
-
-
-	lbDownControl = Label(windowControlsScreen,text = "Down Control:",font = fontBold)
-	lbDownControl.place(relx = 0.2,rely = 0.4, anchor = CENTER)
-	txtDownControl = Entry(windowControlsScreen,font = fontNormal)
-	txtDownControl.place(relx = 0.5,rely = 0.4, anchor = CENTER)
-	txtDownControl.insert(0,myPlayer.controls[2])
-
-	lbRightControl = Label(windowControlsScreen,text = "Right Control:",font = fontBold)
-	lbRightControl.place(relx = 0.2,rely = 0.5, anchor = CENTER)
-	txtRightControl = Entry(windowControlsScreen,font = fontNormal)
-	txtRightControl.place(relx = 0.5,rely = 0.5, anchor = CENTER)
-	txtRightControl.insert(0,myPlayer.controls[2])
-
-	lbPauseControl = Label(windowControlsScreen,text = "Pause Control:",font = fontBold)
-	lbPauseControl.place(relx = 0.2,rely = 0.6, anchor = CENTER)
-	txtPauseControl = Entry(windowControlsScreen,font = fontNormal)
-	txtPauseControl.place(relx = 0.5,rely = 0.6, anchor = CENTER)
-	txtPauseControl.insert(0,myPlayer.controls[3])
-
-	lbBossControl = Label(windowControlsScreen,text = "Boss Control:",font = fontBold)
-	lbBossControl.place(relx = 0.2,rely = 0.7, anchor = CENTER)
-	txtBossControl = Entry(windowControlsScreen,font = fontNormal)
-	txtBossControl.place(relx = 0.5,rely = 0.7, anchor = CENTER)
-	txtBossControl.insert(0,myPlayer.controls[4])
-
-	btnResetControls = Button(windowControlsScreen,text = "Reset Controls",command = ,font = fontBold)
-	btnResetControls.place(relx = 0.3,rely = 0.8,anchor = CENTER)
-
-	btnClose = Button(windowControlsScreen,text = "Back",command = lambda: (windowControlsScreen.destroy()), font = fontBold)
-	btnClose.place(relx = 0.5, rely = 0.9, anchor = CENTER)
-
+#General Procedures
+def ConvertToList(string):#This is used to convert a string containing a list to an actual list variable
+	Mylist = []
+	for i in range(0,len(string)):
+		if ((string[i] != "[") and (string[i] != ",") and (string[i] != "]") and (string[i] != "'")):
+			Mylist.append(string[i])
+	return Mylist
 
 #Main sub that runs the program
 def BeginGame():
-	windowMenu = Tk() #Creates a window
-	SetUpMenu(windowMenu) #Will run the procedure and set up the menu correctly
-
-	windowMenu.mainloop() #Will put the window into a listening mode so that it waits for an event to happen. Without it will instantly close, this ensures the program remains open
+	windowMenu = Menu() 
 
 
 
