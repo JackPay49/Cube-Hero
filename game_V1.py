@@ -193,6 +193,11 @@ class LoginScreen(Tk):
 			messagebox.showinfo("Login","User already exists! Please use a different name")
 
 class ScoreboardScreen(Tk):
+	lbTitle = Label
+	btnClose = Button
+	scorebox = Text
+
+	scoreboard = Scoreboard()
 	def __init__(self):
 		super().__init__()
 		self.geometry("1000x700")
@@ -200,25 +205,24 @@ class ScoreboardScreen(Tk):
 
 		fontNormal = ("Default",12)
 
-		lbTitle = TitleLabel(self,"Scoreboard")
+		self.lbTitle = TitleLabel(self,"Scoreboard")
 
 
-		btnClose = BackButton(self,"Back",True)
+		self.btnClose = BackButton(self,"Back",True)
 
-		scoreBox = Text(self, font = fontNormal)#This makes a simple textbox for the scoreboard with the attributes mentioned
-		scoreBox.place(relx = 0.5,rely = 0.5,anchor = CENTER)
+		self.scoreBox = Text(self, font = fontNormal)#This makes a simple textbox for the scoreboard with the attributes mentioned
+		self.scoreBox.place(relx = 0.5,rely = 0.5,anchor = CENTER)
 
-		scoreboard = Scoreboard()#Load in the scoreboard to use
-		scoreboard.LoadInScoreboard()
+		self.scoreboard.LoadInScoreboard()
 
 		scoreText = ""
-		for i in range(0 ,scoreboard.numberOfScores):#Loops through every single score in the scorebaord and displays them. This way incase the number of scores on the board changes
-			scoreBox.insert(INSERT,str(i + 1) + ".")#Will add the scoreboard text to the text box. The INSERT is the location of where to insert the text. This means to just insert it to the end
+		for i in range(0 ,self.scoreboard.numberOfScores):#Loops through every single score in the scorebaord and displays them. This way incase the number of scores on the board changes
+			self.scoreBox.insert(INSERT,str(i + 1) + ".")#Will add the scoreboard text to the text box. The INSERT is the location of where to insert the text. This means to just insert it to the end
 			#The part above will add the 1. or 2. or n. to each score to signify where they are in the rank
-			scoreBox.insert(INSERT,scoreboard.scores[i].name + " : " + str(scoreboard.scores[i].score))#Will print their name and then score
+			self.scoreBox.insert(INSERT,self.scoreboard.scores[i].name + " : " + str(self.scoreboard.scores[i].score))#Will print their name and then score
 			for j in range(0,3):
-				scoreBox.insert(INSERT, "\n")#Will insert 3 lines between text to ensure each player entry is really spaced out
-		scoreBox.configure(state = 'disabled')#Makes the textbox read-only so that the user cannot edit it. Does this now as the text has been set
+				self.scoreBox.insert(INSERT, "\n")#Will insert 3 lines between text to ensure each player entry is really spaced out
+		self.scoreBox.configure(state = 'disabled')#Makes the textbox read-only so that the user cannot edit it. Does this now as the text has been set
 		self.mainloop()
 def OpenScoreboard():
 	windowScoreboard = ScoreboardScreen()
