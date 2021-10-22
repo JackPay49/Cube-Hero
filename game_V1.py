@@ -134,6 +134,19 @@ def LoadGame():
 def NewGame():
 	windowLogin = LoginScreen(True)#Opens the login screen. NewGame variable is set to true as we are making a new game
 class LoginScreen(Tk):
+	lbTitle = Label
+	lbName = Label
+	lbPassword = Label
+
+	txtName = Entry
+	txtPassword = Entry
+
+	btnBeginGame = Button
+	btnControls = Button
+	btnClose = Button
+	btnLogin = Button
+
+
 	def __init__(self,newGame):
 		super().__init__()
 		myPlayer = player()
@@ -149,31 +162,31 @@ class LoginScreen(Tk):
 		fontBold = ("Default",12,"bold")
 
 
-		lbTitle = TitleLabel(self,titleText)
+		self.lbTitle = TitleLabel(self,titleText)
 
-		lbName = Label(self,text = "Name:",font = fontBold)
-		lbName.place(relx = 0.2,rely = 0.2, anchor = CENTER)
-		txtName = Entry(self,font = fontNormal)
-		txtName.place(relx = 0.5,rely = 0.2, anchor = CENTER)
+		self.lbName = Label(self,text = "Name:",font = fontBold)
+		self.lbName.place(relx = 0.2,rely = 0.2, anchor = CENTER)
+		self.txtName = Entry(self,font = fontNormal)
+		self.txtName.place(relx = 0.5,rely = 0.2, anchor = CENTER)
 
-		lbPassword = Label(self,text = "Password:",font = fontBold)
-		lbPassword.place(relx = 0.2,rely = 0.3, anchor = CENTER)
-		txtPassword = Entry(self,show = "*",font = fontNormal)#show will changed this entry so that instead of actual text just * will be displayed for each character on screen for privacy
-		txtPassword.place(relx = 0.5,rely = 0.3, anchor = CENTER)
+		self.lbPassword = Label(self,text = "Password:",font = fontBold)
+		self.lbPassword.place(relx = 0.2,rely = 0.3, anchor = CENTER)
+		self.txtPassword = Entry(self,show = "*",font = fontNormal)#show will changed this entry so that instead of actual text just * will be displayed for each character on screen for privacy
+		self.txtPassword.place(relx = 0.5,rely = 0.3, anchor = CENTER)
 
 		if (newGame):#If its a new game then make it a create account button
-			btnLogin = Button(self,text = "Create new game",font = fontBold, command = lambda: self.CreateNewPlayer(myPlayer,txtName.get(),txtPassword.get()))#lambda used here otherwise the command will be initiated as soon as the button is made
+			self.btnLogin = Button(self,text = "Create new game",font = fontBold, command = lambda: self.CreateNewPlayer(myPlayer,self.txtName.get(),self.txtPassword.get()))#lambda used here otherwise the command will be initiated as soon as the button is made
 		else:#Else if it is just loading a game then make a login button
-			btnLogin = Button(self,text = "Login",font = fontBold, command = lambda: self.Login(myPlayer,txtName.get(),txtPassword.get()) )
-		btnLogin.place(relx = 0.5,rely = 0.4, anchor = CENTER)
+			self.btnLogin = Button(self,text = "Login",font = fontBold, command = lambda: self.Login(myPlayer,self.txtName.get(),self.txtPassword.get()) )
+		self.btnLogin.place(relx = 0.5,rely = 0.4, anchor = CENTER)
 
-		btnBeginGame = Button(self,text = "Begin Game",command = lambda:(self.destroy(),OpenGameScreen(myPlayer)), font = fontBold)
-		btnBeginGame.place(relx = 0.7,rely = 0.6,anchor = CENTER)
+		self.btnBeginGame = Button(self,text = "Begin Game",command = lambda:(self.destroy(),OpenGameScreen(myPlayer)), font = fontBold)
+		self.btnBeginGame.place(relx = 0.7,rely = 0.6,anchor = CENTER)
 
-		btnControls = Button(self,text = "Controls",command = lambda:(OpenControlsScreen(myPlayer)), font = fontBold)
-		btnControls.place(relx = 0.3,rely = 0.6, anchor = CENTER)
+		self.btnControls = Button(self,text = "Controls",command = lambda:(OpenControlsScreen(myPlayer)), font = fontBold)
+		self.btnControls.place(relx = 0.3,rely = 0.6, anchor = CENTER)
 
-		btnClose = BackButton(self,"Back",True)
+		self.btnClose = BackButton(self,"Back",True)
 		self.mainloop()
 
 	def Login(self,myPlayer,name,password):
