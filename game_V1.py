@@ -104,6 +104,13 @@ class player:
 		self.SavePlayer()
 
 class Menu(Tk):
+	lbTitle = Label
+
+	btnLoadGame = Button
+	btnCreateNewGame = Button
+	btnScoreboard = Button
+	btnClose = Button
+	
 	def __init__(self):
 		super().__init__()
 		self.geometry("500x500")#Sets the size of the window
@@ -112,20 +119,20 @@ class Menu(Tk):
 		#fonts
 		fontNormal = ("Default",12,"bold")
 
-		lbTitle = TitleLabel(self,"Game Name!")
+		self.lbTitle = TitleLabel(self,"Game Name!")
 
 		#Buttons
-		btnLoadGame = Button(self,text = "Load Game", command = lambda: (self.destroy(),LoadGame()),font = fontNormal)#Creates a basic button displaying text
-		btnLoadGame.place(relx = 0.5, rely = 0.3, anchor = CENTER)#Will place the button relative to 0.1 of the width of the screen, 0,5 of the height of the screen and in the center
+		self.btnLoadGame = Button(self,text = "Load Game", command = lambda: (self.destroy(),LoadGame()),font = fontNormal)#Creates a basic button displaying text
+		self.btnLoadGame.place(relx = 0.5, rely = 0.3, anchor = CENTER)#Will place the button relative to 0.1 of the width of the screen, 0,5 of the height of the screen and in the center
 
-		btnCreateNewGame = Button(self,text = "Create new Game",command = lambda: (self.destroy(),NewGame()),font = fontNormal)
-		btnCreateNewGame.place(relx = 0.5, rely = 0.5, anchor = CENTER)
+		self.btnCreateNewGame = Button(self,text = "Create new Game",command = lambda: (self.destroy(),NewGame()),font = fontNormal)
+		self.btnCreateNewGame.place(relx = 0.5, rely = 0.5, anchor = CENTER)
 
 
-		btnScoreboard = Button(self,text = "Scoreboard",command = lambda: (self.destroy(),OpenScoreboard()),font = fontNormal)
-		btnScoreboard.place(relx = 0.5, rely = 0.7, anchor = CENTER)
+		self.btnScoreboard = Button(self,text = "Scoreboard",command = lambda: (self.destroy(),OpenScoreboard()),font = fontNormal)
+		self.btnScoreboard.place(relx = 0.5, rely = 0.7, anchor = CENTER)
 
-		btnClose = BackButton(self,"Close",False)
+		self.btnClose = BackButton(self,"Close",False)
 
 		#
 		self.mainloop()
