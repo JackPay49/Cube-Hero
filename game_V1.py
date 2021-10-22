@@ -1,7 +1,6 @@
 import tkinter
 from tkinter import *
-from tkinter import messagebox#imports the messagebox library specifically so that it can be used to output messages
-# Will import everything from the tkinter library
+from tkinter import messagebox
 
 #Classes
 # class snake:
@@ -110,7 +109,7 @@ class Menu(Tk):
 	btnCreateNewGame = Button
 	btnScoreboard = Button
 	btnClose = Button
-	
+
 	def __init__(self):
 		super().__init__()
 		self.geometry("500x500")#Sets the size of the window
@@ -388,10 +387,19 @@ class TitleLabel(Label):
 
 #General Procedures
 def ConvertToList(string):#This is used to convert a string containing a list to an actual list variable
+	#This is used to convert a string to a list. It will move through each item skipping them if they are any of the list 
+	#parts like [], etc. If they are not those characters it will add them to a temp string value. This is to allow longer 
+	# strings for the controls. When the end of these strings have been reached, so when they're not blank and there's
+	# the second ' from ['a'] only then will it add the string to the list aas the current control. Must also reset the 
+	# value of the temp item here
 	Mylist = []
+	currentItem = ""
 	for i in range(0,len(string)):
 		if ((string[i] != "[") and (string[i] != ",") and (string[i] != "]") and (string[i] != "'") and (string[i] != " ")):
-			Mylist.append(string[i])
+			currentItem += string[i]
+		elif ((string[i] == "'") and (currentItem != "")):
+			Mylist.append(currentItem)
+			currentItem = ""
 	return Mylist
 
 #Main sub that runs the program
