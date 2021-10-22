@@ -92,11 +92,15 @@ class player:
 		file.write(str(self.password) + "\n")
 		file.write(str(self.level) + "\n")
 		file.write(str(self.score) + "\n")
-		file.write(self.controls + "\n")
+		file.write(str(self.controls) + "\n")
 		file.close()
 	def CreatePlayer(self,nValue,pValue):#Will create an object for the player with the values and will create their file & save it
 		self.name = nValue
 		self.password = pValue
+		self.SavePlayer()
+
+	def ResetControls(self):
+		self.controls = ['w','a','s','d','e','b']
 		self.SavePlayer()
 
 class Menu(Tk):
@@ -106,8 +110,9 @@ class Menu(Tk):
 		self.title("Menu") #Sets the title of the window currently
 
 		#fonts
-		fontTitle = ("Default",30,"bold")
-		fontNormal = ("Default",12)
+		fontNormal = ("Default",12,"bold")
+
+		lbTitle = TitleLabel(self,"Game Name!")
 
 		#Buttons
 		btnLoadGame = Button(self,text = "Load Game", command = lambda: (self.destroy(),LoadGame()),font = fontNormal)#Creates a basic button displaying text
@@ -122,9 +127,7 @@ class Menu(Tk):
 
 		btnClose = BackButton(self,"Close",False)
 
-		#labels
-		lbTitle = Label(self,text = "Game Name!",font = fontTitle)#Creates a label, just the same type of commands as making a button
-		lbTitle.place(relx = 0.5, rely = 0.1, anchor = CENTER)
+		#
 		self.mainloop()
 def LoadGame():
 	windowLogin = LoginScreen(False)#Opens the login screen. NewGame variable is set to false as we are loading a game
@@ -142,13 +145,11 @@ class LoginScreen(Tk):
 		self.title(titleText)
 
 
-		fontTitle = ("Default",30,"bold","underline")
 		fontNormal = ("Default",12)
 		fontBold = ("Default",12,"bold")
 
 
-		lbTitle = Label(self, text = titleText, font = fontTitle)
-		lbTitle.place(relx = 0.5,rely = 0.05,anchor = CENTER)
+		lbTitle = TitleLabel(self,titleText)
 
 		lbName = Label(self,text = "Name:",font = fontBold)
 		lbName.place(relx = 0.2,rely = 0.2, anchor = CENTER)
@@ -167,10 +168,10 @@ class LoginScreen(Tk):
 		btnLogin.place(relx = 0.5,rely = 0.4, anchor = CENTER)
 
 		btnBeginGame = Button(self,text = "Begin Game",command = lambda:(self.destroy(),OpenGameScreen(myPlayer)), font = fontBold)
-		btnBeginGame.place(relx = 0.5,rely = 0.6,anchor = CENTER)
+		btnBeginGame.place(relx = 0.7,rely = 0.6,anchor = CENTER)
 
 		btnControls = Button(self,text = "Controls",command = lambda:(OpenControlsScreen(myPlayer)), font = fontBold)
-		btnControls.place(relx = 0.3,rely = 0.8, anchor = CENTER)
+		btnControls.place(relx = 0.3,rely = 0.6, anchor = CENTER)
 
 		btnClose = BackButton(self,"Back",True)
 		self.mainloop()
@@ -197,11 +198,9 @@ class ScoreboardScreen(Tk):
 		self.geometry("1000x700")
 		self.title("Scoreboard")
 
-		fontTitle = ("Default",30,"bold")
 		fontNormal = ("Default",12)
 
-		lbTitle = Label(self,text = "Scoreboard", font = fontTitle)
-		lbTitle.place(relx = 0.5, rely = 0.1, anchor = CENTER)
+		lbTitle = TitleLabel(self,"Scoreboard")
 
 
 		btnClose = BackButton(self,"Back",True)
@@ -233,60 +232,109 @@ def OpenGameScreen(myPlayer):
 	gameScreen = GameScreen()
 
 class ControlsScreen(Tk):
+	lbUpControl = Label
+	lbRightControl = Label
+	lbLeftControl = Label
+	lbDownControl = Label
+	lbPauseControl = Label
+	lbBossControl = Label
+	lbTitle = Label
+
+	txtUpControl = Entry
+	txtRightControl = Entry
+	txtLeftControl = Entry
+	txtDownControl = Entry
+	txtPauseControl = Entry
+	txtBossControl = Entry
+
+	btnClose = Button
+	btnResetControls = Button
+	btnSaveChanges = Button
+
 	def __init__(self,myPlayer):
 		super().__init__()
 		self.geometry("600x500")
 		self.title("Controls")
 
-		fontTitle = ("Default",30,"bold","underline")
-		fontNormal = ("Default",12)
 		fontBold = ("Default",12,"bold")
-
-		lbTitle = Label(self,text = "Controls", font = fontTitle)
-		lbTitle.place(relx = 0.5, rely = 0.1, anchor = CENTER)
-
-		lbUpControl = Label(self,text = "Up Control:",font = fontBold)
-		lbUpControl.place(relx = 0.2,rely = 0.2, anchor = CENTER)
-		txtUpControl = Entry(self,font = fontNormal)
-		txtUpControl.place(relx = 0.5,rely = 0.2, anchor = CENTER)
-		txtUpControl.insert(0,myPlayer.controls[0])
-
-		lbLeftControl = Label(self,text = "Left Control:",font = fontBold)
-		lbLeftControl.place(relx = 0.2,rely = 0.3, anchor = CENTER)
-		txtLeftControl = Entry(self,font = fontNormal)
-		txtLeftControl.place(relx = 0.5,rely = 0.3, anchor = CENTER)
-		txtLeftControl.insert(0,myPlayer.controls[1])
+		fontNormal = ("Default",12)
 
 
-		lbDownControl = Label(self,text = "Down Control:",font = fontBold)
-		lbDownControl.place(relx = 0.2,rely = 0.4, anchor = CENTER)
-		txtDownControl = Entry(self,font = fontNormal)
-		txtDownControl.place(relx = 0.5,rely = 0.4, anchor = CENTER)
-		txtDownControl.insert(0,myPlayer.controls[2])
+		self.lbTitle = TitleLabel(self,"Controls")
 
-		lbRightControl = Label(self,text = "Right Control:",font = fontBold)
-		lbRightControl.place(relx = 0.2,rely = 0.5, anchor = CENTER)
-		txtRightControl = Entry(self,font = fontNormal)
-		txtRightControl.place(relx = 0.5,rely = 0.5, anchor = CENTER)
-		txtRightControl.insert(0,myPlayer.controls[2])
+		self.lbUpControl = Label(self,text = "Up Control:",font = fontBold)
+		self.lbUpControl.place(relx = 0.2,rely = 0.2, anchor = CENTER)
+		self.txtUpControl = Entry(self,font = fontNormal)
+		self.txtUpControl.place(relx = 0.5,rely = 0.2, anchor = CENTER)
 
-		lbPauseControl = Label(self,text = "Pause Control:",font = fontBold)
-		lbPauseControl.place(relx = 0.2,rely = 0.6, anchor = CENTER)
-		txtPauseControl = Entry(self,font = fontNormal)
-		txtPauseControl.place(relx = 0.5,rely = 0.6, anchor = CENTER)
-		txtPauseControl.insert(0,myPlayer.controls[3])
+		self.lbLeftControl = Label(self,text = "Left Control:",font = fontBold)
+		self.lbLeftControl.place(relx = 0.2,rely = 0.3, anchor = CENTER)
+		self.txtLeftControl = Entry(self,font = fontNormal)
+		self.txtLeftControl.place(relx = 0.5,rely = 0.3, anchor = CENTER)
 
-		lbBossControl = Label(self,text = "Boss Control:",font = fontBold)
-		lbBossControl.place(relx = 0.2,rely = 0.7, anchor = CENTER)
-		txtBossControl = Entry(self,font = fontNormal)
-		txtBossControl.place(relx = 0.5,rely = 0.7, anchor = CENTER)
-		txtBossControl.insert(0,myPlayer.controls[4])
 
-		btnResetControls = Button(self,text = "Reset Controls" ,font = fontBold)
-		btnResetControls.place(relx = 0.3,rely = 0.8,anchor = CENTER)
+		self.lbDownControl = Label(self,text = "Down Control:",font = fontBold)
+		self.lbDownControl.place(relx = 0.2,rely = 0.4, anchor = CENTER)
+		self.txtDownControl = Entry(self,font = fontNormal)
+		self.txtDownControl.place(relx = 0.5,rely = 0.4, anchor = CENTER)
 
-		btnClose = BackButton(self,"Back",False)
+		self.lbRightControl = Label(self,text = "Right Control:",font = fontBold)
+		self.lbRightControl.place(relx = 0.2,rely = 0.5, anchor = CENTER)
+		self.txtRightControl = Entry(self,font = fontNormal)
+		self.txtRightControl.place(relx = 0.5,rely = 0.5, anchor = CENTER)
+
+		self.lbPauseControl = Label(self,text = "Pause Control:",font = fontBold)
+		self.lbPauseControl.place(relx = 0.2,rely = 0.6, anchor = CENTER)
+		self.txtPauseControl = Entry(self,font = fontNormal)
+		self.txtPauseControl.place(relx = 0.5,rely = 0.6, anchor = CENTER)
+
+		self.lbBossControl = Label(self,text = "Boss Control:",font = fontBold)
+		self.lbBossControl.place(relx = 0.2,rely = 0.7, anchor = CENTER)
+		self.txtBossControl = Entry(self,font = fontNormal)
+		self.txtBossControl.place(relx = 0.5,rely = 0.7, anchor = CENTER)
+
+		self.DisplayControls(myPlayer)
+
+		self.btnResetControls = Button(self,text = "Reset Controls" ,command = lambda:(self.ResetControls(myPlayer)),font = fontBold)
+		self.btnResetControls.place(relx = 0.3,rely = 0.8,anchor = CENTER)
+
+		self.btnSaveChanges = Button(self,text = "Save Changes" ,command = lambda:(self.SaveChanges(myPlayer)),font = fontBold)
+		self.btnSaveChanges.place(relx = 0.7,rely = 0.8,anchor = CENTER)
+
+		self.btnClose = BackButton(self,"Back",False)
 		self.mainloop()
+
+	def ResetControls(self,myPlayer):
+		myPlayer.ResetControls()
+		self.DisplayControls(myPlayer)
+
+	def DisplayControls(self,myPlayer):
+		self.txtUpControl.delete(0,"end")
+		self.txtLeftControl.delete(0,"end")
+		self.txtDownControl.delete(0,"end")
+		self.txtRightControl.delete(0,"end")
+		self.txtPauseControl.delete(0,"end")
+		self.txtBossControl.delete(0,"end")
+
+		self.txtUpControl.insert(0,myPlayer.controls[0])
+		self.txtLeftControl.insert(0,myPlayer.controls[1])
+		self.txtDownControl.insert(0,myPlayer.controls[2])
+		self.txtRightControl.insert(0,myPlayer.controls[3])
+		self.txtPauseControl.insert(0,myPlayer.controls[4])
+		self.txtBossControl.insert(0,myPlayer.controls[5])
+
+
+	def SaveChanges(self,myPlayer):
+		myPlayer.controls[0] = self.txtUpControl.get().strip()
+		myPlayer.controls[1] = self.txtLeftControl.get().strip()
+		myPlayer.controls[2] = self.txtDownControl.get().strip()
+		myPlayer.controls[3] = self.txtRightControl.get().strip()
+		myPlayer.controls[4] = self.txtPauseControl.get().strip()
+		myPlayer.controls[5] = self.txtBossControl.get().strip()
+		myPlayer.SavePlayer()
+		messagebox.showinfo("Saved!","Changes to controls have been saved!")
+
+
 def OpenControlsScreen(myPlayer):
 	if (myPlayer.name == ""):
 		messagebox.showinfo("Error","Please Login first!")
@@ -294,21 +342,31 @@ def OpenControlsScreen(myPlayer):
 		windowControlsScreen = ControlsScreen(myPlayer)
 
 #Classees for general controls
-class BackButton(Button):
+class BackButton(Button):	
 	def __init__(self,parentWindow,textValue,openMenu):
 		super().__init__()
-		self = Button(parentWindow,text = textValue,command = lambda:(parentWindow.destroy(),ReOpenMenu(openMenu)),font = ("Default",12))
+		self = Button(parentWindow,text = textValue,font = ("Default",12,"bold"))
 		self.place(relx = 0.5, rely = 0.9, anchor = CENTER)
+		#Below Will reopn the menu if the value of openMenu is true. This is so that screens like the controls screen don't open the menu but the login does
+		if (openMenu):
+			self.configure(command = lambda:(parentWindow.destroy(),BeginGame()))
+		else:
+			self.configure(command = lambda:(parentWindow.destroy()))
+class TitleLabel(Label):
+	def __init__(self,parentWindow,textValue):
+		super().__init__()
+		self = Label(parentWindow,text = textValue,font = ("Default",30,"bold","underline")) 
+		self.place(relx = 0.5, rely = 0.1, anchor = CENTER)
 
-def ReOpenMenu(openMenu):
-	if (openMenu):
-		BeginGame()
+
+
+
 
 #General Procedures
 def ConvertToList(string):#This is used to convert a string containing a list to an actual list variable
 	Mylist = []
 	for i in range(0,len(string)):
-		if ((string[i] != "[") and (string[i] != ",") and (string[i] != "]") and (string[i] != "'")):
+		if ((string[i] != "[") and (string[i] != ",") and (string[i] != "]") and (string[i] != "'") and (string[i] != " ")):
 			Mylist.append(string[i])
 	return Mylist
 
