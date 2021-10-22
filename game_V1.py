@@ -14,7 +14,7 @@ class Scoreboard:
 	def SortScores(self,low,high):#This is a basic quicksort that sorts the algorithm from greatest score to smallest, 0 to 9. Based on the scores of each player
 		tempLow = low
 		tempHigh = high
-		pivot = self.scores[int((low + high)/2)].score#Must specify self so that it changes the attribute of the class
+		pivot = self.scores[int((low + high)/2)].score
 		while(tempLow <= tempHigh):
 			while(self.scores[tempLow].score > pivot and tempLow < high):
 				tempLow += 1
@@ -32,68 +32,74 @@ class Scoreboard:
 			self.SortScores(tempLow,high)
 
 	def SaveScoreboard(self):
-		self.SortScores(0,(self.numberOfScores - 1))#Sort the scoreboard before saving it so that we know it's in order
-		file = open("gameFiles/scoreboard.txt","w")#Opens the scorebaord file to write into. Will rewrite the full thing
+		#This writes all scorebaorrd details into a text file. it will format them in the form of a name, then a score on a different line and then it will leave a blank line between different player scores.
+		#At the top of the file there will also be the number of scores stored which is used to change how long the loop will search for scores in the file
+		self.SortScores(0,(self.numberOfScores - 1))
+		file = open("gameFiles/scoreboard.txt","w")
 		file.write(str(self.numberOfScores))
 		for i in range(0,len(self.scores)):
 			file.write("\n" + self.scores[i].name)
 			file.write("\n" + str(self.scores[i].score))
-			file.write("\n")#Leaves a line for readability
+			file.write("\n")
 		file.close()
 
 	def LoadInScoreboard(self):
+		#This will load in details from the scoreboard. It reads the values for each player and puts them into a temporary player strcuture which is then added to the scoreabord list.
 		file = open("gameFiles/scoreboard.txt","rt")
 		self.numberOfScores = int(file.readline())
 		for i in range(0,self.numberOfScores):
-			tempPlayer = player()#Will create a dumby player to store within the scores list
-			tempPlayer.name = file.readline().strip()#Loads in their name and score, on two separate lines. Strip is used to get rid of any leading or trailing white space.
+			tempPlayer = player()
+			tempPlayer.name = file.readline().strip()
 			tempPlayer.score = int(file.readline())
-			file.readline()#Will then skip one line, each player record has a space in between for readability
-			self.scores.append(tempPlayer)#Will add the player to the scoreboard
-		file.close()#Must close file!
+			file.readline()
+			self.scores.append(tempPlayer)
+		file.close()
 
 	def AddScoreToScoreboard(self,newPlayer):
-		#2 cases. Either the scoreboard is full or not. if not then we can just add the new score to the end and sort it. If it is full then we must check the lowest score
-		if (len(self.scores) >= self.maxNumberOfScores):#If there are 10 scores then it is full, check lowest score
-			if (newPlayer.score > self.scores[maxNumberOfScores - 1].score):#If their score is higher than the lowest score saved then replace it. Must still reorder incase its still larger than another score
+		#There are two possible cases to adding a score to the scorebaord. 1: the scoreboard is full already. If it is already full then it will compare to the last score in the scorebaord, the lowest. If the new
+		#score is higher than that, it should be added and so replaces this last score. We then resort and save the scorebaord if it was added.
+		#2: in this case the scorebaord isn't full. In this case the new score can just be added to the end of the scorebaord and it can be sorted and saved.
+		if (len(self.scores) >= self.maxNumberOfScores):
+			if (newPlayer.score > self.scores[maxNumberOfScores - 1].score):
 				self.scores[maxNumberOfScores - 1] = newPlayer
 				self.numberOfScores += 1
 				self.SortScores(0,(self.numberOfScores - 1))
-				self.SaveScoreboard()#Save these changes
-		else: #else then the new score can just be added onto the end of the scoreboard
-			self.scores.append(newPlayer)#adds onto the end
+				self.SaveScoreboard()
+		else: 
+			self.scores.append(newPlayer)
 			self.numberOfScores += 1
-			self.SortScores(0,(self.numberOfScores - 1))#sorts it again
-			self.SaveScoreboard()#Save these changes
+			self.SortScores(0,(self.numberOfScores - 1))
+			self.SaveScoreboard()
 
 class player:
-	name = ""#All variables or attributes of players
+	name = ""
 	level = 0
 	score = 0
-	password = ""#Stores their password to be used to login and out
-	controls = ['w','a','s','d','e','b']#This stores the player controls for up, left, down, right, pause and boss screen respectively
+	password = ""
+	controls = ['w','a','s','d','e','b']#This stores the player controls for up, left, down, right, pause and boss screen respectively. These will be used when actraully assigning controls in the game screen
 	# playerSnake = snake()
 
 	def LoadPlayer(self,nValue):
+		#This jsut loads in the details of the player. Important thing to note here is the loading of the controls. They are read in as a string and then a separate procedure will find the control values and
+		#insert them into the array
 		self.name = nValue
-		file = open("gameFiles/" + self.name + ".txt","rt")#This will open a file for reading in the text format based on the input name of the user
-		
-		file.readline()#Used to skip the name which is written into the file for readability
-		self.password = (file.readline()).strip()#Gets rid of white space too
-		self.level = int(file.readline())#Gets their level and score & converts them into integers
+		file = open("gameFiles/" + self.name + ".txt","rt")
+		file.readline()
+		self.password = (file.readline()).strip()
+		self.level = int(file.readline())
 		self.score = int(file.readline())
 		self.controls = ConvertToList(file.readline())
-		file.close()#Must close the file afterwards!
+		file.close()
 
 	def SavePlayer(self):
-		file = open("gameFiles/" + self.name + ".txt","wt")#Remakes the file
+		file = open("gameFiles/" + self.name + ".txt","wt")
 		file.write(self.name + "\n")
 		file.write(str(self.password) + "\n")
 		file.write(str(self.level) + "\n")
 		file.write(str(self.score) + "\n")
 		file.write(str(self.controls) + "\n")
 		file.close()
-	def CreatePlayer(self,nValue,pValue):#Will create an object for the player with the values and will create their file & save it
+	def CreatePlayer(self,nValue,pValue):
 		self.name = nValue
 		self.password = pValue
 		self.SavePlayer()
@@ -112,8 +118,8 @@ class Menu(Tk):
 
 	def __init__(self):
 		super().__init__()
-		self.geometry("500x500")#Sets the size of the window
-		self.title("Menu") #Sets the title of the window currently
+		self.geometry("500x500")
+		self.title("Menu")
 
 		#fonts
 		fontNormal = ("Default",12,"bold")
@@ -121,8 +127,8 @@ class Menu(Tk):
 		self.lbTitle = TitleLabel(self,"Game Name!")
 
 		#Buttons
-		self.btnLoadGame = Button(self,text = "Load Game", command = lambda: (self.destroy(),LoadGame()),font = fontNormal)#Creates a basic button displaying text
-		self.btnLoadGame.place(relx = 0.5, rely = 0.3, anchor = CENTER)#Will place the button relative to 0.1 of the width of the screen, 0,5 of the height of the screen and in the center
+		self.btnLoadGame = Button(self,text = "Load Game", command = lambda: (self.destroy(),LoadGame()),font = fontNormal)
+		self.btnLoadGame.place(relx = 0.5, rely = 0.3, anchor = CENTER)
 
 		self.btnCreateNewGame = Button(self,text = "Create new Game",command = lambda: (self.destroy(),NewGame()),font = fontNormal)
 		self.btnCreateNewGame.place(relx = 0.5, rely = 0.5, anchor = CENTER)
@@ -133,7 +139,6 @@ class Menu(Tk):
 
 		self.btnClose = BackButton(self,"Close",False)
 
-		#
 		self.mainloop()
 def LoadGame():
 	windowLogin = LoginScreen(False)#Opens the login screen. NewGame variable is set to false as we are loading a game
@@ -152,15 +157,16 @@ class LoginScreen(Tk):
 	btnClose = Button
 	btnLogin = Button
 
-
 	def __init__(self,newGame):
+		#Important to note here. The newGame parameter is a boolean used to tell us whether the login screen should be to login or to create a new game. Based on this the title of the screen and the
+		#function of the login button will be changed
 		super().__init__()
 		myPlayer = player()
 		self.geometry("600x600")
-		if (newGame):#If its a new game then say instead to create a new account
+		if (newGame):
 			titleText = "Create a new Game"
 		else:
-			titleText = "Login"#Otherwise it should just say to load a game
+			titleText = "Login"
 		self.title(titleText)
 
 
@@ -177,12 +183,12 @@ class LoginScreen(Tk):
 
 		self.lbPassword = Label(self,text = "Password:",font = fontBold)
 		self.lbPassword.place(relx = 0.2,rely = 0.3, anchor = CENTER)
-		self.txtPassword = Entry(self,show = "*",font = fontNormal)#show will changed this entry so that instead of actual text just * will be displayed for each character on screen for privacy
+		self.txtPassword = Entry(self,show = "*",font = fontNormal)
 		self.txtPassword.place(relx = 0.5,rely = 0.3, anchor = CENTER)
 
-		if (newGame):#If its a new game then make it a create account button
-			self.btnLogin = Button(self,text = "Create new game",font = fontBold, command = lambda: self.CreateNewPlayer(myPlayer,self.txtName.get(),self.txtPassword.get()))#lambda used here otherwise the command will be initiated as soon as the button is made
-		else:#Else if it is just loading a game then make a login button
+		if (newGame):
+			self.btnLogin = Button(self,text = "Create new game",font = fontBold, command = lambda: self.CreateNewPlayer(myPlayer,self.txtName.get(),self.txtPassword.get()))
+		else:
 			self.btnLogin = Button(self,text = "Login",font = fontBold, command = lambda: self.Login(myPlayer,self.txtName.get(),self.txtPassword.get()) )
 		self.btnLogin.place(relx = 0.5,rely = 0.4, anchor = CENTER)
 
@@ -196,19 +202,23 @@ class LoginScreen(Tk):
 		self.mainloop()
 
 	def Login(self,myPlayer,name,password):
+		#This is a basic login function. It loads the player in and checks if their entered password matches the saved one
 		myPlayer.LoadPlayer(name)
-		if (myPlayer.password == password):#If there password is correct
-			messagebox.showinfo("Login","Logged in!")#Log them in, don't start game yet as they may want to do something else
-		else:#Do nothing if it is wrong, let them enter it again
+		if (myPlayer.password == password):
+			messagebox.showinfo("Login","Logged in!")
+		else:
 			messagebox.showinfo("Login","Password incorrect, try again!")
+
 	def CreateNewPlayer(self,myPlayer,name,password):
+		#This sub will create a player file for the new player. Doing this will create an eror if the player exists already. Therefore this will be caught and an error message displayed. If it is a new player
+		#Then the player will be made with the input name and password, and will be saved to the new file
 		try:
-			file = open("gameFiles/" + name + ".txt","xt")#Creates the file for the user. If it exists then this will cause and erorr thus triggering the Except statement
+			file = open("gameFiles/" + name + ".txt","xt")
 			file.close()
 			myPlayer.CreatePlayer(name,password)
 			messagebox.showinfo("Login","Account has been made!")
 
-		except FileExistsError:#do nothing other than tell them that the name exists, let them reenter details
+		except FileExistsError:
 			messagebox.showinfo("Login","User already exists! Please use a different name")
 
 class ScoreboardScreen(Tk):
@@ -229,20 +239,24 @@ class ScoreboardScreen(Tk):
 
 		self.btnClose = BackButton(self,"Back",True)
 
-		self.scoreBox = Text(self, font = fontNormal)#This makes a simple textbox for the scoreboard with the attributes mentioned
+		self.scoreBox = Text(self, font = fontNormal)
 		self.scoreBox.place(relx = 0.5,rely = 0.5,anchor = CENTER)
 
-		self.scoreboard.LoadInScoreboard()
-
-		scoreText = ""
-		for i in range(0 ,self.scoreboard.numberOfScores):#Loops through every single score in the scorebaord and displays them. This way incase the number of scores on the board changes
-			self.scoreBox.insert(INSERT,str(i + 1) + ".")#Will add the scoreboard text to the text box. The INSERT is the location of where to insert the text. This means to just insert it to the end
-			#The part above will add the 1. or 2. or n. to each score to signify where they are in the rank
-			self.scoreBox.insert(INSERT,self.scoreboard.scores[i].name + " : " + str(self.scoreboard.scores[i].score))#Will print their name and then score
-			for j in range(0,3):
-				self.scoreBox.insert(INSERT, "\n")#Will insert 3 lines between text to ensure each player entry is really spaced out
-		self.scoreBox.configure(state = 'disabled')#Makes the textbox read-only so that the user cannot edit it. Does this now as the text has been set
+		self.DisplayScoreboard()
 		self.mainloop()
+
+	def DisplayScoreboard(self):
+		#This procedure will load the scorebaord in. It will then format them into the text box on the screen in the fornat of 'placeOnScorebaord. Name: Score'. It will also make it so the scoreboard is read
+		#only afterwards to prevent the player from altering scores
+		self.scoreboard.LoadInScoreboard()
+		scoreText = ""
+		for i in range(0 ,self.scoreboard.numberOfScores):
+			self.scoreBox.insert(INSERT,str(i + 1) + ".")
+			self.scoreBox.insert(INSERT,self.scoreboard.scores[i].name + " : " + str(self.scoreboard.scores[i].score))
+			for j in range(0,3):
+				self.scoreBox.insert(INSERT, "\n")
+		self.scoreBox.configure(state = 'disabled')
+
 def OpenScoreboard():
 	windowScoreboard = ScoreboardScreen()
 
@@ -316,7 +330,7 @@ class ControlsScreen(Tk):
 		self.txtBossControl = Entry(self,font = fontNormal)
 		self.txtBossControl.place(relx = 0.5,rely = 0.7, anchor = CENTER)
 
-		self.DisplayControls(myPlayer)
+		self.DisplayControls(myPlayer) #This fills in all of the text boxes with the values of the controls
 
 		self.btnResetControls = Button(self,text = "Reset Controls" ,command = lambda:(self.ResetControls(myPlayer)),font = fontBold)
 		self.btnResetControls.place(relx = 0.3,rely = 0.8,anchor = CENTER)
@@ -328,10 +342,12 @@ class ControlsScreen(Tk):
 		self.mainloop()
 
 	def ResetControls(self,myPlayer):
+		#This procedure will set and save the player controls to the default. It then redisplays them on screen
 		myPlayer.ResetControls()
 		self.DisplayControls(myPlayer)
 
 	def DisplayControls(self,myPlayer):
+		# This procedure will delete all of the text within the entry controls and will then re-insert all of the player controls. Must do this due to the entry control
 		self.txtUpControl.delete(0,"end")
 		self.txtLeftControl.delete(0,"end")
 		self.txtDownControl.delete(0,"end")
@@ -348,6 +364,7 @@ class ControlsScreen(Tk):
 
 
 	def SaveChanges(self,myPlayer):
+		#This procedure gets the text fromm all of the entries, strips away any white space connected to the controls and will then fill in the player controls list.
 		myPlayer.controls[0] = self.txtUpControl.get().strip()
 		myPlayer.controls[1] = self.txtLeftControl.get().strip()
 		myPlayer.controls[2] = self.txtDownControl.get().strip()
@@ -356,34 +373,32 @@ class ControlsScreen(Tk):
 		myPlayer.controls[5] = self.txtBossControl.get().strip()
 		myPlayer.SavePlayer()
 		messagebox.showinfo("Saved!","Changes to controls have been saved!")
-
-
 def OpenControlsScreen(myPlayer):
+	#This procedure only displays if the player is logged in as we need their controls, without that this screen is useless
 	if (myPlayer.name == ""):
 		messagebox.showinfo("Error","Please Login first!")
 	else:
 		windowControlsScreen = ControlsScreen(myPlayer)
 
 #Classees for general controls
-class BackButton(Button):	
+class BackButton(Button):
+	#This is a reusable back button. It will position itself in the same and correct place on screen each time. It's text will change based on the input parameter as some back buttons must say back
+	#Whilst others need to say quit. It also takes the boolean value of openMenu which is used to tell whether we should reopen the menu after closing the parentwindow (the window it is put into)
+	# So if that value is true then it will reopen the menu like for the login screen
 	def __init__(self,parentWindow,textValue,openMenu):
 		super().__init__()
 		self = Button(parentWindow,text = textValue,font = ("Default",12,"bold"))
 		self.place(relx = 0.5, rely = 0.9, anchor = CENTER)
-		#Below Will reopn the menu if the value of openMenu is true. This is so that screens like the controls screen don't open the menu but the login does
 		if (openMenu):
 			self.configure(command = lambda:(parentWindow.destroy(),BeginGame()))
 		else:
 			self.configure(command = lambda:(parentWindow.destroy()))
 class TitleLabel(Label):
+	#This is a reusable title label. It will fomrat and position the label correctly on the screen and will fill in the text based on the input parameter
 	def __init__(self,parentWindow,textValue):
 		super().__init__()
 		self = Label(parentWindow,text = textValue,font = ("Default",30,"bold","underline")) 
 		self.place(relx = 0.5, rely = 0.1, anchor = CENTER)
-
-
-
-
 
 #General Procedures
 def ConvertToList(string):#This is used to convert a string containing a list to an actual list variable
