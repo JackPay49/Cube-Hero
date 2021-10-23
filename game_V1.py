@@ -2,8 +2,37 @@ import tkinter
 from tkinter import *
 from tkinter import messagebox
 
+screenWidth = 1600
+screenHeight = 900
+screenResolution = (str(screenWidth) + "x" + str(screenHeight))
+
 #Classes
-# class snake:
+class Snake:
+	width = 38
+	height = 38
+	color = 'red'
+	length = 3
+
+	bodyX = [10,10,10]
+	bodyY = [10,9,8]
+
+	facing = "UP"#Could be UP,DOWN,RIGHT,LEFT to move the snake
+
+	def Move(self):
+		if (self.facing == "UP"):
+			for i in range(0,self.length):
+				bodyY[i] -=1
+		elif (self.facing == "DOWN"):
+			for i in range(0,self.length):
+				bodyY[i] +=1
+		elif (self.facing == "RIGHT"):
+			for i in range(0,self.length):
+				bodyX[i] +=1
+		elif (self.facing == "LEFT"):
+			for i in range(0,self.length):
+				bodyX[i] -=1
+
+
 
 class Scoreboard:
 
@@ -76,7 +105,7 @@ class player:
 	level = 0
 	score = 0
 	password = ""
-	controls = ['w','a','s','d','e','b']#This stores the player controls for up, left, down, right, pause and boss screen respectively. These will be used when actraully assigning controls in the game screen
+	controls = ['W','A','S','D','E','B']#This stores the player controls for up, left, down, right, pause and boss screen respectively. These will be used when actraully assigning controls in the game screen
 	# playerSnake = snake()
 
 	def LoadPlayer(self,nValue):
@@ -105,7 +134,7 @@ class player:
 		self.SavePlayer()
 
 	def ResetControls(self):
-		self.controls = ['w','a','s','d','e','b']
+		self.controls = ['W','A','S','D','E','B']
 		self.SavePlayer()
 
 class Menu(Tk):
@@ -260,13 +289,7 @@ class ScoreboardScreen(Tk):
 def OpenScoreboard():
 	windowScoreboard = ScoreboardScreen()
 
-class GameScreen(Tk):
-	def __init__(self):
-		super().__init__()
-		self.title("Game screen")
-		self.geometry("1000x1000")
-def OpenGameScreen(myPlayer):
-	gameScreen = GameScreen()
+
 
 class ControlsScreen(Tk):
 	lbUpControl = Label
@@ -400,6 +423,60 @@ class TitleLabel(Label):
 		self = Label(parentWindow,text = textValue,font = ("Default",30,"bold","underline")) 
 		self.place(relx = 0.5, rely = 0.1, anchor = CENTER)
 
+#Main game
+class GameScreen(Tk):
+	background = Canvas
+
+	backgroundWidth = 800
+	backgroundHeight = 800
+	numberOfVerticalLines = 20
+	numberOfHorizontalLines = 20
+
+	lastPlayerControl = "UP"
+	def __init__(self):
+		#This procedure will set up the background for the game. It creates a canvas on the screen and draws a grid on 
+		#that. The loop draws this grid, firstly it draws two lines as the top and left borders. It then draws 21 
+		#horizontal and 21 vertical lines to create the grid with borders. This is so that snakes can be painted in
+		super().__init__()
+		self.title("Game screen")
+		self.geometry(screenResolution)
+
+		self.background = Canvas(self,width = self.backgroundWidth,height = self.backgroundHeight)
+		self.background.place(relx = 0.5,rely = 0.5, anchor = CENTER)
+		self.background.configure(bg = 'white')
+		self.background.pack()
+
+
+		self.background.create_line(1,0,1,self.backgroundHeight)
+		self.background.create_line(0,1,self.backgroundWidth,1)
+
+		for i in range(1,(self.numberOfVerticalLines + 1) ):
+			xposition = (i * (self.backgroundWidth/self.numberOfVerticalLines))
+			self.background.create_line(xposition,0,xposition,self.backgroundHeight)
+
+		for i in range(1,(self.numberOfHorizontalLines + 1)):
+			yPosition = (i * (self.backgroundHeight/self.numberOfHorizontalLines))
+			self.background.create_line(0,yPosition,self.backgroundWidth,yPosition)
+
+		basicSnake = Snake()
+		self.PaintSnake(basicSnake)
+
+	def PaintSnake(self,snake):
+		gridBoxWidth = self.backgroundWidth/self.numberOfHorizontalLines
+		for i in range(0,snake.length):
+			leftCornerX = snake.bodyX[i] * gridBoxWidth
+			leftCornerY = snake.bodyY[i] * gridBoxWidth
+			rightCornerX = (snake.bodyX[i] + 1) * gridBoxWidth
+			rightCornerY = (snake.bodyY[i] + 1) * gridBoxWidth
+
+			self.background.create_rectangle(leftCornerX,leftCornerY,rightCornerX,rightCornerY,outline = snake.color,fill = snake.color)
+
+	def StartGameCycle():
+
+
+def OpenGameScreen(myPlayer):
+	gameScreen = GameScreen()
+
 #General Procedures
 def ConvertToList(string):#This is used to convert a string containing a list to an actual list variable
 	#This is used to convert a string to a list. It will move through each item skipping them if they are any of the list 
@@ -419,6 +496,7 @@ def ConvertToList(string):#This is used to convert a string containing a list to
 
 #Main sub that runs the program
 def BeginGame():
+	global screenResolution,screenWidth,screenHeight
 	windowMenu = Menu() 
 
 
