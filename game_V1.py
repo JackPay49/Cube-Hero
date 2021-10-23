@@ -1,4 +1,4 @@
-import tkinter
+import tkinter,time
 from tkinter import *
 from tkinter import messagebox
 
@@ -21,16 +21,20 @@ class Snake:
 	def Move(self):
 		if (self.facing == "UP"):
 			for i in range(0,self.length):
-				bodyY[i] -=1
+				self.bodyY[i] -=1
 		elif (self.facing == "DOWN"):
 			for i in range(0,self.length):
-				bodyY[i] +=1
+				self.bodyY[i] +=1
 		elif (self.facing == "RIGHT"):
 			for i in range(0,self.length):
-				bodyX[i] +=1
+				self.bodyX[i] +=1
 		elif (self.facing == "LEFT"):
 			for i in range(0,self.length):
-				bodyX[i] -=1
+				self.bodyX[i] -=1
+
+	# def UpAction(self):
+	# 	if 
+
 
 
 
@@ -100,13 +104,14 @@ class Scoreboard:
 			self.SortScores(0,(self.numberOfScores - 1))
 			self.SaveScoreboard()
 
-class player:
+class Player:
 	name = ""
 	level = 0
 	score = 0
 	password = ""
-	controls = ['W','A','S','D','E','B']#This stores the player controls for up, left, down, right, pause and boss screen respectively. These will be used when actraully assigning controls in the game screen
-	# playerSnake = snake()
+	controls = ['w','a','s','d','e','b']#This stores the player controls for up, left, down, right, pause and boss screen respectively. These will be used when actraully assigning controls in the game screen
+	
+	snake = Snake()
 
 	def LoadPlayer(self,nValue):
 		#This jsut loads in the details of the player. Important thing to note here is the loading of the controls. They are read in as a string and then a separate procedure will find the control values and
@@ -134,7 +139,7 @@ class player:
 		self.SavePlayer()
 
 	def ResetControls(self):
-		self.controls = ['W','A','S','D','E','B']
+		self.controls = ['w','a','s','d','e','b']
 		self.SavePlayer()
 
 class Menu(Tk):
@@ -190,7 +195,7 @@ class LoginScreen(Tk):
 		#Important to note here. The newGame parameter is a boolean used to tell us whether the login screen should be to login or to create a new game. Based on this the title of the screen and the
 		#function of the login button will be changed
 		super().__init__()
-		myPlayer = player()
+		myPlayer = Player()
 		self.geometry("600x600")
 		if (newGame):
 			titleText = "Create a new Game"
@@ -433,7 +438,8 @@ class GameScreen(Tk):
 	numberOfHorizontalLines = 20
 
 	lastPlayerControl = "UP"
-	def __init__(self):
+	myPlayer = Player()
+	def __init__(self,myPlayer):
 		#This procedure will set up the background for the game. It creates a canvas on the screen and draws a grid on 
 		#that. The loop draws this grid, firstly it draws two lines as the top and left borders. It then draws 21 
 		#horizontal and 21 vertical lines to create the grid with borders. This is so that snakes can be painted in
@@ -441,6 +447,16 @@ class GameScreen(Tk):
 		self.title("Game screen")
 		self.geometry(screenResolution)
 
+		self.SetUpBackground()
+
+		self.myPlayer = myPlayer
+		self.PaintSnake(self.myPlayer.snake)
+
+		self.StartGameCycle()
+
+		self.SetUpControls()
+
+	def SetUpBackground(self):
 		self.background = Canvas(self,width = self.backgroundWidth,height = self.backgroundHeight)
 		self.background.place(relx = 0.5,rely = 0.5, anchor = CENTER)
 		self.background.configure(bg = 'white')
@@ -458,8 +474,36 @@ class GameScreen(Tk):
 			yPosition = (i * (self.backgroundHeight/self.numberOfHorizontalLines))
 			self.background.create_line(0,yPosition,self.backgroundWidth,yPosition)
 
-		basicSnake = Snake()
-		self.PaintSnake(basicSnake)
+	def SetUpControls(self):
+		self.bind(("<" + self.myPlayer.controls[0] + ">"),self.UpAction)
+		self.bind(("<" + self.myPlayer.controls[1] + ">"),self.LeftAction)
+		self.bind(("<" + self.myPlayer.controls[2] + ">"),self.DownAction)
+		self.bind(("<" + self.myPlayer.controls[3] + ">"),self.RightAction)
+		self.bind(("<" + self.myPlayer.controls[4] + ">"),self.Pause)
+		self.bind(("<" + self.myPlayer.controls[5] + ">"),self.BossScreen)
+
+	def UpAction(self):
+		self.lastPlayerControl = "Up"
+		self.myPlayer.snake.UpAction()
+
+	def LeftAction(self):
+		self.lastPlayerControl = "Left"
+		self.myPlayer.snake.LeftAction()
+
+	def DownAction(self):
+		self.lastPlayerControl = "Down"
+		self.myPlayer.snake.UpAction()
+
+	def RightAction(self):
+		self.lastPlayerControl = "Right"
+		self.myPlayer.snake.RightAction()
+
+	def Pause(self):
+		self.lastPlayerControl = "Pause"
+
+	def BossScreen(self):
+		self.lastPlayerControl = "BossScreen"
+
 
 	def PaintSnake(self,snake):
 		gridBoxWidth = self.backgroundWidth/self.numberOfHorizontalLines
@@ -471,11 +515,16 @@ class GameScreen(Tk):
 
 			self.background.create_rectangle(leftCornerX,leftCornerY,rightCornerX,rightCornerY,outline = snake.color,fill = snake.color)
 
-	def StartGameCycle():
+	def StartGameCycle(self):
+		if ((self.lastPlayerControl != "Pause") and (self.lastPlayerControl != "BossScreen")):
+			self.background.delete(ALL)
+			self.myPlayer.snake.Move()
+			self.PaintSnake(self.myPlayer.snake)
+			self.after(200,self.StartGameCycle)
 
 
 def OpenGameScreen(myPlayer):
-	gameScreen = GameScreen()
+	gameScreen = GameScreen(myPlayer)
 
 #General Procedures
 def ConvertToList(string):#This is used to convert a string containing a list to an actual list variable
