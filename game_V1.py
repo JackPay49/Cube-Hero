@@ -7,47 +7,64 @@ screenHeight = 900
 screenResolution = (str(screenWidth) + "x" + str(screenHeight))
 
 #Classes
+
+
+class Block:
+	x = 0
+	y = 0
+	facing = "Up"
+	def __init__(self,xValue,yValue,fValue):
+		self.x = xValue
+		self.y = yValue
+		self.facing = fValue
+
 class Snake:
 	width = 38
 	height = 38
 	color = 'red'
-	length = 3
+	length = 6
 
-	bodyX = [10,10,10]
-	bodyY = [10,9,8]
+	body = [Block(10,5,"Up"),Block(10,6,"Up"),Block(10,7,"Up"),Block(10,8,"Up"),Block(10,9,"Up"),Block(10,10,"Up")]
 
-	facing = "Up"#Could be UP,DOWN,RIGHT,LEFT to move the snake
+	turningPoints = []
 
 	def Move(self):
-		if (self.facing == "Up"):
-			for i in range(0,self.length):
-				self.bodyY[i] -=1
-		elif (self.facing == "Down"):
-			for i in range(0,self.length):
-				self.bodyY[i] +=1
-		elif (self.facing == "Right"):
-			for i in range(0,self.length):
-				self.bodyX[i] += 1
-		elif (self.facing == "Left"):
-			for i in range(0,self.length):
-				self.bodyX[i] -=1
+		indexToRemove = -1
+		for i in range(0,self.length):
+			for j in range(0,len(self.turningPoints)):
+				if ((self.body[i].x == self.turningPoints[j].x) and (self.body[i].y == self.turningPoints[j].y)):
+					self.body[i].facing = self.turningPoints[j].facing
+					if (i == (self.length - 1)):
+						indexToRemove = j
+			if (indexToRemove != -1):
+				self.turningPoints.remove(self.turningPoints[indexToRemove])
+			if (self.body[i].facing == "Up"):
+				self.body[i].y -=1
+			elif (self.body[i].facing == "Down"):
+				self.body[i].y +=1
+			elif (self.body[i].facing == "Right"):
+				self.body[i].x += 1
+			elif (self.body[i].facing == "Left"):
+				self.body[i].x -=1
 
 	def UpAction(self,event):
-		if ((self.facing == "Right") or (self.facing == "Left")):
-			self.facing = "Up"
+		if ((self.body[0].facing == "Right") or (self.body[0].facing == "Left")):
+			self.body[0].facing = "Up"
+			self.turningPoints.append(Block(self.body[0].x,self.body[0].y,self.body[0].facing))
+
 	def LeftAction(self,event):
-		if ((self.facing == "Up") or (self.facing == "Down")):
-			self.facing = "Left"
+		if ((self.body[0].facing == "Up") or (self.body[0].facing == "Down")):
+			self.body[0].facing = "Left"
+			self.turningPoints.append(Block(self.body[0].x,self.body[0].y,self.body[0].facing))
+
 	def DownAction(self,event):
-		if ((self.facing == "Right") or (self.facing == "Left")):
-			self.facing = "Down"
+		if ((self.body[0].facing == "Right") or (self.body[0].facing == "Left")):
+			self.body[0].facing = "Down"
+			self.turningPoints.append(Block(self.body[0].x,self.body[0].y,self.body[0].facing))
 	def RightAction(self,event):
-		if ((self.facing == "Up") or (self.facing == "Down")):
-			self.facing = "Right"
-
-
-
-
+		if ((self.body[0].facing == "Up") or (self.body[0].facing == "Down")):
+			self.body[0].facing = "Right"
+			self.turningPoints.append(Block(self.body[0].x,self.body[0].y,self.body[0].facing))
 
 class Scoreboard:
 
@@ -504,10 +521,10 @@ class GameScreen(Tk):
 	def PaintSnake(self,snake):
 		gridBoxWidth = self.backgroundWidth/self.numberOfHorizontalLines
 		for i in range(0,snake.length):
-			leftCornerX = snake.bodyX[i] * gridBoxWidth
-			leftCornerY = snake.bodyY[i] * gridBoxWidth
-			rightCornerX = (snake.bodyX[i] + 1) * gridBoxWidth
-			rightCornerY = (snake.bodyY[i] + 1) * gridBoxWidth
+			leftCornerX = snake.body[i].x * gridBoxWidth
+			leftCornerY = snake.body[i].y * gridBoxWidth
+			rightCornerX = (snake.body[i].x + 1) * gridBoxWidth
+			rightCornerY = (snake.body[i].y + 1) * gridBoxWidth
 
 			self.background.create_rectangle(leftCornerX,leftCornerY,rightCornerX,rightCornerY,outline = snake.color,fill = snake.color)
 
