@@ -16,24 +16,35 @@ class Snake:
 	bodyX = [10,10,10]
 	bodyY = [10,9,8]
 
-	facing = "UP"#Could be UP,DOWN,RIGHT,LEFT to move the snake
+	facing = "Up"#Could be UP,DOWN,RIGHT,LEFT to move the snake
 
 	def Move(self):
-		if (self.facing == "UP"):
+		if (self.facing == "Up"):
 			for i in range(0,self.length):
 				self.bodyY[i] -=1
-		elif (self.facing == "DOWN"):
+		elif (self.facing == "Down"):
 			for i in range(0,self.length):
 				self.bodyY[i] +=1
-		elif (self.facing == "RIGHT"):
+		elif (self.facing == "Right"):
 			for i in range(0,self.length):
-				self.bodyX[i] +=1
-		elif (self.facing == "LEFT"):
+				self.bodyX[i] += 1
+		elif (self.facing == "Left"):
 			for i in range(0,self.length):
 				self.bodyX[i] -=1
 
-	# def UpAction(self):
-	# 	if 
+	def UpAction(self,event):
+		if ((self.facing == "Right") or (self.facing == "Left")):
+			self.facing = "Up"
+	def LeftAction(self,event):
+		if ((self.facing == "Up") or (self.facing == "Down")):
+			self.facing = "Left"
+	def DownAction(self,event):
+		if ((self.facing == "Right") or (self.facing == "Left")):
+			self.facing = "Down"
+	def RightAction(self,event):
+		if ((self.facing == "Up") or (self.facing == "Down")):
+			self.facing = "Right"
+
 
 
 
@@ -437,8 +448,9 @@ class GameScreen(Tk):
 	numberOfVerticalLines = 20
 	numberOfHorizontalLines = 20
 
-	lastPlayerControl = "UP"
 	myPlayer = Player()
+
+	paused = False
 	def __init__(self,myPlayer):
 		#This procedure will set up the background for the game. It creates a canvas on the screen and draws a grid on 
 		#that. The loop draws this grid, firstly it draws two lines as the top and left borders. It then draws 21 
@@ -475,34 +487,18 @@ class GameScreen(Tk):
 			self.background.create_line(0,yPosition,self.backgroundWidth,yPosition)
 
 	def SetUpControls(self):
-		self.bind(("<" + self.myPlayer.controls[0] + ">"),self.UpAction)
-		self.bind(("<" + self.myPlayer.controls[1] + ">"),self.LeftAction)
-		self.bind(("<" + self.myPlayer.controls[2] + ">"),self.DownAction)
-		self.bind(("<" + self.myPlayer.controls[3] + ">"),self.RightAction)
+		self.bind(("<" + self.myPlayer.controls[0] + ">"),self.myPlayer.snake.UpAction)
+		self.bind(("<" + self.myPlayer.controls[1] + ">"),self.myPlayer.snake.LeftAction)
+		self.bind(("<" + self.myPlayer.controls[2] + ">"),self.myPlayer.snake.DownAction)
+		self.bind(("<" + self.myPlayer.controls[3] + ">"),self.myPlayer.snake.RightAction)
 		self.bind(("<" + self.myPlayer.controls[4] + ">"),self.Pause)
 		self.bind(("<" + self.myPlayer.controls[5] + ">"),self.BossScreen)
 
-	def UpAction(self):
-		self.lastPlayerControl = "Up"
-		self.myPlayer.snake.UpAction()
+	def Pause(self,event):
+		self.paused = True
 
-	def LeftAction(self):
-		self.lastPlayerControl = "Left"
-		self.myPlayer.snake.LeftAction()
-
-	def DownAction(self):
-		self.lastPlayerControl = "Down"
-		self.myPlayer.snake.UpAction()
-
-	def RightAction(self):
-		self.lastPlayerControl = "Right"
-		self.myPlayer.snake.RightAction()
-
-	def Pause(self):
-		self.lastPlayerControl = "Pause"
-
-	def BossScreen(self):
-		self.lastPlayerControl = "BossScreen"
+	def BossScreen(self,event):
+		self.paused = True
 
 
 	def PaintSnake(self,snake):
@@ -516,7 +512,7 @@ class GameScreen(Tk):
 			self.background.create_rectangle(leftCornerX,leftCornerY,rightCornerX,rightCornerY,outline = snake.color,fill = snake.color)
 
 	def StartGameCycle(self):
-		if ((self.lastPlayerControl != "Pause") and (self.lastPlayerControl != "BossScreen")):
+		if (not self.paused):
 			self.background.delete(ALL)
 			self.myPlayer.snake.Move()
 			self.PaintSnake(self.myPlayer.snake)
