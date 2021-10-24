@@ -10,6 +10,8 @@ screenResolution = (str(screenWidth) + "x" + str(screenHeight))
 
 
 class Block:
+	#Below class is used to store a position on the baord and a direction. This is to store a single section
+	#of a snake. This is used when the snake is turninng and moving and just within a snake class
 	x = 0
 	y = 0
 	facing = "Up"
@@ -23,30 +25,44 @@ class Snake:
 	height = 38
 	color = 'red'
 	length = 6
-
+	#The below list stores the actual body of the snake. It stores the position on the board of each section and
+	#the direction that block is moving in as the different parts can be moving in different ways
 	body = [Block(10,5,"Up"),Block(10,6,"Up"),Block(10,7,"Up"),Block(10,8,"Up"),Block(10,9,"Up"),Block(10,10,"Up")]
 
+	#Below stores positions on the board. When part of the snake reaches them they should turn in a different
+	#direction
 	turningPoints = []
 
 	def Move(self):
-		indexToRemove = -1
+		#This sub moves the snake. For each section of the snake's body it will first check if the body has reached a turning point on the baord. If the
+		# body section has then it will turn it's direction to the one stored in the turning point. If the final section of the snake passes a turning
+		#point then that turning point is no longer needed and therefore it is remvoed from the turning point list. This sub will then move the body of 
+		#snake by just adding or subtracting from the position of the body.
+		#This procedure is used every single game cycle
+		indexToRemove = -1 #Below is used to validate whether the body has reached a turning point and then chagning the direction of movement
 		for i in range(0,self.length):
 			for j in range(0,len(self.turningPoints)):
 				if ((self.body[i].x == self.turningPoints[j].x) and (self.body[i].y == self.turningPoints[j].y)):
 					self.body[i].facing = self.turningPoints[j].facing
 					if (i == (self.length - 1)):
 						indexToRemove = j
+			#Below is used to remove the turning point once the final body section has passed through
 			if (indexToRemove != -1):
 				self.turningPoints.remove(self.turningPoints[indexToRemove])
+			#Below does the actual movement
 			if (self.body[i].facing == "Up"):
-				self.body[i].y -=1
+				self.body[i].y -= 1
 			elif (self.body[i].facing == "Down"):
-				self.body[i].y +=1
+				self.body[i].y += 1
 			elif (self.body[i].facing == "Right"):
 				self.body[i].x += 1
 			elif (self.body[i].facing == "Left"):
-				self.body[i].x -=1
+				self.body[i].x -= 1
 
+	#The below procedures all do the same function for the different directions. They will check to ensure that the movement is valid. So for example
+	#the snake can only turn right if it is moving up or down. Otherwise it is already going right or it cannot do a full 180 degree turn
+	#The procedures will then change which direction the head of the snake, the first block, is moving and will add the turning point to the list. It
+	#adds the turning point after changing the direction the head is moving as otherwise the rest of the body would keep on moving
 	def UpAction(self,event):
 		if ((self.body[0].facing == "Right") or (self.body[0].facing == "Left")):
 			self.body[0].facing = "Up"
@@ -462,37 +478,36 @@ class GameScreen(Tk):
 
 	backgroundWidth = 800
 	backgroundHeight = 800
-	numberOfVerticalLines = 20
-	numberOfHorizontalLines = 20
+	numberOfVerticalLines = 100
+	numberOfHorizontalLines = 100
+
+	gameCycleLength = 200 #In milliseconds
 
 	myPlayer = Player()
 
 	paused = False
 	def __init__(self,myPlayer):
-		#This procedure will set up the background for the game. It creates a canvas on the screen and draws a grid on 
-		#that. The loop draws this grid, firstly it draws two lines as the top and left borders. It then draws 21 
-		#horizontal and 21 vertical lines to create the grid with borders. This is so that snakes can be painted in
 		super().__init__()
 		self.title("Game screen")
 		self.geometry(screenResolution)
 
-		self.SetUpBackground()
-
-		self.myPlayer = myPlayer
-		self.PaintSnake(self.myPlayer.snake)
-
-		self.StartGameCycle()
-
-		self.SetUpControls()
-
-	def SetUpBackground(self):
 		self.background = Canvas(self,width = self.backgroundWidth,height = self.backgroundHeight)
 		self.background.place(relx = 0.5,rely = 0.5, anchor = CENTER)
 		self.background.configure(bg = 'white')
 		self.background.pack()
+		self.DisplayGrid()
 
+		self.myPlayer = myPlayer
+		self.DisplaySnake(self.myPlayer.snake)
 
-		self.background.create_line(1,0,1,self.backgroundHeight)
+		self.StartGameCycle()
+		self.SetUpControls()
+
+	def DisplayGrid(self):
+		#This procedure will set up the grid for the game. It creates a canvas on the screen and draws a grid on 
+		#that. The loop draws this grid, firstly it draws two lines as the top and left borders. It then draws 21 
+		#horizontal and 21 vertical lines to create the grid with borders. This is so that snakes can be painted in
+		self.background.create_line(1,0,1,self.backgroundHeight)#Must draw these lines separate otherwise they would appear outside of the canvas
 		self.background.create_line(0,1,self.backgroundWidth,1)
 
 		for i in range(1,(self.numberOfVerticalLines + 1) ):
@@ -502,8 +517,8 @@ class GameScreen(Tk):
 		for i in range(1,(self.numberOfHorizontalLines + 1)):
 			yPosition = (i * (self.backgroundHeight/self.numberOfHorizontalLines))
 			self.background.create_line(0,yPosition,self.backgroundWidth,yPosition)
-
 	def SetUpControls(self):
+		#This procedure makes all of the keybinds to be used in game. It makes them using what the player input for their controls
 		self.bind(("<" + self.myPlayer.controls[0] + ">"),self.myPlayer.snake.UpAction)
 		self.bind(("<" + self.myPlayer.controls[1] + ">"),self.myPlayer.snake.LeftAction)
 		self.bind(("<" + self.myPlayer.controls[2] + ">"),self.myPlayer.snake.DownAction)
@@ -515,10 +530,16 @@ class GameScreen(Tk):
 		self.paused = True
 
 	def BossScreen(self,event):
-		self.paused = True
+		if (self.paused == True):
+			self.paused = False
+			self.StartGameCycle()
+		else:
+			self.paused = True
 
 
-	def PaintSnake(self,snake):
+	def DisplaySnake(self,snake):
+		#This will display a specific snake onto the screen. It calculates the position on the baord of each section of the snake based on the 
+		#canvas width and the number of grid lines and will draw each body section onto the canvas. This is used every single game cycle
 		gridBoxWidth = self.backgroundWidth/self.numberOfHorizontalLines
 		for i in range(0,snake.length):
 			leftCornerX = snake.body[i].x * gridBoxWidth
@@ -529,11 +550,14 @@ class GameScreen(Tk):
 			self.background.create_rectangle(leftCornerX,leftCornerY,rightCornerX,rightCornerY,outline = snake.color,fill = snake.color)
 
 	def StartGameCycle(self):
+		#This procedure does the game loop. On every iteration it clears the entire board, moves each of the snakes and will then redraw all of the
+		#snakes in their new positions. The final instruction is used to make the delay between moves and to carry on the iterative procedure.
 		if (not self.paused):
 			self.background.delete(ALL)
+			self.DisplayGrid()
 			self.myPlayer.snake.Move()
-			self.PaintSnake(self.myPlayer.snake)
-			self.after(200,self.StartGameCycle)
+			self.DisplaySnake(self.myPlayer.snake)
+			self.after(self.gameCycleLength,self.StartGameCycle)
 
 
 def OpenGameScreen(myPlayer):
