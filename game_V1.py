@@ -1,4 +1,4 @@
-import tkinter,time
+import tkinter,time,random
 from tkinter import *
 from tkinter import messagebox
 
@@ -24,10 +24,10 @@ class Snake:
 	width = 38
 	height = 38
 	color = 'red'
-	length = 6
+	length = 0
 	#The below list stores the actual body of the snake. It stores the position on the board of each section and
 	#the direction that block is moving in as the different parts can be moving in different ways
-	body = [Block(10,5,"Up"),Block(10,6,"Up"),Block(10,7,"Up"),Block(10,8,"Up"),Block(10,9,"Up"),Block(10,10,"Up")]
+	body = []
 
 	#Below stores positions on the board. When part of the snake reaches them they should turn in a different
 	#direction
@@ -81,6 +81,57 @@ class Snake:
 		if ((self.body[0].facing == "Up") or (self.body[0].facing == "Down")):
 			self.body[0].facing = "Right"
 			self.turningPoints.append(Block(self.body[0].x,self.body[0].y,self.body[0].facing))
+
+	def CheckPosition(self,gameScreen,x,y):
+		print(x,",",y)
+		if ((x < 0) or (x > gameScreen.numberOfHorizontalLines) or (y < 0) or (y > gameScreen.numberOfVerticalLines)):
+			return False
+		else:
+			for i in range(0,self.length):
+				if ((x == self.body[i].x) and (y == self.body[i].y)):
+					return False
+		return True
+
+
+	def GenerateSnakeBody(self,gameScreen,x,y,lValue):
+		directionOfMovement = ""
+		xPosition = x
+		yPosition = y
+		valid = False
+		allDirections = ["Up","Left","Down","Right"]
+		directionOfGeneration = random.choice(allDirections)
+		for i in range(0,lValue):
+			allDirections = ["Up","Left","Down","Right"]
+			while(not valid):			
+				xPosition = x
+				yPosition = y
+				if (directionOfGeneration == "Up"):
+					directionOfMovement = "Down"
+					yPosition -= i
+				elif(directionOfGeneration == "Down"):
+					directionOfMovement = "Up"
+					yPosition += i
+				elif(directionOfGeneration == "Right"):
+					directionOfMovement = "Left"
+					xPosition += i
+				elif(directionOfGeneration == "Left"):
+					directionOfMovement = "Right"
+					xPosition -= i
+
+				if (self.CheckPosition(gameScreen,xPosition,yPosition)):
+					valid = True
+					self.body.append(Block(xPosition,yPosition,directionOfMovement))
+					self.length += 1
+				else:
+					valid = False
+					print(allDirections)
+					print(directionOfGeneration)
+					allDirections.remove(directionOfGeneration)
+					if (len(allDirections) == 0):
+						print("Error!")
+					else:
+						directionOfGeneration = random.choice(allDirections) 
+
 
 class Scoreboard:
 
@@ -185,6 +236,9 @@ class Player:
 	def ResetControls(self):
 		self.controls = ['w','a','s','d','e','b']
 		self.SavePlayer()
+
+	def CreateSnake(self,gameScreen,x,y,lValue):
+		self.snake.GenerateSnakeBody(gameScreen,x,y,lValue)
 
 class Menu(Tk):
 	lbTitle = Label
@@ -498,6 +552,7 @@ class GameScreen(Tk):
 		self.DisplayGrid()
 
 		self.myPlayer = myPlayer
+		self.myPlayer.CreateSnake(self,3,20,10)
 		self.DisplaySnake(self.myPlayer.snake)
 
 		self.StartGameCycle()
