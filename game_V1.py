@@ -25,6 +25,7 @@ class Snake:
 	height = 38
 	color = 'red'
 	length = 0
+	moving = True
 	#The below list stores the actual body of the snake. It stores the position on the board of each section and
 	#the direction that block is moving in as the different parts can be moving in different ways
 	body = []
@@ -39,25 +40,26 @@ class Snake:
 		#point then that turning point is no longer needed and therefore it is remvoed from the turning point list. This sub will then move the body of 
 		#snake by just adding or subtracting from the position of the body.
 		#This procedure is used every single game cycle
-		indexToRemove = -1 #Below is used to validate whether the body has reached a turning point and then chagning the direction of movement
-		for i in range(0,self.length):
-			for j in range(0,len(self.turningPoints)):
-				if ((self.body[i].x == self.turningPoints[j].x) and (self.body[i].y == self.turningPoints[j].y)):
-					self.body[i].facing = self.turningPoints[j].facing
-					if (i == (self.length - 1)):
-						indexToRemove = j
-			#Below is used to remove the turning point once the final body section has passed through
-			if (indexToRemove != -1):
-				self.turningPoints.remove(self.turningPoints[indexToRemove])
-			#Below does the actual movement
-			if (self.body[i].facing == "Up"):
-				self.body[i].y -= 1
-			elif (self.body[i].facing == "Down"):
-				self.body[i].y += 1
-			elif (self.body[i].facing == "Right"):
-				self.body[i].x += 1
-			elif (self.body[i].facing == "Left"):
-				self.body[i].x -= 1
+		if (self.moving):
+			indexToRemove = -1 #Below is used to validate whether the body has reached a turning point and then chagning the direction of movement
+			for i in range(0,self.length):
+				for j in range(0,len(self.turningPoints)):
+					if ((self.body[i].x == self.turningPoints[j].x) and (self.body[i].y == self.turningPoints[j].y)):
+						self.body[i].facing = self.turningPoints[j].facing
+						if (i == (self.length - 1)):
+							indexToRemove = j
+				#Below is used to remove the turning point once the final body section has passed through
+				if (indexToRemove != -1):
+					self.turningPoints.remove(self.turningPoints[indexToRemove])
+				#Below does the actual movement
+				if (self.body[i].facing == "Up"):
+					self.body[i].y -= 1
+				elif (self.body[i].facing == "Down"):
+					self.body[i].y += 1
+				elif (self.body[i].facing == "Right"):
+					self.body[i].x += 1
+				elif (self.body[i].facing == "Left"):
+					self.body[i].x -= 1
 
 	#The below procedures all do the same function for the different directions. They will check to ensure that the movement is valid. So for example
 	#the snake can only turn right if it is moving up or down. Otherwise it is already going right or it cannot do a full 180 degree turn
@@ -83,13 +85,26 @@ class Snake:
 			self.turningPoints.append(Block(self.body[0].x,self.body[0].y,self.body[0].facing))
 
 	def CheckPosition(self,gameScreen,x,y):
+		#This will ensure that the position input in is legal. It checks that the position isn't
+		#outside of the grid and then checks to see whether the position is already part of the
+		#current snakes body. This second part is to check whether the player has run into
+		#themself
 		if ((x < 0) or (x > gameScreen.numberOfHorizontalLines) or (y < 0) or (y > gameScreen.numberOfVerticalLines)):
 			return False
 		else:
-			for i in range(0,self.length):
+			for i in range(0,len(self.body)):
 				if ((x == self.body[i].x) and (y == self.body[i].y)):
 					return False
 		return True
+
+	def RandomlyGenerate(self,gameScreen):
+		self.length = random.randint(2,20)
+		self.RandomlyPlace(gameScreen)
+
+	def RandomlyPlace(self,gameScreen):
+		x = random.randint(0,gameScreen.numberOfHorizontalLines)
+		y = random.randint(0,gameScreen.numberOfVerticalLines)
+		self.GenerateSnakeBody(gameScreen,x,y,self.length)
 
 
 	def GenerateSnakeBody(self,gameScreen,x,y,lValue):
@@ -98,8 +113,8 @@ class Snake:
 		yPosition = y
 		allDirections = ["Up","Left","Down","Right"]
 		directionOfGeneration = random.choice(allDirections)
-		directionOfGeneration = "Left"#renove
-		for i in range(0,lValue):
+		self.length = lValue
+		for i in range(0,self.length):
 			allDirections = ["Up","Left","Down","Right"]
 			valid = False
 			changedDirections = False
@@ -123,7 +138,6 @@ class Snake:
 					xPosition = newXPosition
 					yPosition = newYPosition
 					self.body.append(Block(xPosition,yPosition,directionOfMovement))
-					self.length += 1
 					if (changedDirections):
 						turningPoint = Block(self.body[i - 1].x,self.body[i - 1].y,self.body[i - 1].facing)
 						self.turningPoints.append(turningPoint)
@@ -557,7 +571,8 @@ class GameScreen(Tk):
 		self.DisplayGrid()
 
 		self.myPlayer = myPlayer
-		self.myPlayer.CreateSnake(self,3,20,10)
+		# self.myPlayer.CreateSnake(self,3,20,10)
+		self.myPlayer.snake.RandomlyGenerate(self)
 		self.DisplaySnake(self.myPlayer.snake)
 
 		self.StartGameCycle()
