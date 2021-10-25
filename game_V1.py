@@ -83,7 +83,6 @@ class Snake:
 			self.turningPoints.append(Block(self.body[0].x,self.body[0].y,self.body[0].facing))
 
 	def CheckPosition(self,gameScreen,x,y):
-		print(x,",",y)
 		if ((x < 0) or (x > gameScreen.numberOfHorizontalLines) or (y < 0) or (y > gameScreen.numberOfVerticalLines)):
 			return False
 		else:
@@ -97,40 +96,46 @@ class Snake:
 		directionOfMovement = ""
 		xPosition = x
 		yPosition = y
-		valid = False
 		allDirections = ["Up","Left","Down","Right"]
 		directionOfGeneration = random.choice(allDirections)
+		directionOfGeneration = "Left"#renove
 		for i in range(0,lValue):
 			allDirections = ["Up","Left","Down","Right"]
-			while(not valid):			
-				xPosition = x
-				yPosition = y
+			valid = False
+			changedDirections = False
+			while(not valid):
+				newYPosition = yPosition
+				newXPosition = xPosition		
 				if (directionOfGeneration == "Up"):
 					directionOfMovement = "Down"
-					yPosition -= i
+					newYPosition -= 1
 				elif(directionOfGeneration == "Down"):
 					directionOfMovement = "Up"
-					yPosition += i
+					newYPosition += 1
 				elif(directionOfGeneration == "Right"):
 					directionOfMovement = "Left"
-					xPosition += i
+					newXPosition += 1
 				elif(directionOfGeneration == "Left"):
 					directionOfMovement = "Right"
-					xPosition -= i
-
-				if (self.CheckPosition(gameScreen,xPosition,yPosition)):
+					newXPosition -= 1
+				if (self.CheckPosition(gameScreen,newXPosition,newYPosition)):
 					valid = True
+					xPosition = newXPosition
+					yPosition = newYPosition
 					self.body.append(Block(xPosition,yPosition,directionOfMovement))
 					self.length += 1
+					if (changedDirections):
+						turningPoint = Block(self.body[i - 1].x,self.body[i - 1].y,self.body[i - 1].facing)
+						self.turningPoints.append(turningPoint)
 				else:
 					valid = False
-					print(allDirections)
-					print(directionOfGeneration)
 					allDirections.remove(directionOfGeneration)
 					if (len(allDirections) == 0):
 						print("Error!")
-					else:
-						directionOfGeneration = random.choice(allDirections) 
+					else:		
+						directionOfGeneration = random.choice(allDirections)
+						if (i != 1):
+							changedDirections = True
 
 
 class Scoreboard:
