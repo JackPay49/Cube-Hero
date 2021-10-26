@@ -108,6 +108,14 @@ class Snake:
 
 
 	def GenerateSnakeBody(self,gameScreen,x,y,lValue):
+		#The point of this procedure is to place the snake on the screen and to generate the position of all its body sections. The length can or cannot be specified beforehand. 
+		#The way this works is that it will first pick a random direction to generate in from the start position. It will move one section at a time in this direction and check if this new position is valid 
+		#for the snake to exist in. It checks using the CheckPosition procedure. If it is a valid position it will add the snake to the body, otherwise it will remove this direction from those that are valid
+		#to generate in, for this body section. It will then randomly pick another direction and loop again trying to place the same body section. It's important to note here too that changedDirections
+		#boolean is used to remember if we have suddenly begun generating in a different direction. This is then used to create a turning point, when the next body section is generated in this new direction.
+		#This turning point is very important as it ensures that then when the snake begins to move away, each of the body sections will also turn with the head. 
+		#This sub is crucial incase further snakes are added in the future, if the player is generated near to the edge of the board, if other snakes are randomly placed in the future or if the game ends up
+		# having walls through the middle of the grid
 		directionOfMovement = ""
 		xPosition = x
 		yPosition = y
@@ -139,7 +147,8 @@ class Snake:
 					yPosition = newYPosition
 					self.body.append(Block(xPosition,yPosition,directionOfMovement))
 					if (changedDirections):
-						turningPoint = Block(self.body[i - 1].x,self.body[i - 1].y,self.body[i - 1].facing)
+						turningPoint = Block(self.body[i - 1].x,self.body[i - 1].y,self.body[i - 1].facing)#We save the previous block as this is the one that is actually on the bend of the snake. It must
+						#be made in a new instance of Block() to ensure that it isn't updated like the body part is, when the snake moves next
 						self.turningPoints.append(turningPoint)
 				else:
 					valid = False
@@ -148,7 +157,8 @@ class Snake:
 						print("Error!")
 					else:		
 						directionOfGeneration = random.choice(allDirections)
-						if (i != 1):
+						if (i != 1):#This is used as an error will be caused if we make a turning point of the previous body part, as obviously it doesn't exist. Also there's no need to have a turning point 
+						#ahead of the head as at this point it is just changing the direction it will move off in
 							changedDirections = True
 
 
