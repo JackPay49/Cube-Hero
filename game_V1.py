@@ -34,7 +34,7 @@ class Snake:
 	#direction
 	turningPoints = []
 
-	def Move(self):
+	def Move(self,gameScreen):
 		#This sub moves the snake. For each section of the snake's body it will first check if the body has reached a turning point on the baord. If the
 		# body section has then it will turn it's direction to the one stored in the turning point. If the final section of the snake passes a turning
 		#point then that turning point is no longer needed and therefore it is remvoed from the turning point list. This sub will then move the body of 
@@ -52,14 +52,24 @@ class Snake:
 				if (indexToRemove != -1):
 					self.turningPoints.remove(self.turningPoints[indexToRemove])
 				#Below does the actual movement
+				xPosition = self.body[i].x
+				yPosition = self.body[i].y
 				if (self.body[i].facing == "Up"):
-					self.body[i].y -= 1
+					yPosition -= 1
 				elif (self.body[i].facing == "Down"):
-					self.body[i].y += 1
+					yPosition += 1
 				elif (self.body[i].facing == "Right"):
-					self.body[i].x += 1
+					xPosition += 1
 				elif (self.body[i].facing == "Left"):
-					self.body[i].x -= 1
+					xPosition -= 1
+
+				if ((not self.CheckPosition(gameScreen,xPosition,yPosition)) and (i == 0)):
+					gameScreen.GameOver()
+				else:
+					self.body[i].x = xPosition
+					self.body[i].y = yPosition
+
+
 
 	#The below procedures all do the same function for the different directions. They will check to ensure that the movement is valid. So for example
 	#the snake can only turn right if it is moving up or down. Otherwise it is already going right or it cannot do a full 180 degree turn
@@ -94,7 +104,7 @@ class Snake:
 		else:
 			for i in range(0,len(self.body)):
 				if ((x == self.body[i].x) and (y == self.body[i].y)):
-					return False
+					return False			
 		return True
 
 	def RandomlyGenerate(self,gameScreen):
@@ -640,10 +650,14 @@ class GameScreen(Tk):
 		if (not self.paused):
 			self.background.delete(ALL)
 			self.DisplayGrid()
-			self.myPlayer.snake.Move()
+			self.myPlayer.snake.Move(self)
 			self.DisplaySnake(self.myPlayer.snake)
 			self.after(self.gameCycleLength,self.StartGameCycle)
 
+	def GameOver(self):
+		messagebox.showinfo("Game Over","GAME OVER!!!!")		
+		self.destroy()
+		BeginGame()
 
 def OpenGameScreen(myPlayer):
 	gameScreen = GameScreen(myPlayer)
