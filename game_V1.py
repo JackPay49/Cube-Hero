@@ -27,6 +27,25 @@ class PowerUp:
 
 	def __init__(self,gameScreen):
 		self.RandomlyPlace(gameScreen)
+		self.RandomyType()
+
+	def RandomyType(self):
+		#This will randomly pick which type of powerup it is
+		numberOfTypes = 4
+		typeNumber = random.randint(1,numberOfTypes)
+		if (typeNumber == 1):
+			self.powerUpType = "Grow"
+			self.color = 'blue'
+		elif (typeNumber == 2):
+			self.powerUpType = "SpeedUp"
+			self.color = 'green'
+		elif (typeNumber == 3):
+			self.powerUpType = "SlowDown"
+			self.color = 'red'
+		elif (typeNumber == 4):
+			self.powerUpType = "Shrink"
+			self.color = 'yellow'
+
 
 	def RandomlyPlace(self,gameScreen):
 		#This procedure is easy. It randomly finds a position on the board and will validate it. It will only place the powerup in that position if it is valid
@@ -38,11 +57,20 @@ class PowerUp:
 		self.position = Block(x,y,"Null")
 
 	def PowerUpConsumed(self,gameScreen,snake):
-		#This procedure is simple currently but should become far more complex. It will carry out the actual function of the powerup. For now there is only one type of powerup which will increase the size of
-		#the player snake. It also increases the score at the same time and will then remove the pwoerup from the game screen
+		#This procedure is simple currently but should become far more complex. It will carry out the actual function of the powerup. So it will increase size of the player if it is type grow, etc, etc.
+		#The Shrink powerup gives no points as it makes the game easier to play
 		if (self.powerUpType == "Grow"):
 			snake.IncreaseLength(1)
 			gameScreen.myPlayer.IncreaseScore(100)
+		elif (self.powerUpType == "SpeedUp"):
+			snake.IncreaseSpeed(1)
+			gameScreen.myPlayer.IncreaseScore(50)
+		elif (self.powerUpType == "SlowDown"):
+			snake.DecreaseSpeed(1)
+			gameScreen.myPlayer.IncreaseScore(50)
+		elif (self.powerUpType == "Shrink"):
+			snake.DecreaseLength(gameScreen,1)
+
 		gameScreen.powerUps.remove(self)
 
 	def CheckPosition(self,gameScreen,x,y):
@@ -57,11 +85,11 @@ class PowerUp:
 
 
 class Snake:
-	# width = 38
-	# height = 38
-	color = 'red'
+	color = 'black'
 	length = 0
 	moving = True
+
+	speed = 1
 
 	#The below list stores the actual body of the snake. It stores the position on the board of each section and
 	#the direction that block is moving in as the different parts can be moving in different ways
@@ -77,39 +105,44 @@ class Snake:
 		#point then that turning point is no longer needed and therefore it is remvoed from the turning point list. This sub will then move the body of 
 		#snake by just adding or subtracting from the position of the body.
 		#This procedure is used every single game cycle
-		if (self.moving):
-			indexToRemove = -1 #Below is used to validate whether the body has reached a turning point and then chagning the direction of movement
-			for i in range(0,self.length):
-				for j in range(0,len(self.turningPoints)):
-					if ((self.body[i].x == self.turningPoints[j].x) and (self.body[i].y == self.turningPoints[j].y)):
-						self.body[i].facing = self.turningPoints[j].facing
-						if (i == (self.length - 1)):
-							indexToRemove = j
-				#Below is used to remove the turning point once the final body section has passed through
-				if (indexToRemove != -1):
-					self.turningPoints.remove(self.turningPoints[indexToRemove])
-				#Below does the actual movement
-				xPosition = self.body[i].x
-				yPosition = self.body[i].y
-				if (self.body[i].facing == "Up"):
-					yPosition -= 1
-				elif (self.body[i].facing == "Down"):
-					yPosition += 1
-				elif (self.body[i].facing == "Right"):
-					xPosition += 1
-				elif (self.body[i].facing == "Left"):
-					xPosition -= 1
+		for k in range(self.speed):#It will move multiple times in one turn depending on the speed
+			if (self.moving):
+				indexToRemove = -1 #Below is used to validate whether the body has reached a turning point and then chagning the direction of movement
+				i = 0
+				while(i < self.length):#This is used rather than a For loop as the length may change throughout this (like if the player find a shrink or grow powerup)
+					for j in range(0,len(self.turningPoints)):
+						if ((self.body[i].x == self.turningPoints[j].x) and (self.body[i].y == self.turningPoints[j].y)):
+							self.body[i].facing = self.turningPoints[j].facing
+							if (i == (self.length - 1)):
+								indexToRemove = j
+					#Below is used to remove the turning point once the final body section has passed through
+					if (indexToRemove != -1):
+						self.turningPoints.remove(self.turningPoints[indexToRemove])
+					#Below does the actual movement
+					xPosition = self.body[i].x
+					yPosition = self.body[i].y
+					if (self.body[i].facing == "Up"):
+						yPosition -= 1
+					elif (self.body[i].facing == "Down"):
+						yPosition += 1
+					elif (self.body[i].facing == "Right"):
+						xPosition += 1
+					elif (self.body[i].facing == "Left"):
+						xPosition -= 1
 
-				#This will check for any game ending collisions such as colliding with the walls or colliding with the snakes own body. If either of
-				#these happen it will cause the game over sequence. If the move doesn't cause a collision then we can carry on moving and so set
-				#the new position of the snake. It only validating colliding with something on i==0 as this is the head. Only this can collide with
-				#something.
-				if ((not self.CheckPosition(gameScreen,xPosition,yPosition)) and (i == 0)):
-					gameScreen.GameOver()
-				else:
-					self.CheckCollisions(gameScreen)#This will check for collisions such as if the player intercepts a powerup
-					self.body[i].x = xPosition
-					self.body[i].y = yPosition
+					#This will check for any game ending collisions such as colliding with the walls or colliding with the snakes own body. If either of
+					#these happen it will cause the game over sequence. If the move doesn't cause a collision then we can carry on moving and so set
+					#the new position of the snake. It only validating colliding with something on i==0 as this is the head. Only this can collide with
+					#something.
+					if ((not self.CheckPosition(gameScreen,xPosition,yPosition)) and (i == 0)):
+						gameScreen.GameOver()
+						self.moving = False
+					else:
+						self.CheckCollisions(gameScreen)#This will check for collisions such as if the player intercepts a powerup
+						if (i < self.length):
+							self.body[i].x = xPosition
+							self.body[i].y = yPosition
+					i +=1
 
 
 
@@ -233,6 +266,22 @@ class Snake:
 				gameScreen.powerUps[count].PowerUpConsumed(gameScreen,self)
 			else:
 				count +=1
+
+	def IncreaseSpeed(self,amount):
+		for i in range(amount):
+			if (self.speed < 3):
+				self.speed +=1
+
+	def DecreaseSpeed(self,amount):
+		for i in range(amount):
+			if (self.speed > 1):
+				self.speed -=1
+
+	def DecreaseLength(self,gameScreen,amount):
+		for i in range(amount):
+			self.body.remove(self.body[self.length - 1])
+			self.length -=1
+
 
 class Scoreboard:
 
@@ -721,10 +770,14 @@ class GameScreen(Tk):
 		if ((not self.paused) and (not self.gameOver)):
 			self.background.delete(ALL)
 			self.DisplayGrid()
+
 			self.myPlayer.snake.Move(self)
+			self.CheckIfPlayerTooSmall()
 			if (not self.gameOver):
+
 				self.DisplaySnake(self.myPlayer.snake)
 				self.DisplayPowerUps()
+
 				self.gameCycleCount +=1
 				self.AddPowerUps()
 				self.after(self.gameCycleLength,self.StartGameCycle)
@@ -754,6 +807,10 @@ class GameScreen(Tk):
 			rightCornerY = (self.powerUps[i].position.y + 1) * gridBoxWidth
 
 			self.background.create_rectangle(leftCornerX,leftCornerY,rightCornerX,rightCornerY,outline = self.powerUps[i].color,fill = self.powerUps[i].color)
+
+	def CheckIfPlayerTooSmall(self):
+		if (self.myPlayer.snake.length <= 2):
+			self.GameOver()
 
 def OpenGameScreen(myPlayer):
 	gameScreen = GameScreen(myPlayer)
