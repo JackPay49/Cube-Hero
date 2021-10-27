@@ -21,11 +21,12 @@ class Block:
 		self.facing = fValue
 
 class Snake:
-	width = 38
-	height = 38
+	# width = 38
+	# height = 38
 	color = 'red'
 	length = 0
 	moving = True
+
 	#The below list stores the actual body of the snake. It stores the position on the board of each section and
 	#the direction that block is moving in as the different parts can be moving in different ways
 	body = []
@@ -63,6 +64,10 @@ class Snake:
 				elif (self.body[i].facing == "Left"):
 					xPosition -= 1
 
+				#This will check for any game ending collisions such as colliding with the walls or colliding with the snakes own body. If either of
+				#these happen it will cause the game over sequence. If the move doesn't cause a collision then we can carry on moving and so set
+				#the new position of the snake. It only validating colliding with something on i==0 as this is the head. Only this can collide with
+				#something.
 				if ((not self.CheckPosition(gameScreen,xPosition,yPosition)) and (i == 0)):
 					gameScreen.GameOver()
 				else:
@@ -99,11 +104,11 @@ class Snake:
 		#outside of the grid and then checks to see whether the position is already part of the
 		#current snakes body. This second part is to check whether the player has run into
 		#themself
-		if ((x < 0) or (x > gameScreen.numberOfHorizontalLines) or (y < 0) or (y > gameScreen.numberOfVerticalLines)):
+		if ((x < 0) or (x >= gameScreen.numberOfHorizontalLines) or (y < 0) or (y >= gameScreen.numberOfVerticalLines)):
 			return False
 		else:
 			for i in range(0,len(self.body)):
-				if ((x == self.body[i].x) and (y == self.body[i].y)):
+				if ((x == self.body[i].x) and (y == self.body[i].y)):	
 					return False			
 		return True
 
@@ -130,6 +135,7 @@ class Snake:
 		xPosition = x
 		yPosition = y
 		allDirections = ["Up","Left","Down","Right"]
+		self.body = []
 		directionOfGeneration = random.choice(allDirections)
 		self.length = lValue
 		for i in range(0,self.length):
@@ -571,12 +577,14 @@ class GameScreen(Tk):
 
 	backgroundWidth = 800
 	backgroundHeight = 800
-	numberOfVerticalLines = 100
-	numberOfHorizontalLines = 100
+	numberOfVerticalLines = 50
+	numberOfHorizontalLines = 50
 
-	gameCycleLength = 200 #In milliseconds
+	gameCycleLength = 100 #In milliseconds
 
 	myPlayer = Player()
+
+	gameOver = False
 
 	paused = False
 	def __init__(self,myPlayer):
@@ -595,8 +603,9 @@ class GameScreen(Tk):
 		self.myPlayer.snake.RandomlyGenerate(self)
 		self.DisplaySnake(self.myPlayer.snake)
 
-		self.StartGameCycle()
 		self.SetUpControls()
+		self.StartGameCycle()
+
 
 	def DisplayGrid(self):
 		#This procedure will set up the grid for the game. It creates a canvas on the screen and draws a grid on 
@@ -647,15 +656,20 @@ class GameScreen(Tk):
 	def StartGameCycle(self):
 		#This procedure does the game loop. On every iteration it clears the entire board, moves each of the snakes and will then redraw all of the
 		#snakes in their new positions. The final instruction is used to make the delay between moves and to carry on the iterative procedure.
-		if (not self.paused):
+		if ((not self.paused) and (not self.gameOver)):
 			self.background.delete(ALL)
 			self.DisplayGrid()
 			self.myPlayer.snake.Move(self)
-			self.DisplaySnake(self.myPlayer.snake)
-			self.after(self.gameCycleLength,self.StartGameCycle)
+			if (not self.gameOver):
+				self.DisplaySnake(self.myPlayer.snake)
+				self.after(self.gameCycleLength,self.StartGameCycle)
 
 	def GameOver(self):
-		messagebox.showinfo("Game Over","GAME OVER!!!!")		
+		#This procedure is used to end the game, like if the player collides witht their own body or a wall. It will delete everything on the 
+		#canvas and will close the window. It then also reopens the menu window.
+		messagebox.showinfo("Game Over","GAME OVER!!!!")
+		self.gameOver = True	
+		self.background.delete(ALL)
 		self.destroy()
 		BeginGame()
 
