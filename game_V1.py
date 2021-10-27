@@ -20,6 +20,42 @@ class Block:
 		self.y = yValue
 		self.facing = fValue
 
+class PowerUp:
+	position = None
+	powerUpType = "Grow"#Later in game dev there will be many different types of powerup like speedup, grow, shrink, slowdown,etc
+	color = 'blue'
+
+	def __init__(self,gameScreen):
+		self.RandomlyPlace(gameScreen)
+
+	def RandomlyPlace(self,gameScreen):
+		#This procedure is easy. It randomly finds a position on the board and will validate it. It will only place the powerup in that position if it is valid
+		valid = False
+		while (valid == False):
+			x = random.randint(0,gameScreen.numberOfHorizontalLines)
+			y = random.randint(0,gameScreen.numberOfVerticalLines)
+			valid = self.CheckPosition(gameScreen,x,y)
+		self.position = Block(x,y,"Null")
+
+	def PowerUpConsumed(self,gameScreen,snake):
+		#This procedure is simple currently but should become far more complex. It will carry out the actual function of the powerup. For now there is only one type of powerup which will increase the size of
+		#the player snake. It also increases the score at the same time and will then remove the pwoerup from the game screen
+		if (self.powerUpType == "Grow"):
+			snake.IncreaseLength(1)
+			gameScreen.myPlayer.IncreaseScore(100)
+		gameScreen.powerUps.remove(self)
+
+	def CheckPosition(self,gameScreen,x,y):
+		#This just checks if the powerup if ontop of the player snake or is ontop of another powerup
+		for i in range(gameScreen.myPlayer.snake.length):
+			if ((x == gameScreen.myPlayer.snake.body[i].x) and (y == gameScreen.myPlayer.snake.body[i].y)):
+				return False
+		for i in range(len(gameScreen.powerUps)):
+			if ((x == gameScreen.powerUps[i].position.x) and (y == gameScreen.powerUps[i].position.y)):
+				return False
+		return True		
+
+
 class Snake:
 	# width = 38
 	# height = 38
@@ -71,6 +107,7 @@ class Snake:
 				if ((not self.CheckPosition(gameScreen,xPosition,yPosition)) and (i == 0)):
 					gameScreen.GameOver()
 				else:
+					self.CheckCollisions(gameScreen)#This will check for collisions such as if the player intercepts a powerup
 					self.body[i].x = xPosition
 					self.body[i].y = yPosition
 
@@ -177,6 +214,25 @@ class Snake:
 						#ahead of the head as at this point it is just changing the direction it will move off in
 							changedDirections = True
 
+	def IncreaseLength(self,amount):
+		#This procedure will increase the size of the snake by a certain amount. It does this by mimicking the tail of the snake and adding it to the list of the snake's body. It uses the same position as the
+		#snake's tail as otherwise there will be a gap in the snake. This is because of the placement of this procedure, it will only take effect just before the snake is due to move and so the snake body
+		#is recorded as being in the last positiob but it is about to move
+		for i in range(amount):
+			xPosition = self.body[self.length - 1].x
+			yPosition = self.body[self.length - 1].y
+			facing = self.body[self.length - 1].facing
+			self.length +=1
+			self.body.append(Block(xPosition,yPosition,facing))
+
+	def CheckCollisions(self,gameScreen):
+		#This procedure checks through the list of powerups to see if the head of the snake has intercepted any pwoerups. If it has then the powerup will be activated on this snake
+		count = 0
+		while (count < len(gameScreen.powerUps)):
+			if ((self.body[0].x == gameScreen.powerUps[count].position.x) and (self.body[0].y == gameScreen.powerUps[count].position.y)):
+				gameScreen.powerUps[count].PowerUpConsumed(gameScreen,self)
+			else:
+				count +=1
 
 class Scoreboard:
 
@@ -284,6 +340,9 @@ class Player:
 
 	def CreateSnake(self,gameScreen,x,y,lValue):
 		self.snake.GenerateSnakeBody(gameScreen,x,y,lValue)
+
+	def IncreaseScore(self,amount):
+		self.score += amount
 
 class Menu(Tk):
 	lbTitle = Label
@@ -581,12 +640,15 @@ class GameScreen(Tk):
 	numberOfHorizontalLines = 50
 
 	gameCycleLength = 100 #In milliseconds
+	gameCycleCount = 0;
 
 	myPlayer = Player()
 
 	gameOver = False
 
 	paused = False
+
+	powerUps = []
 	def __init__(self,myPlayer):
 		super().__init__()
 		self.title("Game screen")
@@ -662,6 +724,9 @@ class GameScreen(Tk):
 			self.myPlayer.snake.Move(self)
 			if (not self.gameOver):
 				self.DisplaySnake(self.myPlayer.snake)
+				self.DisplayPowerUps()
+				self.gameCycleCount +=1
+				self.AddPowerUps()
 				self.after(self.gameCycleLength,self.StartGameCycle)
 
 	def GameOver(self):
@@ -672,6 +737,23 @@ class GameScreen(Tk):
 		self.background.delete(ALL)
 		self.destroy()
 		BeginGame()
+
+	def AddPowerUps(self):
+		#Every 10 game cycles a new powerup will be added to the screen
+		if ((self.gameCycleCount % 20)== 0):
+			self.gameCycleCount == 0
+			self.powerUps.append(PowerUp(self))
+
+	def DisplayPowerUps(self):
+		#This just displays and paints each of the powerups on the screen in the same way that snakes are
+		gridBoxWidth = self.backgroundWidth/self.numberOfHorizontalLines
+		for i in range(0,len(self.powerUps)):
+			leftCornerX = self.powerUps[i].position.x * gridBoxWidth
+			leftCornerY = self.powerUps[i].position.y * gridBoxWidth
+			rightCornerX = (self.powerUps[i].position.x + 1) * gridBoxWidth
+			rightCornerY = (self.powerUps[i].position.y + 1) * gridBoxWidth
+
+			self.background.create_rectangle(leftCornerX,leftCornerY,rightCornerX,rightCornerY,outline = self.powerUps[i].color,fill = self.powerUps[i].color)
 
 def OpenGameScreen(myPlayer):
 	gameScreen = GameScreen(myPlayer)
