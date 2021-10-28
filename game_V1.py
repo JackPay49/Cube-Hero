@@ -187,8 +187,8 @@ class Snake:
 		self.RandomlyPlace(gameScreen)
 
 	def RandomlyPlace(self,gameScreen):
-		x = random.randint(0,gameScreen.numberOfHorizontalLines)
-		y = random.randint(0,gameScreen.numberOfVerticalLines)
+		x = random.randint(1,gameScreen.numberOfHorizontalLines)
+		y = random.randint(1,gameScreen.numberOfVerticalLines)
 		self.GenerateSnakeBody(gameScreen,x,y,self.length)
 
 
@@ -206,6 +206,15 @@ class Snake:
 		yPosition = y
 		allDirections = ["Up","Left","Down","Right"]
 		self.body = []
+		if (x <= 5):
+			allDirections.remove("Right")
+		elif (y <= 5):
+			allDirections.remove("Down")
+		elif (x >= (gameScreen.numberOfHorizontalLines - 5)):
+			allDirections.remove("Left")
+		elif (y <= (gameScreen.numberOfVerticalLines - 5)):
+			allDirections.remove("Up")
+
 		directionOfGeneration = random.choice(allDirections)
 		self.length = lValue
 		for i in range(0,self.length):
@@ -326,7 +335,7 @@ class Scoreboard:
 		file = open("gameFiles/scoreboard.txt","rt")
 		self.numberOfScores = int(file.readline())
 		for i in range(0,self.numberOfScores):
-			tempPlayer = player()
+			tempPlayer = Player()
 			tempPlayer.name = file.readline().strip()
 			tempPlayer.score = int(file.readline())
 			file.readline()
@@ -409,7 +418,7 @@ class Menu(Tk):
 		#fonts
 		fontNormal = ("Default",12,"bold")
 
-		self.lbTitle = TitleLabel(self,"Game Name!")
+		self.lbTitle = TitleLabel(self,"Cube Hero!")
 
 		#Buttons
 		self.btnLoadGame = Button(self,text = "Load Game", command = lambda: (self.destroy(),LoadGame()),font = fontNormal)
@@ -419,7 +428,7 @@ class Menu(Tk):
 		self.btnCreateNewGame.place(relx = 0.5, rely = 0.5, anchor = CENTER)
 
 
-		self.btnScoreboard = Button(self,text = "Scoreboard",command = lambda: (self.destroy(),OpenScoreboard()),font = fontNormal)
+		self.btnScoreboard = Button(self,text = "Scoreboard",command = OpenScoreboard,font = fontNormal)
 		self.btnScoreboard.place(relx = 0.5, rely = 0.7, anchor = CENTER)
 
 		self.btnClose = BackButton(self,"Close",False)
@@ -441,6 +450,7 @@ class LoginScreen(Tk):
 	btnControls = Button
 	btnClose = Button
 	btnLogin = Button
+	btnRules = Button
 
 	def __init__(self,newGame):
 		#Important to note here. The newGame parameter is a boolean used to tell us whether the login screen should be to login or to create a new game. Based on this the title of the screen and the
@@ -483,6 +493,9 @@ class LoginScreen(Tk):
 		self.btnControls = Button(self,text = "Controls",command = lambda:(OpenControlsScreen(myPlayer)), font = fontBold)
 		self.btnControls.place(relx = 0.3,rely = 0.6, anchor = CENTER)
 
+		self.btnRules = Button(self,text = "Rules",command = OpenRulesScreen, font = fontBold)
+		self.btnRules.place(relx = 0.3,rely = 0.8, anchor = CENTER)
+
 		self.btnClose = BackButton(self,"Back",True)
 		self.mainloop()
 
@@ -517,14 +530,12 @@ class ScoreboardScreen(Tk):
 		self.geometry("1000x700")
 		self.title("Scoreboard")
 
-		fontNormal = ("Default",12)
-
 		self.lbTitle = TitleLabel(self,"Scoreboard")
 
 
-		self.btnClose = BackButton(self,"Back",True)
+		self.btnClose = BackButton(self,"Back",False)
 
-		self.scoreBox = Text(self, font = fontNormal)
+		self.scoreBox = Text(self, font = ("Default",12))
 		self.scoreBox.place(relx = 0.5,rely = 0.5,anchor = CENTER)
 
 		self.DisplayScoreboard()
@@ -545,6 +556,87 @@ class ScoreboardScreen(Tk):
 def OpenScoreboard():
 	windowScoreboard = ScoreboardScreen()
 
+class PauseSceen(Tk):
+	btnResumeGame =  Button
+	btnSaveGame = Button
+	btnControls = Button
+	btnRules = Button
+	btnScoreboard = Button
+	btnBack = Button
+	btnCheatCode = Button
+
+	txtCheatCode = Entry
+
+	def __init__(self,parentWindow):
+		super().__init__()
+		self.geometry("300x700")
+		self.title("Pause")
+
+		fontButton = ("Default",12,"bold")
+		fontNormal = ("Default",12)
+
+
+		self.lbTitle = TitleLabel(self,"Game Pause")
+
+		self.btnResumeGame = Button(self,text = "Resume Game",font = fontButton)
+		self.btnResumeGame.place(relx = 0.5, rely = 0.2, anchor = CENTER)
+		self.btnResumeGame.configure(command = lambda:(parentWindow.Unpause(),self.destroy()))
+
+		self.btnSaveGame = Button(self,text = "Save Game",font = fontButton)
+		self.btnSaveGame.place(relx = 0.5, rely = 0.3, anchor = CENTER)
+		# self.btnSaveGame.configure(command = parentWindow.SaveGame)
+
+		self.btnControls = Button(self,text = "Controls",font = fontButton)
+		self.btnControls.place(relx = 0.5, rely = 0.4, anchor = CENTER)
+		self.btnControls.configure(command = lambda:(OpenControlsScreen(parentWindow.myPlayer)))
+
+		self.btnRules = Button(self,text = "Rules",font = fontButton)
+		self.btnRules.place(relx = 0.5, rely = 0.5, anchor = CENTER)
+		self.btnRules.configure(command = OpenRulesScreen)
+
+		self.btnScoreboard = Button(self,text = "Scoreboard",font = fontButton)
+		self.btnScoreboard.place(relx = 0.5, rely = 0.6, anchor = CENTER)
+		self.btnScoreboard.configure(command = OpenScoreboard)
+
+		self.btnCheatCode = Button(self,text = "Enter Cheat Code",font = fontButton)
+		self.btnCheatCode.place(relx = 0.5, rely = 0.7, anchor = CENTER)
+		self.txtCheatCode = Entry(self,font = fontNormal)
+		self.txtCheatCode.place(relx = 0.5,rely = 0.8, anchor = CENTER)
+
+		self.btnBack = Button(self,text = "Quit Game",font = fontButton)
+		self.btnBack.place(relx = 0.5, rely = 0.9, anchor = CENTER)
+		self.btnBack.configure(command = lambda:(self.destroy(),parentWindow.CloseWindow()))
+
+		self.mainloop()
+
+class RulesScreen(Tk):
+	btnBack = Button
+
+	lbTitle = Label
+
+	txtRules = Text
+
+	def __init__(self):
+		super().__init__()
+		self.geometry("700x700")
+		self.title("Rules")
+
+		lbTitle = TitleLabel(self,"Welcome to Cube Hero!")
+		btnBack = BackButton(self,"Back",False)
+
+		file = open("gameFiles/rules.txt","r")
+		rules = file.read()
+		file.close()
+
+		self.txtRules = Text(self, font = ("Default",12))
+		self.txtRules.place(relx = 0.5,rely = 0.5,anchor = CENTER)
+		self.txtRules.insert(INSERT,rules)
+		self.txtRules.pack(pady = 100)
+
+		self.mainloop()
+
+def OpenRulesScreen():
+	rulesScreen = RulesScreen()
 
 
 class ControlsScreen(Tk):
@@ -688,7 +780,7 @@ class GameScreen(Tk):
 	numberOfVerticalLines = 50
 	numberOfHorizontalLines = 50
 
-	gameCycleLength = 100 #In milliseconds
+	gameCycleLength = 200 #In milliseconds
 	gameCycleCount = 0;
 
 	myPlayer = Player()
@@ -741,13 +833,27 @@ class GameScreen(Tk):
 		self.bind(("<" + self.myPlayer.controls[4] + ">"),self.Pause)
 		self.bind(("<" + self.myPlayer.controls[5] + ">"),self.BossScreen)
 
+	def RemoveControls(self):
+		self.unbind(("<" + self.myPlayer.controls[0] + ">"))
+		self.unbind(("<" + self.myPlayer.controls[1] + ">"))
+		self.unbind(("<" + self.myPlayer.controls[2] + ">"))
+		self.unbind(("<" + self.myPlayer.controls[3] + ">"))
+		self.unbind(("<" + self.myPlayer.controls[4] + ">"))
+		self.unbind(("<" + self.myPlayer.controls[5] + ">"))
+
 	def Pause(self,event):
 		self.paused = True
+		self.RemoveControls()
+		pauseMenu = PauseSceen(self)
+
+	def Unpause(self):
+		self.paused = False
+		self.SetUpControls()
+		self.StartGameCycle()
 
 	def BossScreen(self,event):
 		if (self.paused == True):
-			self.paused = False
-			self.StartGameCycle()
+			self.Unpause()
 		else:
 			self.paused = True
 
@@ -787,6 +893,9 @@ class GameScreen(Tk):
 		#canvas and will close the window. It then also reopens the menu window.
 		messagebox.showinfo("Game Over","GAME OVER!!!!")
 		self.gameOver = True	
+		self.CloseWindow()
+
+	def CloseWindow(self):
 		self.background.delete(ALL)
 		self.destroy()
 		BeginGame()
