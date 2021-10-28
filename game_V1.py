@@ -30,25 +30,37 @@ class PowerUp:
 		self.RandomlyPlace(gameScreen)
 		self.RandomyType()
 
+	def MakePowerUp(self,xPosition,yPosition,type):
+		self.position = Block(xPosition,yPosition,"Null")
+		self.powerUpType = type
+		self.SetColor()
+
 	def RandomyType(self):
 		#This will randomly pick which type of powerup it is
 		typeNumber = random.randint(1,numberOfPowerUpTypes)
 		if (typeNumber == 1):
 			self.powerUpType = "Grow"
-			self.color = 'blue'
 		elif (typeNumber == 2):
 			self.powerUpType = "SpeedUp"
-			self.color = 'green'
 		elif (typeNumber == 3):
 			self.powerUpType = "SlowDown"
-			self.color = 'red'
 		elif (typeNumber == 4):
 			self.powerUpType = "Shrink"
-			self.color = 'yellow'
 		elif (typeNumber == 5):
 			self.powerUpType = "Random"
-			self.color = 'purple'
+		self.SetColor()
 
+	def SetColor(self):
+		if (self.powerUpType == "Grow"):
+			self.color = 'blue'
+		elif (self.powerUpType == "SpeedUp"):
+			self.color = 'green'
+		elif (self.powerUpType == "SlowDown"):
+			self.color = 'red'
+		elif (self.powerUpType == "Shrink"):
+			self.color = 'yellow'
+		elif (self.powerUpType == "Random"):
+			self.color = 'purple'
 
 	def RandomlyPlace(self,gameScreen):
 		#This procedure is easy. It randomly finds a position on the board and will validate it. It will only place the powerup in that position if it is valid
@@ -196,7 +208,7 @@ class Snake:
 		return True
 
 	def RandomlyGenerate(self,gameScreen):
-		self.length = random.randint(2,20)
+		self.length = random.randint(3,20)
 		self.RandomlyPlace(gameScreen)
 
 	def RandomlyPlace(self,gameScreen):
@@ -270,14 +282,20 @@ class Snake:
 							changedDirections = True
 
 	def IncreaseLength(self,amount):
-		#This procedure will increase the size of the snake by a certain amount. It does this by mimicking the tail of the snake and adding it to the list of the snake's body. It uses the same position as the
-		#snake's tail as otherwise there will be a gap in the snake. This is because of the placement of this procedure, it will only take effect just before the snake is due to move and so the snake body
-		#is recorded as being in the last positiob but it is about to move
+		#This procedure will increase the size of the snake by a certain amount. It does this by mimicking the tail of the snake and adding it to the list of the snake's body.
 		for i in range(amount):
 			xPosition = self.body[self.length - 1].x
 			yPosition = self.body[self.length - 1].y
 			facing = self.body[self.length - 1].facing
 			self.length +=1
+			if (facing == "Right"):
+				xPosition -=1
+			elif (facing == "Left"):
+				xPosition +=1			
+			elif (facing == "Up"):
+				yPosition +=1			
+			elif (facing == "Down"):
+				yPosition -=1
 			self.body.append(Block(xPosition,yPosition,facing))
 
 	def CheckCollisions(self,gameScreen):
@@ -303,6 +321,43 @@ class Snake:
 		for i in range(amount):
 			self.body.remove(self.body[self.length - 1])
 			self.length -=1
+
+
+	def SaveSnake(self,myPlayer):
+		file = open("gameFiles/" + myPlayer.name + "Snake.txt","w")
+		file.write(str(self.length) + "\n")
+		for i in range(self.length):
+			file.write(str(self.body[i].x) + "\n")
+			file.write(str(self.body[i].y) + "\n")
+			file.write(self.body[i].facing + "\n")	
+
+		file.write("\n")
+
+		file.write(str(len(self.turningPoints)) + "\n")
+		for i in range(len(self.turningPoints)):
+			file.write(str(self.turningPoints[i].x) + "\n")
+			file.write(str(self.turningPoints[i].y) + "\n")
+			file.write(self.turningPoints[i].facing + "\n")
+
+	def LoadSnake(self,myPlayer):
+		file = open("gameFiles/" + myPlayer.name + "Snake.txt","r")
+		self.length = int(file.readline().strip())
+		self.body = []
+		self.turningPoints = []
+		for i in range(self.length):
+			xPosition = int(file.readline().strip())
+			yPosition = int(file.readline().strip())
+			facing = file.readline().strip()
+			self.body.append(Block(xPosition,yPosition,facing))
+
+		file.readline()
+
+		number = int(file.readline().strip())
+		for i in range(number):
+			xPosition = int(file.readline().strip())
+			yPosition = int(file.readline().strip())
+			facing = file.readline().strip()
+			self.turningPoints.append(Block(xPosition,yPosition,facing))
 
 
 class Scoreboard:
@@ -373,11 +428,11 @@ class Scoreboard:
 
 class Player:
 	name = ""
-	level = 0
 	score = 0
 	password = ""
 	controls = ['w','a','s','d','e','b']#This stores the player controls for up, left, down, right, pause and boss screen respectively. These will be used when actraully assigning controls in the game screen
-	
+	midLevel = False
+
 	snake = Snake()
 
 	def LoadPlayer(self,nValue):
@@ -387,19 +442,25 @@ class Player:
 		file = open("gameFiles/" + self.name + ".txt","rt")
 		file.readline()
 		self.password = (file.readline()).strip()
-		self.level = int(file.readline())
 		self.score = int(file.readline())
 		self.controls = ConvertToList(file.readline())
+		midLevelState = file.readline().strip()
 		file.close()
+		if (midLevelState == "1"):
+			self.midLevel = True
 
 	def SavePlayer(self):
 		file = open("gameFiles/" + self.name + ".txt","wt")
 		file.write(self.name + "\n")
 		file.write(str(self.password) + "\n")
-		file.write(str(self.level) + "\n")
 		file.write(str(self.score) + "\n")
 		file.write(str(self.controls) + "\n")
+		if (self.midLevel == True):
+			file.write("1\n")
+		else:
+			file.write("0\n")
 		file.close()
+
 	def CreatePlayer(self,nValue,pValue):
 		self.name = nValue
 		self.password = pValue
@@ -597,7 +658,7 @@ class PauseSceen(Tk):
 
 		self.btnSaveGame = Button(self,text = "Save Game",font = fontButton)
 		self.btnSaveGame.place(relx = 0.5, rely = 0.3, anchor = CENTER)
-		# self.btnSaveGame.configure(command = parentWindow.SaveGame)
+		self.btnSaveGame.configure(command = parentWindow.SaveGame)
 
 		self.btnControls = Button(self,text = "Controls",font = fontButton)
 		self.btnControls.place(relx = 0.5, rely = 0.4, anchor = CENTER)
@@ -815,8 +876,11 @@ class GameScreen(Tk):
 		self.DisplayGrid()
 
 		self.myPlayer = myPlayer
-		# self.myPlayer.CreateSnake(self,3,20,10)
-		self.myPlayer.snake.RandomlyGenerate(self)
+		if (self.myPlayer.midLevel == False):
+			self.myPlayer.snake.length = 3
+			self.myPlayer.snake.RandomlyPlace(self)
+		else:
+			self.LoadGame()
 		self.DisplaySnake(self.myPlayer.snake)
 
 		self.SetUpControls()
@@ -904,6 +968,8 @@ class GameScreen(Tk):
 	def GameOver(self):
 		#This procedure is used to end the game, like if the player collides witht their own body or a wall. It will delete everything on the 
 		#canvas and will close the window. It then also reopens the menu window.
+		self.myPlayer.midLevel = False
+		self.myPlayer.SavePlayer()
 		messagebox.showinfo("Game Over","GAME OVER!!!!")
 		self.gameOver = True	
 		self.CloseWindow()
@@ -933,6 +999,33 @@ class GameScreen(Tk):
 	def CheckIfPlayerTooSmall(self):
 		if (self.myPlayer.snake.length <= 2):
 			self.GameOver()
+
+	def LoadGame(self):
+		self.myPlayer.LoadPlayer(self.myPlayer.name)
+		self.myPlayer.snake.LoadSnake(self.myPlayer)
+		file = open("gameFiles/" + self.myPlayer.name + "Level.txt","r")
+
+		self.powerUps = []
+		number = int(file.readline().strip())
+		for i in range(number):
+			xPosition =  int(file.readline().strip())
+			yPosition =  int(file.readline().strip())
+			tempType =  file.readline().strip()
+			newPowerup = PowerUp(self)
+			newPowerup.MakePowerUp(xPosition,yPosition,tempType)
+			self.powerUps.append(newPowerup)
+
+	def SaveGame(self):	
+		self.myPlayer.midLevel = True	
+		self.myPlayer.SavePlayer()
+		self.myPlayer.snake.SaveSnake(self.myPlayer)
+		file = open("gameFiles/" + self.myPlayer.name + "Level.txt","w")
+
+		file.write(str(len(self.powerUps)) + "\n")
+		for i in range(len(self.powerUps)):
+			file.write(str(self.powerUps[i].position.x) + "\n")
+			file.write(str(self.powerUps[i].position.y) + "\n")
+			file.write(self.powerUps[i].powerUpType + "\n")
 
 def OpenGameScreen(myPlayer):
 	gameScreen = GameScreen(myPlayer)

@@ -1,0 +1,16 @@
+5
+33
+30
+Shrink
+40
+36
+SpeedUp
+19
+26
+Shrink
+50
+29
+SlowDown
+37
+2
+Random
