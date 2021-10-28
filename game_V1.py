@@ -6,6 +6,7 @@ screenWidth = 1600
 screenHeight = 900
 screenResolution = (str(screenWidth) + "x" + str(screenHeight))
 
+numberOfPowerUpTypes = 5
 #Classes
 
 
@@ -31,8 +32,7 @@ class PowerUp:
 
 	def RandomyType(self):
 		#This will randomly pick which type of powerup it is
-		numberOfTypes = 4
-		typeNumber = random.randint(1,numberOfTypes)
+		typeNumber = random.randint(1,numberOfPowerUpTypes)
 		if (typeNumber == 1):
 			self.powerUpType = "Grow"
 			self.color = 'blue'
@@ -45,6 +45,9 @@ class PowerUp:
 		elif (typeNumber == 4):
 			self.powerUpType = "Shrink"
 			self.color = 'yellow'
+		elif (typeNumber == 5):
+			self.powerUpType = "Random"
+			self.color = 'purple'
 
 
 	def RandomlyPlace(self,gameScreen):
@@ -70,7 +73,17 @@ class PowerUp:
 			gameScreen.myPlayer.IncreaseScore(50)
 		elif (self.powerUpType == "Shrink"):
 			snake.DecreaseLength(gameScreen,1)
-
+		elif (self.powerUpType == "Random"):#This powerup gives more points as it will randomly assign pick a powerup from the lsit of powerups
+			randomPowerNumber = random.randint(1,(numberOfPowerUpTypes - 1))
+			if (randomPowerNumber == 1):
+				snake.IncreaseLength(1)
+			elif (randomPowerNumber == 2):
+				snake.IncreaseSpeed(1)
+			elif (randomPowerNumber == 3):
+				snake.DecreaseSpeed(1)
+			elif (randomPowerNumber == 4):
+				snake.DecreaseLength(gameScreen,1)
+			gameScreen.myPlayer.IncreaseScore(150)
 		gameScreen.powerUps.remove(self)
 
 	def CheckPosition(self,gameScreen,x,y):
@@ -943,7 +956,7 @@ def ConvertToList(string):#This is used to convert a string containing a list to
 
 #Main sub that runs the program
 def BeginGame():
-	global screenResolution,screenWidth,screenHeight
+	global screenResolution,screenWidth,screenHeight, numberOfPowerUpTypes
 	windowMenu = Menu() 
 
 
