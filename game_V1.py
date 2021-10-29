@@ -109,7 +109,7 @@ class PowerUp:
 		for i in range(len(gameScreen.powerUps)):
 			if ((x == gameScreen.powerUps[i].position.x) and (y == gameScreen.powerUps[i].position.y)):
 				return False
-		return True		
+		return True
 
 
 class Snake:
@@ -130,7 +130,7 @@ class Snake:
 	def Move(self,gameScreen):
 		#This sub moves the snake. For each section of the snake's body it will first check if the body has reached a turning point on the baord. If the
 		# body section has then it will turn it's direction to the one stored in the turning point. If the final section of the snake passes a turning
-		#point then that turning point is no longer needed and therefore it is remvoed from the turning point list. This sub will then move the body of 
+		#point then that turning point is no longer needed and therefore it is remvoed from the turning point list. This sub will then move the body of
 		#snake by just adding or subtracting from the position of the body.
 		#This procedure is used every single game cycle
 		for k in range(self.speed):#It will move multiple times in one turn depending on the speed
@@ -206,8 +206,8 @@ class Snake:
 			return False
 		else:
 			for i in range(0,len(self.body)):
-				if ((x == self.body[i].x) and (y == self.body[i].y)):	
-					return False			
+				if ((x == self.body[i].x) and (y == self.body[i].y)):
+					return False
 		return True
 
 	def RandomlyGenerate(self,gameScreen):
@@ -221,12 +221,12 @@ class Snake:
 
 
 	def GenerateSnakeBody(self,gameScreen,x,y,lValue):
-		#The point of this procedure is to place the snake on the screen and to generate the position of all its body sections. The length can or cannot be specified beforehand. 
-		#The way this works is that it will first pick a random direction to generate in from the start position. It will move one section at a time in this direction and check if this new position is valid 
+		#The point of this procedure is to place the snake on the screen and to generate the position of all its body sections. The length can or cannot be specified beforehand.
+		#The way this works is that it will first pick a random direction to generate in from the start position. It will move one section at a time in this direction and check if this new position is valid
 		#for the snake to exist in. It checks using the CheckPosition procedure. If it is a valid position it will add the snake to the body, otherwise it will remove this direction from those that are valid
 		#to generate in, for this body section. It will then randomly pick another direction and loop again trying to place the same body section. It's important to note here too that changedDirections
 		#boolean is used to remember if we have suddenly begun generating in a different direction. This is then used to create a turning point, when the next body section is generated in this new direction.
-		#This turning point is very important as it ensures that then when the snake begins to move away, each of the body sections will also turn with the head. 
+		#This turning point is very important as it ensures that then when the snake begins to move away, each of the body sections will also turn with the head.
 		#This sub is crucial incase further snakes are added in the future, if the player is generated near to the edge of the board, if other snakes are randomly placed in the future or if the game ends up
 		# having walls through the middle of the grid
 		directionOfMovement = ""
@@ -251,7 +251,7 @@ class Snake:
 			changedDirections = False
 			while(not valid):
 				newYPosition = yPosition
-				newXPosition = xPosition		
+				newXPosition = xPosition
 				if (directionOfGeneration == "Up"):
 					directionOfMovement = "Down"
 					newYPosition -= 1
@@ -278,9 +278,9 @@ class Snake:
 					allDirections.remove(directionOfGeneration)
 					if (len(allDirections) == 0):
 						print("Error!")
-					else:		
+					else:
 						directionOfGeneration = random.choice(allDirections)
-						if (i != 1):#This is used as an error will be caused if we make a turning point of the previous body part, as obviously it doesn't exist. Also there's no need to have a turning point 
+						if (i != 1):#This is used as an error will be caused if we make a turning point of the previous body part, as obviously it doesn't exist. Also there's no need to have a turning point
 						#ahead of the head as at this point it is just changing the direction it will move off in
 							changedDirections = True
 
@@ -294,9 +294,9 @@ class Snake:
 			if (facing == "Right"):
 				xPosition -=1
 			elif (facing == "Left"):
-				xPosition +=1			
+				xPosition +=1
 			elif (facing == "Up"):
-				yPosition +=1			
+				yPosition +=1
 			elif (facing == "Down"):
 				yPosition -=1
 			self.body.append(Block(xPosition,yPosition,facing))
@@ -334,7 +334,7 @@ class Snake:
 		for i in range(self.length):
 			file.write(str(self.body[i].x) + "\n")
 			file.write(str(self.body[i].y) + "\n")
-			file.write(self.body[i].facing + "\n")	
+			file.write(self.body[i].facing + "\n")
 
 		file.write("\n")
 
@@ -427,7 +427,7 @@ class Scoreboard:
 				self.numberOfScores += 1
 				self.SortScores(0,(self.numberOfScores - 1))
 				self.SaveScoreboard()
-		else: 
+		else:
 			self.scores.append(newPlayer)
 			self.numberOfScores += 1
 			self.SortScores(0,(self.numberOfScores - 1))
@@ -663,6 +663,8 @@ class PauseSceen(Tk):
 
 	txtCheatCode = Entry
 
+  cheatCodes = []
+
 	def __init__(self,parentWindow):
 		super().__init__()
 		self.geometry("300x700")
@@ -704,6 +706,20 @@ class PauseSceen(Tk):
 		self.btnBack.configure(command = lambda:(self.destroy(),parentWindow.CloseWindow(True)))
 
 		self.mainloop()
+
+  def LoadInCheatCodes(self):
+    file = open("gameFiles/cheatCodes.txt","r")
+    numberOfCheatCodes = int(file.readline().strip())
+    self.cheatCodes = []
+    for i in range(numberOfCheatCodes):
+      tempString = file.readline().strip()
+      self.cheatCodes.append(tempString)
+
+  def EnterCheatCode(self):
+    self.LoadInCheatCodes()
+    userInput = self.txtCheatCode.get().strip()
+
+
 
 class RulesScreen(Tk):
 	btnBack = Button
@@ -864,7 +880,7 @@ class TitleLabel(Label):
 	#This is a reusable title label. It will fomrat and position the label correctly on the screen and will fill in the text based on the input parameter
 	def __init__(self,parentWindow,textValue):
 		super().__init__()
-		self = Label(parentWindow,text = textValue,font = ("Default",30,"bold","underline")) 
+		self = Label(parentWindow,text = textValue,font = ("Default",30,"bold","underline"))
 		self.place(relx = 0.5, rely = 0.1, anchor = CENTER)
 
 #Main game
@@ -908,7 +924,7 @@ class GameScreen(Tk):
 		self.txtScore.place(relx = 0.6,rely = 0.95,anchor = CENTER)
 
 		self.myPlayer = myPlayer
-		if (self.myPlayer.midLevel == False): #Here if the player is mid way through the level, only then will their game be loaded in and 
+		if (self.myPlayer.midLevel == False): #Here if the player is mid way through the level, only then will their game be loaded in and
 		#displayed. If they're not midlevel then they will always be randomly placed and be given a length of 3
 			self.myPlayer.snake.length = 3
 			self.myPlayer.snake.RandomlyPlace(self)
@@ -921,8 +937,8 @@ class GameScreen(Tk):
 
 
 	def DisplayGrid(self):
-		#This procedure will set up the grid for the game. It creates a canvas on the screen and draws a grid on 
-		#that. The loop draws this grid, firstly it draws two lines as the top and left borders. It then draws 21 
+		#This procedure will set up the grid for the game. It creates a canvas on the screen and draws a grid on
+		#that. The loop draws this grid, firstly it draws two lines as the top and left borders. It then draws 21
 		#horizontal and 21 vertical lines to create the grid with borders. This is so that snakes can be painted in
 		self.background.create_line(1,0,1,self.backgroundHeight)#Must draw these lines separate otherwise they would appear outside of the canvas
 		self.background.create_line(0,1,self.backgroundWidth,1)
@@ -952,7 +968,7 @@ class GameScreen(Tk):
 		self.unbind(("<" + self.myPlayer.controls[5] + ">"))
 
 	def Pause(self,event):
-		#This procedure pauses the game, opens the pause screen but also gets rid of all keybinds. This is incase they are changed within the 
+		#This procedure pauses the game, opens the pause screen but also gets rid of all keybinds. This is incase they are changed within the
 		#the pause menu. This is so that the controls can be reassgined again
 		self.paused = True
 		self.RemoveControls()
@@ -971,7 +987,7 @@ class GameScreen(Tk):
 
 
 	def DisplaySnake(self,snake):
-		#This will display a specific snake onto the screen. It calculates the position on the baord of each section of the snake based on the 
+		#This will display a specific snake onto the screen. It calculates the position on the baord of each section of the snake based on the
 		#canvas width and the number of grid lines and will draw each body section onto the canvas. This is used every single game cycle
 		gridBoxWidth = self.backgroundWidth/self.numberOfHorizontalLines
 		for i in range(0,snake.length):
@@ -1002,12 +1018,12 @@ class GameScreen(Tk):
 				self.after(self.gameCycleLength,self.StartGameCycle)
 
 	def GameOver(self):
-		#This procedure is used to end the game, like if the player collides witht their own body or a wall. It will delete everything on the 
+		#This procedure is used to end the game, like if the player collides witht their own body or a wall. It will delete everything on the
 		#canvas and will close the window. It then also reopens the menu window.
 		self.myPlayer.midLevel = False
 		self.myPlayer.SavePlayer()
 		messagebox.showinfo("Game Over","GAME OVER!!!!")
-		self.gameOver = True	
+		self.gameOver = True
 		self.CloseWindow(False)
 
 	def CloseWindow(self,askToSave):
@@ -1059,8 +1075,8 @@ class GameScreen(Tk):
 			newPowerup.MakePowerUp(xPosition,yPosition,tempType)
 			self.powerUps.append(newPowerup)
 
-	def SaveGame(self):	
-		self.myPlayer.midLevel = True	
+	def SaveGame(self):
+		self.myPlayer.midLevel = True
 		self.myPlayer.SavePlayer()
 		self.myPlayer.snake.SaveSnake(self.myPlayer)
 		file = open("gameFiles/" + self.myPlayer.name + "Level.txt","w")
@@ -1089,10 +1105,10 @@ def OpenGameScreen(myPlayer):
 
 #General Procedures
 def ConvertToList(string):#This is used to convert a string containing a list to an actual list variable
-	#This is used to convert a string to a list. It will move through each item skipping them if they are any of the list 
-	#parts like [], etc. If they are not those characters it will add them to a temp string value. This is to allow longer 
+	#This is used to convert a string to a list. It will move through each item skipping them if they are any of the list
+	#parts like [], etc. If they are not those characters it will add them to a temp string value. This is to allow longer
 	# strings for the controls. When the end of these strings have been reached, so when they're not blank and there's
-	# the second ' from ['a'] only then will it add the string to the list aas the current control. Must also reset the 
+	# the second ' from ['a'] only then will it add the string to the list aas the current control. Must also reset the
 	# value of the temp item here
 	Mylist = []
 	currentItem = ""
@@ -1107,13 +1123,8 @@ def ConvertToList(string):#This is used to convert a string containing a list to
 #Main sub that runs the program
 def BeginGame():
 	global screenResolution,screenWidth,screenHeight, numberOfPowerUpTypes
-	windowMenu = Menu() 
+	windowMenu = Menu()
 
 
 
 BeginGame()#Needed here at the end for the full program to be run. Must be specified last otherwise the other things won't have been declared yet
-
-
-
-
-
