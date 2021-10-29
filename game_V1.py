@@ -854,6 +854,9 @@ class TitleLabel(Label):
 class GameScreen(Tk):
 	background = Canvas
 
+	lbScore = Label
+	txtScore = Entry
+
 	backgroundWidth = 800
 	backgroundHeight = 800
 	numberOfVerticalLines = 50
@@ -879,6 +882,11 @@ class GameScreen(Tk):
 		self.background.configure(bg = 'white')
 		self.background.pack()
 		self.DisplayGrid()
+
+		self.lbScore = Label(self,text = "Score: ",font = ("Default",20,"bold"))
+		self.lbScore.place(relx = 0.4,rely = 0.95,anchor = CENTER)
+		self.txtScore = Entry(self,font = ("Default",20,"bold"))
+		self.txtScore.place(relx = 0.6,rely = 0.95,anchor = CENTER)
 
 		self.myPlayer = myPlayer
 		if (self.myPlayer.midLevel == False): #Here if the player is mid way through the level, only then will their game be loaded in and 
@@ -968,6 +976,7 @@ class GameScreen(Tk):
 
 				self.DisplaySnake(self.myPlayer.snake)
 				self.DisplayPowerUps()
+				self.IncreasePlayerScore()
 
 				self.gameCycleCount +=1
 				self.AddPowerUps()
@@ -1044,6 +1053,17 @@ class GameScreen(Tk):
 			file.write(self.powerUps[i].powerUpType + "\n")
 
 		messagebox.showinfo("Saved","Game has been saved!")
+
+	def DisplayScore(self):
+		self.txtScore.delete(0,"end")
+		self.txtScore.insert(0,self.myPlayer.score)
+
+	def IncreasePlayerScore(self):
+		#This will increase the players score by 1 times by each extra body length they are on top of the base 3
+		if (self.gameOver != True):
+			self.myPlayer.IncreaseScore(self.myPlayer.snake.length - 2)
+			self.DisplayScore()
+
 
 def OpenGameScreen(myPlayer):
 	gameScreen = GameScreen(myPlayer)
