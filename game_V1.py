@@ -2,14 +2,14 @@ import tkinter,time,random
 from tkinter import *
 from tkinter import messagebox
 
+#Screen Resolution is 1600x900
 screenWidth = 1600
 screenHeight = 900
 screenResolution = (str(screenWidth) + "x" + str(screenHeight))
 
 numberOfPowerUpTypes = 5
+
 #Classes
-
-
 class Block:
 	#Below class is used to store a position on the baord and a direction. This is to store a single section
 	#of a snake. This is used when the snake is turninng and moving and just within a snake class
@@ -25,6 +25,7 @@ class PowerUp:
 	position = None
 	powerUpType = "Grow"#Later in game dev there will be many different types of powerup like speedup, grow, shrink, slowdown,etc
 	color = 'blue'
+
 
 	def __init__(self,gameScreen):
 		self.RandomlyPlace(gameScreen)
@@ -887,6 +888,8 @@ class GameScreen(Tk):
 
 	paused = False
 
+
+
 	powerUps = []
 	def __init__(self,myPlayer):
 		super().__init__()
@@ -1033,8 +1036,8 @@ class GameScreen(Tk):
 			rightCornerX = (self.powerUps[i].position.x + 1) * gridBoxWidth
 			rightCornerY = (self.powerUps[i].position.y + 1) * gridBoxWidth
 
-			self.background.create_rectangle(leftCornerX,leftCornerY,rightCornerX,rightCornerY,outline = self.powerUps[i].color,fill = self.powerUps[i].color)
-
+			self.image= PhotoImage(file = "gameRes/powerUpSpeedUp.gif")
+			self.background.create_image(leftCornerX,leftCornerY,image = self.image)
 	def CheckIfPlayerTooSmall(self):
 		if (self.myPlayer.snake.length <= 2):
 			self.GameOver()
