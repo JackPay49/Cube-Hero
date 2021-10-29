@@ -36,7 +36,8 @@ class PowerUp:
 		self.SetColor()
 
 	def RandomyType(self):
-		#This will randomly pick which type of powerup it is
+		#This will randomly pick which type of powerup it is and will then set the color based
+		#on the color
 		typeNumber = random.randint(1,numberOfPowerUpTypes)
 		if (typeNumber == 1):
 			self.powerUpType = "Grow"
@@ -51,6 +52,7 @@ class PowerUp:
 		self.SetColor()
 
 	def SetColor(self):
+		#Changes the color based on the type of powerup
 		if (self.powerUpType == "Grow"):
 			self.color = 'blue'
 		elif (self.powerUpType == "SpeedUp"):
@@ -208,7 +210,7 @@ class Snake:
 		return True
 
 	def RandomlyGenerate(self,gameScreen):
-		self.length = random.randint(3,20)
+		self.length = random.randint(3,20)#Minimum size a snake can be is 3 long, as it reaches 2 it will die
 		self.RandomlyPlace(gameScreen)
 
 	def RandomlyPlace(self,gameScreen):
@@ -324,6 +326,8 @@ class Snake:
 
 
 	def SaveSnake(self,myPlayer):
+		#This procedure writes up all of the details about the snake, which come down to each
+		#of the body sections and all of the turning points
 		file = open("gameFiles/" + myPlayer.name + "Snake.txt","w")
 		file.write(str(self.length) + "\n")
 		for i in range(self.length):
@@ -431,7 +435,7 @@ class Player:
 	score = 0
 	password = ""
 	controls = ['w','a','s','d','e','b']#This stores the player controls for up, left, down, right, pause and boss screen respectively. These will be used when actraully assigning controls in the game screen
-	midLevel = False
+	midLevel = False#Midlevel is used to tell the program whether the player is mid way through a level already. If they are then it will actually load the level details in, but if they're not then it won't.
 
 	snake = Snake()
 
@@ -455,7 +459,7 @@ class Player:
 		file.write(str(self.password) + "\n")
 		file.write(str(self.score) + "\n")
 		file.write(str(self.controls) + "\n")
-		if (self.midLevel == True):
+		if (self.midLevel == True):#In the player file the midlevel boolean is stored as either a 0 or 1
 			file.write("1\n")
 		else:
 			file.write("0\n")
@@ -476,6 +480,7 @@ class Player:
 	def IncreaseScore(self,amount):
 		self.score += amount
 
+#Screen Classes:
 class Menu(Tk):
 	lbTitle = Label
 
@@ -679,7 +684,7 @@ class PauseSceen(Tk):
 
 		self.btnBack = Button(self,text = "Quit Game",font = fontButton)
 		self.btnBack.place(relx = 0.5, rely = 0.9, anchor = CENTER)
-		self.btnBack.configure(command = lambda:(self.destroy(),parentWindow.CloseWindow()))
+		self.btnBack.configure(command = lambda:(self.destroy(),parentWindow.CloseWindow(True)))
 
 		self.mainloop()
 
@@ -876,7 +881,8 @@ class GameScreen(Tk):
 		self.DisplayGrid()
 
 		self.myPlayer = myPlayer
-		if (self.myPlayer.midLevel == False):
+		if (self.myPlayer.midLevel == False): #Here if the player is mid way through the level, only then will their game be loaded in and 
+		#displayed. If they're not midlevel then they will always be randomly placed and be given a length of 3
 			self.myPlayer.snake.length = 3
 			self.myPlayer.snake.RandomlyPlace(self)
 		else:
@@ -919,6 +925,8 @@ class GameScreen(Tk):
 		self.unbind(("<" + self.myPlayer.controls[5] + ">"))
 
 	def Pause(self,event):
+		#This procedure pauses the game, opens the pause screen but also gets rid of all keybinds. This is incase they are changed within the 
+		#the pause menu. This is so that the controls can be reassgined again
 		self.paused = True
 		self.RemoveControls()
 		pauseMenu = PauseSceen(self)
@@ -972,12 +980,15 @@ class GameScreen(Tk):
 		self.myPlayer.SavePlayer()
 		messagebox.showinfo("Game Over","GAME OVER!!!!")
 		self.gameOver = True	
-		self.CloseWindow()
+		self.CloseWindow(False)
 
-	def CloseWindow(self):
-		self.background.delete(ALL)
-		self.destroy()
-		BeginGame()
+	def CloseWindow(self,askToSave):
+		if (askToSave):
+
+		else:
+			self.background.delete(ALL)
+			self.destroy()
+			BeginGame()
 
 	def AddPowerUps(self):
 		#Every 10 game cycles a new powerup will be added to the screen
@@ -1001,6 +1012,8 @@ class GameScreen(Tk):
 			self.GameOver()
 
 	def LoadGame(self):
+		#This procedure will load in the player, their snake and the full gameboard. The only detail from the game bpard to really load in is all of the powerups on the
+		#screen
 		self.myPlayer.LoadPlayer(self.myPlayer.name)
 		self.myPlayer.snake.LoadSnake(self.myPlayer)
 		file = open("gameFiles/" + self.myPlayer.name + "Level.txt","r")
@@ -1026,6 +1039,8 @@ class GameScreen(Tk):
 			file.write(str(self.powerUps[i].position.x) + "\n")
 			file.write(str(self.powerUps[i].position.y) + "\n")
 			file.write(self.powerUps[i].powerUpType + "\n")
+
+		messagebox.showinfo("Saved","Game has been saved!")
 
 def OpenGameScreen(myPlayer):
 	gameScreen = GameScreen(myPlayer)
