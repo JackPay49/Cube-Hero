@@ -404,6 +404,7 @@ class Scoreboard:
 
 	def LoadInScoreboard(self):
 		#This will load in details from the scoreboard. It reads the values for each player and puts them into a temporary player strcuture which is then added to the scoreabord list.
+		self.scores = []
 		file = open("gameFiles/scoreboard.txt","rt")
 		self.numberOfScores = int(file.readline())
 		for i in range(0,self.numberOfScores):
@@ -418,6 +419,7 @@ class Scoreboard:
 		#There are two possible cases to adding a score to the scorebaord. 1: the scoreboard is full already. If it is already full then it will compare to the last score in the scorebaord, the lowest. If the new
 		#score is higher than that, it should be added and so replaces this last score. We then resort and save the scorebaord if it was added.
 		#2: in this case the scorebaord isn't full. In this case the new score can just be added to the end of the scorebaord and it can be sorted and saved.
+		self.RemoveScoreFromScoreboard(newPlayer)#This will first check to see if the player has already featured on the scorebaord. It will remove them if they have, to reposition them
 		if (len(self.scores) >= self.maxNumberOfScores):
 			if (newPlayer.score > self.scores[maxNumberOfScores - 1].score):
 				self.scores[maxNumberOfScores - 1] = newPlayer
@@ -429,6 +431,15 @@ class Scoreboard:
 			self.numberOfScores += 1
 			self.SortScores(0,(self.numberOfScores - 1))
 			self.SaveScoreboard()
+
+	def RemoveScoreFromScoreboard(self,myPlayer):
+		i = 0
+		while i < len(self.scores):
+			if (self.scores[i].name == myPlayer.name):
+				self.scores.remove(self.scores[i])
+				self.numberOfScores -=1
+			else:
+				i+=1
 
 class Player:
 	name = ""
@@ -464,6 +475,11 @@ class Player:
 		else:
 			file.write("0\n")
 		file.close()
+
+		scoreboard = Scoreboard()
+		scoreboard.LoadInScoreboard()
+		scoreboard.AddScoreToScoreboard(self)
+		scoreboard = None
 
 	def CreatePlayer(self,nValue,pValue):
 		self.name = nValue
