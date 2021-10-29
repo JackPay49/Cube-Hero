@@ -983,12 +983,15 @@ class GameScreen(Tk):
 		self.CloseWindow(False)
 
 	def CloseWindow(self,askToSave):
+		#This will check if the player wants to save on certain occasions. This is because we don't need to save if they lose a round of the game
+		saveGame = ""
 		if (askToSave):
-
-		else:
-			self.background.delete(ALL)
-			self.destroy()
-			BeginGame()
+			saveGame = messagebox.askquestion("Quit","Would you like to save your progress?")
+			if (saveGame == 'yes'):
+				self.SaveGame()
+		self.background.delete(ALL)
+		self.destroy()
+		BeginGame()
 
 	def AddPowerUps(self):
 		#Every 10 game cycles a new powerup will be added to the screen
