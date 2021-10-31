@@ -113,7 +113,7 @@ class PowerUp:
 
 
 class Snake:
-	color = 'black'
+	color = '#0FFF50'
 	length = 0
 	moving = True
 
@@ -662,8 +662,7 @@ class PauseSceen(Tk):
 	btnCheatCode = Button
 
 	txtCheatCode = Entry
-
-  cheatCodes = []
+	cheatCodes = []
 
 	def __init__(self,parentWindow):
 		super().__init__()
@@ -707,17 +706,17 @@ class PauseSceen(Tk):
 
 		self.mainloop()
 
-  def LoadInCheatCodes(self):
-    file = open("gameFiles/cheatCodes.txt","r")
-    numberOfCheatCodes = int(file.readline().strip())
-    self.cheatCodes = []
-    for i in range(numberOfCheatCodes):
-      tempString = file.readline().strip()
-      self.cheatCodes.append(tempString)
+	def LoadInCheatCodes(self):
+		file = open("gameFiles/cheatCodes.txt","r")
+		numberOfCheatCodes = int(file.readline().strip())
+		self.cheatCodes = []
+		for i in range(numberOfCheatCodes):
+			tempString = file.readline().strip()
+			self.cheatCodes.append(tempString)
 
-  def EnterCheatCode(self):
-    self.LoadInCheatCodes()
-    userInput = self.txtCheatCode.get().strip()
+	def EnterCheatCode(self):
+		self.LoadInCheatCodes()
+		userInput = self.txtCheatCode.get().strip()
 
 
 
@@ -907,6 +906,8 @@ class GameScreen(Tk):
 
 
 	powerUps = []
+	powerUpImages = []
+
 	def __init__(self,myPlayer):
 		super().__init__()
 		self.title("Game screen")
@@ -914,9 +915,9 @@ class GameScreen(Tk):
 
 		self.background = Canvas(self,width = self.backgroundWidth,height = self.backgroundHeight)
 		self.background.place(relx = 0.5,rely = 0.5, anchor = CENTER)
-		self.background.configure(bg = 'white')
+		self.background.configure(bg = 'black')
 		self.background.pack()
-		self.DisplayGrid()
+		# self.DisplayGrid()
 
 		self.lbScore = Label(self,text = "Score: ",font = ("Default",20,"bold"))
 		self.lbScore.place(relx = 0.4,rely = 0.95,anchor = CENTER)
@@ -940,16 +941,16 @@ class GameScreen(Tk):
 		#This procedure will set up the grid for the game. It creates a canvas on the screen and draws a grid on
 		#that. The loop draws this grid, firstly it draws two lines as the top and left borders. It then draws 21
 		#horizontal and 21 vertical lines to create the grid with borders. This is so that snakes can be painted in
-		self.background.create_line(1,0,1,self.backgroundHeight)#Must draw these lines separate otherwise they would appear outside of the canvas
-		self.background.create_line(0,1,self.backgroundWidth,1)
+		self.background.create_line(1,0,1,self.backgroundHeight,fill = 'white')#Must draw these lines separate otherwise they would appear outside of the canvas
+		self.background.create_line(0,1,self.backgroundWidth,1,fill = 'white')
 
 		for i in range(1,(self.numberOfVerticalLines + 1) ):
 			xposition = (i * (self.backgroundWidth/self.numberOfVerticalLines))
-			self.background.create_line(xposition,0,xposition,self.backgroundHeight)
+			self.background.create_line(xposition,0,xposition,self.backgroundHeight,fill = 'white')
 
 		for i in range(1,(self.numberOfHorizontalLines + 1)):
 			yPosition = (i * (self.backgroundHeight/self.numberOfHorizontalLines))
-			self.background.create_line(0,yPosition,self.backgroundWidth,yPosition)
+			self.background.create_line(0,yPosition,self.backgroundWidth,yPosition,fill = 'white')
 	def SetUpControls(self):
 		#This procedure makes all of the keybinds to be used in game. It makes them using what the player input for their controls
 		self.bind(("<" + self.myPlayer.controls[0] + ">"),self.myPlayer.snake.UpAction)
@@ -980,10 +981,22 @@ class GameScreen(Tk):
 		self.StartGameCycle()
 
 	def BossScreen(self,event):
+		#This procedure is used whenever the player uses the boss screen control. It will make the screen the boss screen or undo the boss 
+		#screen based on the current state. It works the same as pausing the game except it also will paste an image of a word document to 
+		#make it look like work is being done.
 		if (self.paused == True):
+			self.background.configure(width = self.backgroundWidth,height = self.backgroundHeight)
+			self.lbScore.place(relx = 0.4,rely = 0.95,anchor = CENTER)
+			self.txtScore.place(relx = 0.6,rely = 0.95,anchor = CENTER)			
 			self.Unpause()
 		else:
 			self.paused = True
+			self.background.configure(width = screenWidth,height = screenHeight)
+			self.image = PhotoImage(file = "gameRes/bossScreen.png")
+			self.background.create_image((screenWidth/2),(screenHeight/2),image = self.image)
+			self.txtScore.place_forget()#These two commands are used to hide the score parts
+			self.lbScore.place_forget()
+
 
 
 	def DisplaySnake(self,snake):
@@ -1003,7 +1016,7 @@ class GameScreen(Tk):
 		#snakes in their new positions. The final instruction is used to make the delay between moves and to carry on the iterative procedure.
 		if ((not self.paused) and (not self.gameOver)):
 			self.background.delete(ALL)
-			self.DisplayGrid()
+			# self.DisplayGrid()
 
 			self.myPlayer.snake.Move(self)
 			self.CheckIfPlayerTooSmall()
@@ -1047,13 +1060,11 @@ class GameScreen(Tk):
 		#This just displays and paints each of the powerups on the screen in the same way that snakes are
 		gridBoxWidth = self.backgroundWidth/self.numberOfHorizontalLines
 		for i in range(0,len(self.powerUps)):
-			leftCornerX = self.powerUps[i].position.x * gridBoxWidth
-			leftCornerY = self.powerUps[i].position.y * gridBoxWidth
-			rightCornerX = (self.powerUps[i].position.x + 1) * gridBoxWidth
-			rightCornerY = (self.powerUps[i].position.y + 1) * gridBoxWidth
+			leftCornerX = (self.powerUps[i].position.x + 0.5) * gridBoxWidth
+			leftCornerY = (self.powerUps[i].position.y + 0.5) * gridBoxWidth
 
-			self.image= PhotoImage(file = "gameRes/powerUpSpeedUp.gif")
-			self.background.create_image(leftCornerX,leftCornerY,image = self.image)
+			self.powerUpImages.append(PhotoImage(file = "gameRes/" + self.powerUps[i].powerUpType +".gif"))
+			self.background.create_image(leftCornerX,leftCornerY,image = self.powerUpImages[len(self.powerUpImages) - 1])
 	def CheckIfPlayerTooSmall(self):
 		if (self.myPlayer.snake.length <= 2):
 			self.GameOver()
