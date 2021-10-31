@@ -78,7 +78,7 @@ class PowerUp:
 		#This procedure is simple currently but should become far more complex. It will carry out the actual function of the powerup. So it will increase size of the player if it is type grow, etc, etc.
 		#The Shrink powerup gives no points as it makes the game easier to play
 		if (self.powerUpType == "Grow"):
-			snake.IncreaseLength(1)
+			snake.IncreaseLength(gameScreen,1)
 			gameScreen.myPlayer.IncreaseScore(100)
 		elif (self.powerUpType == "SpeedUp"):
 			snake.IncreaseSpeed(1)
@@ -91,7 +91,7 @@ class PowerUp:
 		elif (self.powerUpType == "Random"):#This powerup gives more points as it will randomly assign pick a powerup from the lsit of powerups
 			randomPowerNumber = random.randint(1,(numberOfPowerUpTypes - 1))
 			if (randomPowerNumber == 1):
-				snake.IncreaseLength(1)
+				snake.IncreaseLength(gameScreen,1)
 			elif (randomPowerNumber == 2):
 				snake.IncreaseSpeed(1)
 			elif (randomPowerNumber == 3):
@@ -218,86 +218,73 @@ class Snake:
 
 
 	def GenerateSnakeBody(self,gameScreen,x,y,lValue):
-		#The point of this procedure is to place the snake on the screen and to generate the position of all its body sections. The length can or cannot be specified beforehand.
-		#The way this works is that it will first pick a random direction to generate in from the start position. It will move one section at a time in this direction and check if this new position is valid
-		#for the snake to exist in. It checks using the CheckPosition procedure. If it is a valid position it will add the snake to the body, otherwise it will remove this direction from those that are valid
-		#to generate in, for this body section. It will then randomly pick another direction and loop again trying to place the same body section. It's important to note here too that changedDirections
-		#boolean is used to remember if we have suddenly begun generating in a different direction. This is then used to create a turning point, when the next body section is generated in this new direction.
-		#This turning point is very important as it ensures that then when the snake begins to move away, each of the body sections will also turn with the head.
-		#This sub is crucial incase further snakes are added in the future, if the player is generated near to the edge of the board, if other snakes are randomly placed in the future or if the game ends up
-		# having walls through the middle of the grid
-		directionOfMovement = ""
+		#This procedure will generate all the positions of the body of a snake based on the position of its head and its length. It first checks what direction to generate in
+		# and won't generate running straight into the side of the screen. It then will then place the head of the snake and just increase in length, using this pther procedure
+		#to grow in a legal way 						 
 		xPosition = x
 		yPosition = y
-		allDirections = ["Up","Left","Down","Right"]
+		directions = ["Up","Left","Down","Right"]
 		self.body = []
 		if (x <= 5):
-			allDirections.remove("Right")
+			directions.remove("Left")
 		elif (y <= 5):
-			allDirections.remove("Down")
+			directions.remove("Up")
 		elif (x >= (gameScreen.numberOfHorizontalLines - 5)):
-			allDirections.remove("Left")
+			directions.remove("Right")
 		elif (y <= (gameScreen.numberOfVerticalLines - 5)):
-			allDirections.remove("Up")
+			directions.remove("Down")
+		directionOfMovement = random.choice(directions)
+		self.body.append(Block(x,y,directionOfMovement))
+		self.length = 1
+		self.IncreaseLength(gameScreen,(lValue - 1))
 
-		directionOfGeneration = random.choice(allDirections)
-		self.length = lValue
-		for i in range(0,self.length):
+
+
+	def IncreaseLength(self,gameScreen,amount):
+		#This procedure will increase the length of the snake and will chekc to make sure it doesn't run off of the edge of the screen or collide with any powerups. The snake must already have atleast a length of 1 and have the head placed already
+		#It generates the new position of the next body section and the direction it is generating in based off of that head piece. It will check if the position is legal and place the new body part at this position if so. If it is not legal then
+		#it will remove this direction from the list of all possible directions, will randomly pick a new one and attempt to generate this way. When the snake begins generating in a new direction it will create a turning point at the last body part
+		xPosition = self.body[len(self.body) - 1].x		
+		yPosition = self.body[len(self.body) - 1].y		
+		facing = self.body[len(self.body) - 1].facing #direction of movement		
+		for i in range(1,amount + 1):
+			self.length += 1
 			allDirections = ["Up","Left","Down","Right"]
 			valid = False
 			changedDirections = False
 			while(not valid):
 				newYPosition = yPosition
 				newXPosition = xPosition
-				if (directionOfGeneration == "Up"):
-					directionOfMovement = "Down"
+				if (facing == "Down"):
 					newYPosition -= 1
-				elif(directionOfGeneration == "Down"):
-					directionOfMovement = "Up"
+				elif(facing == "Up"):
 					newYPosition += 1
-				elif(directionOfGeneration == "Right"):
-					directionOfMovement = "Left"
+				elif(facing == "Left"):
 					newXPosition += 1
-				elif(directionOfGeneration == "Left"):
-					directionOfMovement = "Right"
+				elif(facing == "Right"):
 					newXPosition -= 1
 				if (self.CheckPosition(gameScreen,newXPosition,newYPosition)):
 					valid = True
 					xPosition = newXPosition
 					yPosition = newYPosition
-					self.body.append(Block(xPosition,yPosition,directionOfMovement))
+					self.body.append(Block(xPosition,yPosition,facing))
 					if (changedDirections):
-						turningPoint = Block(self.body[i - 1].x,self.body[i - 1].y,self.body[i - 1].facing)#We save the previous block as this is the one that is actually on the bend of the snake. It must
+						turningPoint = Block(self.body[len(self.body) - 2].x,self.body[len(self.body) - 2].y,self.body[len(self.body) - 2].facing)#We save the previous block as this is the one that is actually on the bend of the snake. It must
 						#be made in a new instance of Block() to ensure that it isn't updated like the body part is, when the snake moves next
 						self.turningPoints.append(turningPoint)
 				else:
 					valid = False
-					allDirections.remove(directionOfGeneration)
+					allDirections.remove(facing)
+
 					if (len(allDirections) == 0):
 						print("Error!")
 					else:
-						directionOfGeneration = random.choice(allDirections)
+						facing = random.choice(allDirections)
 						if (i != 1):#This is used as an error will be caused if we make a turning point of the previous body part, as obviously it doesn't exist. Also there's no need to have a turning point
 						#ahead of the head as at this point it is just changing the direction it will move off in
-							changedDirections = True
+		 					changedDirections = True
 
-	def IncreaseLength(self,amount):
-		#This procedure will increase the size of the snake by a certain amount. It does this by mimicking the tail of the snake and adding it to the list of the snake's body.
-		# directions = ["Up","Left","Down","Right"]
-		for i in range(amount):
-			xPosition = self.body[self.length - 1].x
-			yPosition = self.body[self.length - 1].y
-			facing = self.body[self.length - 1].facing
-			self.length +=1
-			if (facing == "Right"):
-				xPosition -=1
-			elif (facing == "Left"):
-				xPosition +=1
-			elif (facing == "Up"):
-				yPosition +=1
-			elif (facing == "Down"):
-				yPosition -=1
-			self.body.append(Block(xPosition,yPosition,facing))
+
 
 	def CheckCollisions(self,gameScreen):
 		#This procedure checks through the list of powerups to see if the head of the snake has intercepted any pwoerups. If it has then the powerup will be activated on this snake
@@ -717,7 +704,7 @@ class PauseSceen(Tk):
 		self.LoadInCheatCodes()
 		userInput = self.txtCheatCode.get().strip()
 		if (userInput == self.cheatCodes[0]):
-			gameScreen.myPlayer.snake.IncreaseLength(10)
+			gameScreen.myPlayer.snake.IncreaseLength(gameScreen,10)
 		elif (userInput == self.cheatCodes[1]):
 			gameScreen.myPlayer.snake.DecreaseLength(gameScreen,10)		
 		elif (userInput == self.cheatCodes[2]):
