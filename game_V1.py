@@ -78,7 +78,8 @@ class PowerUp:
 		#This procedure is simple currently but should become far more complex. It will carry out the actual function of the powerup. So it will increase size of the player if it is type grow, etc, etc.
 		#The Shrink powerup gives no points as it makes the game easier to play
 		if (self.powerUpType == "Grow"):
-			snake.IncreaseLength(gameScreen,1)
+			if (gameScreen.checkIfPlayerTooSmall == True):#This is so that the length isn't increased if the player has entered the cheat code to keep them at a length of 1
+				snake.IncreaseLength(gameScreen,1)
 			gameScreen.myPlayer.IncreaseScore(100)
 		elif (self.powerUpType == "SpeedUp"):
 			snake.IncreaseSpeed(1)
@@ -87,7 +88,8 @@ class PowerUp:
 			snake.DecreaseSpeed(1)
 			gameScreen.myPlayer.IncreaseScore(50)
 		elif (self.powerUpType == "Shrink"):
-			snake.DecreaseLength(gameScreen,1)
+			if (gameScreen.checkIfPlayerTooSmall == True):#This is to ensure the player isn't made into a size of 0, if they entered the cheat code to make them a size of 1 then keep them at that size
+				snake.DecreaseLength(gameScreen,1)
 		elif (self.powerUpType == "Random"):#This powerup gives more points as it will randomly assign pick a powerup from the lsit of powerups
 			randomPowerNumber = random.randint(1,(numberOfPowerUpTypes - 1))
 			if (randomPowerNumber == 1):
@@ -329,7 +331,8 @@ class Snake:
 			file.write(str(self.turningPoints[i].y) + "\n")
 			file.write(self.turningPoints[i].facing + "\n")
 
-	def LoadSnake(self,myPlayer):
+
+	def LoadSnake(self,gameScreen,myPlayer):
 		file = open("gameFiles/" + myPlayer.name + "Snake.txt","r")
 		self.length = int(file.readline().strip())
 		self.body = []
@@ -349,6 +352,8 @@ class Snake:
 			facing = file.readline().strip()
 			self.turningPoints.append(Block(xPosition,yPosition,facing))
 
+		if (self.length == 1):
+			gameScreen.checkIfPlayerTooSmall = False
 
 class Scoreboard:
 
@@ -703,15 +708,21 @@ class PauseSceen(Tk):
 	def EnterCheatCode(self,gameScreen):
 		self.LoadInCheatCodes()
 		userInput = self.txtCheatCode.get().strip()
-		if (userInput == self.cheatCodes[0]):
+		if (self.cheatCodes[0] in userInput):
 			gameScreen.myPlayer.snake.IncreaseLength(gameScreen,10)
-		elif (userInput == self.cheatCodes[1]):
+		if (self.cheatCodes[1] in userInput):
 			gameScreen.myPlayer.snake.DecreaseLength(gameScreen,10)		
-		elif (userInput == self.cheatCodes[2]):
+		if (self.cheatCodes[2] in userInput):
 			gameScreen.myPlayer.snake.IncreaseSpeed(3)		
-		elif (userInput == self.cheatCodes[3]):
+		if (self.cheatCodes[3] in userInput):
 			gameScreen.myPlayer.snake.DecreaseSpeed(3)		
-		# elif (userInput == self.cheatCodes[4]):
+		if (self.cheatCodes[4] in userInput):
+			gameScreen.checkIfPlayerTooSmall = False
+			gameScreen.myPlayer.snake.DecreaseLength(gameScreen,gameScreen.myPlayer.snake.length - 1)
+			while (len(gameScreen.myPlayer.snake.turningPoints) > 0):
+				gameScreen.myPlayer.snake.turningPoints.remove(gameScreen.myPlayer.snake.turningPoints[0])		
+		if (self.cheatCodes[5] in userInput):
+			gameScreen.pointModifier = 2500	
 
 
 
@@ -895,13 +906,14 @@ class GameScreen(Tk):
 	myPlayer = Player()
 
 	gameOver = False
-
 	paused = False
 
-
+	checkIfPlayerTooSmall = True
 
 	powerUps = []
 	powerUpImages = []
+
+	pointModifier = 1
 
 	def __init__(self,myPlayer):
 		super().__init__()
@@ -1014,7 +1026,8 @@ class GameScreen(Tk):
 			# self.DisplayGrid()
 
 			self.myPlayer.snake.Move(self)
-			self.CheckIfPlayerTooSmall()
+			if (self.checkIfPlayerTooSmall):
+				self.CheckIfPlayerTooSmall()
 			if (not self.gameOver):
 
 				self.DisplaySnake(self.myPlayer.snake)
@@ -1068,7 +1081,7 @@ class GameScreen(Tk):
 		#This procedure will load in the player, their snake and the full gameboard. The only detail from the game bpard to really load in is all of the powerups on the
 		#screen
 		self.myPlayer.LoadPlayer(self.myPlayer.name)
-		self.myPlayer.snake.LoadSnake(self.myPlayer)
+		self.myPlayer.snake.LoadSnake(self,self.myPlayer)
 		file = open("gameFiles/" + self.myPlayer.name + "Level.txt","r")
 
 		self.powerUps = []
@@ -1102,7 +1115,9 @@ class GameScreen(Tk):
 	def IncreasePlayerScore(self):
 		#This will increase the players score by 1 times by each extra body length they are on top of the base 3
 		if (self.gameOver != True):
-			self.myPlayer.IncreaseScore(self.myPlayer.snake.length - 2)
+			if (self.pointModifier != 2500):
+				self.pointModifier = self.myPlayer.snake.length - 2
+			self.myPlayer.IncreaseScore(self.pointModifier)
 			self.DisplayScore()
 
 	#Cheat codes below
