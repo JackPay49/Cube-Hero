@@ -1,0 +1,7 @@
+6
+grow
+shrink
+speed
+slow
+tiny
+morepoints

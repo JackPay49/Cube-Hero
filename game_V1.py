@@ -182,12 +182,10 @@ class Snake:
 		if ((self.body[0].facing == "Right") or (self.body[0].facing == "Left")):
 			self.body[0].facing = "Up"
 			self.turningPoints.append(Block(self.body[0].x,self.body[0].y,self.body[0].facing))
-
 	def LeftAction(self,event):
 		if ((self.body[0].facing == "Up") or (self.body[0].facing == "Down")):
 			self.body[0].facing = "Left"
 			self.turningPoints.append(Block(self.body[0].x,self.body[0].y,self.body[0].facing))
-
 	def DownAction(self,event):
 		if ((self.body[0].facing == "Right") or (self.body[0].facing == "Left")):
 			self.body[0].facing = "Down"
@@ -213,7 +211,6 @@ class Snake:
 	def RandomlyGenerate(self,gameScreen):
 		self.length = random.randint(3,20)#Minimum size a snake can be is 3 long, as it reaches 2 it will die
 		self.RandomlyPlace(gameScreen)
-
 	def RandomlyPlace(self,gameScreen):
 		x = random.randint(1,gameScreen.numberOfHorizontalLines)
 		y = random.randint(1,gameScreen.numberOfVerticalLines)
@@ -286,6 +283,7 @@ class Snake:
 
 	def IncreaseLength(self,amount):
 		#This procedure will increase the size of the snake by a certain amount. It does this by mimicking the tail of the snake and adding it to the list of the snake's body.
+		# directions = ["Up","Left","Down","Right"]
 		for i in range(amount):
 			xPosition = self.body[self.length - 1].x
 			yPosition = self.body[self.length - 1].y
@@ -697,6 +695,7 @@ class PauseSceen(Tk):
 
 		self.btnCheatCode = Button(self,text = "Enter Cheat Code",font = fontButton)
 		self.btnCheatCode.place(relx = 0.5, rely = 0.7, anchor = CENTER)
+		self.btnCheatCode.configure(command = lambda:(self.EnterCheatCode(parentWindow)))
 		self.txtCheatCode = Entry(self,font = fontNormal)
 		self.txtCheatCode.place(relx = 0.5,rely = 0.8, anchor = CENTER)
 
@@ -714,9 +713,18 @@ class PauseSceen(Tk):
 			tempString = file.readline().strip()
 			self.cheatCodes.append(tempString)
 
-	def EnterCheatCode(self):
+	def EnterCheatCode(self,gameScreen):
 		self.LoadInCheatCodes()
 		userInput = self.txtCheatCode.get().strip()
+		if (userInput == self.cheatCodes[0]):
+			gameScreen.myPlayer.snake.IncreaseLength(10)
+		elif (userInput == self.cheatCodes[1]):
+			gameScreen.myPlayer.snake.DecreaseLength(gameScreen,10)		
+		elif (userInput == self.cheatCodes[2]):
+			gameScreen.myPlayer.snake.IncreaseSpeed(3)		
+		elif (userInput == self.cheatCodes[3]):
+			gameScreen.myPlayer.snake.DecreaseSpeed(3)		
+		# elif (userInput == self.cheatCodes[4]):
 
 
 
@@ -1109,6 +1117,9 @@ class GameScreen(Tk):
 		if (self.gameOver != True):
 			self.myPlayer.IncreaseScore(self.myPlayer.snake.length - 2)
 			self.DisplayScore()
+
+	#Cheat codes below
+
 
 
 def OpenGameScreen(myPlayer):
