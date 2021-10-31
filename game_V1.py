@@ -121,6 +121,8 @@ class Snake:
 
 	speed = 1
 
+	snakeType = "Player"
+
 	#The below list stores the actual body of the snake. It stores the position on the board of each section and
 	#the direction that block is moving in as the different parts can be moving in different ways
 	body = []
@@ -128,6 +130,14 @@ class Snake:
 	#Below stores positions on the board. When part of the snake reaches them they should turn in a different
 	#direction
 	turningPoints = []
+
+	def __init__(self,stValue):
+		self.snakeType = stValue
+		if (self.snakeType == "Player"):
+			self.color = '#0FFF50'
+		else:
+			self.color = '#FF5F1F'
+
 
 	def Move(self,gameScreen):
 		#This sub moves the snake. For each section of the snake's body it will first check if the body has reached a turning point on the baord. If the
@@ -165,8 +175,11 @@ class Snake:
 					#the new position of the snake. It only validating colliding with something on i==0 as this is the head. Only this can collide with
 					#something.
 					if ((not self.CheckPosition(gameScreen,xPosition,yPosition)) and (i == 0)):
-						gameScreen.GameOver()
+						if (self.snakeType == "Player"):#This will only cause a game over if the snake is the player. It will make the snake flash white and stop moving
+							gameScreen.GameOver()
 						self.moving = False
+						self.color = "white"
+
 					else:
 						self.CheckCollisions(gameScreen)#This will check for collisions such as if the player intercepts a powerup
 						if (i < self.length):
@@ -181,18 +194,26 @@ class Snake:
 	#The procedures will then change which direction the head of the snake, the first block, is moving and will add the turning point to the list. It
 	#adds the turning point after changing the direction the head is moving as otherwise the rest of the body would keep on moving
 	def UpAction(self,event):
+		self.TurnUp()
+	def TurnUp(self):
 		if ((self.body[0].facing == "Right") or (self.body[0].facing == "Left")):
 			self.body[0].facing = "Up"
 			self.turningPoints.append(Block(self.body[0].x,self.body[0].y,self.body[0].facing))
 	def LeftAction(self,event):
+		self.TurnLeft()
+	def TurnLeft(self):
 		if ((self.body[0].facing == "Up") or (self.body[0].facing == "Down")):
 			self.body[0].facing = "Left"
 			self.turningPoints.append(Block(self.body[0].x,self.body[0].y,self.body[0].facing))
 	def DownAction(self,event):
+		self.TurnDown()
+	def TurnDown(self):
 		if ((self.body[0].facing == "Right") or (self.body[0].facing == "Left")):
 			self.body[0].facing = "Down"
 			self.turningPoints.append(Block(self.body[0].x,self.body[0].y,self.body[0].facing))
 	def RightAction(self,event):
+		self.TurnRight()
+	def TurnRight(self):
 		if ((self.body[0].facing == "Up") or (self.body[0].facing == "Down")):
 			self.body[0].facing = "Right"
 			self.turningPoints.append(Block(self.body[0].x,self.body[0].y,self.body[0].facing))
@@ -355,6 +376,48 @@ class Snake:
 		if (self.length == 1):
 			gameScreen.checkIfPlayerTooSmall = False
 
+	def DoEnemySnakeMove(self,gameScreen):
+		#This procedure will randomly decide whether to make the enmy snake turn or keep going in a straight line. This procedure should validate where they're moving next
+		#if they're moving straight on and turn them if the next position isn't a valid one. When turning the snake should also move one place forwards
+		choice = random.randint(0,10)
+		repeat = True
+		while ( repeat):
+			repeat = False		
+			if (choice == 0):#then turn a random direction
+				direction = random.randint(0,1)
+				if ((self.body[0].facing == "Up") or (self.body[0].facing == "Down")):
+					if (direction == 0):
+						self.TurnRight()
+					elif (direction == 1):
+						self.TurnLeft()
+				elif ((self.body[0].facing == "Left") or (self.body[0].facing == "Right")):
+					if (direction == 0):
+						self.TurnUp()
+					elif (direction == 1):
+						self.TurnDown()
+				self.Move(gameScreen)
+			else:#then go straight
+				xPosition = self.body[0].x
+				yPosition = self.body[0].y
+				facing = self.body[0].facing
+				if (facing == "Right"):
+					xPosition +=1
+				elif (facing == "Left"):
+					xPosition -=1
+				elif (facing == "Down"):
+					yPosition +=1
+				elif (facing == "Up"):
+					yPosition -=1
+
+				if(self.CheckPosition(gameScreen,xPosition,yPosition)):
+					self.Move(gameScreen)
+				else:
+					choice = 0
+					repeat = True
+
+
+
+
 class Scoreboard:
 
 	scores = []
@@ -439,7 +502,7 @@ class Player:
 	controls = ['w','a','s','d','e','b']#This stores the player controls for up, left, down, right, pause and boss screen respectively. These will be used when actraully assigning controls in the game screen
 	midLevel = False#Midlevel is used to tell the program whether the player is mid way through a level already. If they are then it will actually load the level details in, but if they're not then it won't.
 
-	snake = Snake()
+	snake = Snake("Player")
 
 	def LoadPlayer(self,nValue):
 		#This jsut loads in the details of the player. Important thing to note here is the loading of the controls. They are read in as a string and then a separate procedure will find the control values and
@@ -915,6 +978,8 @@ class GameScreen(Tk):
 
 	pointModifier = 1
 
+	enemySnakes = []
+
 	def __init__(self,myPlayer):
 		super().__init__()
 		self.title("Game screen")
@@ -943,21 +1008,6 @@ class GameScreen(Tk):
 		self.SetUpControls()
 		self.StartGameCycle()
 
-
-	def DisplayGrid(self):
-		#This procedure will set up the grid for the game. It creates a canvas on the screen and draws a grid on
-		#that. The loop draws this grid, firstly it draws two lines as the top and left borders. It then draws 21
-		#horizontal and 21 vertical lines to create the grid with borders. This is so that snakes can be painted in
-		self.background.create_line(1,0,1,self.backgroundHeight,fill = 'white')#Must draw these lines separate otherwise they would appear outside of the canvas
-		self.background.create_line(0,1,self.backgroundWidth,1,fill = 'white')
-
-		for i in range(1,(self.numberOfVerticalLines + 1) ):
-			xposition = (i * (self.backgroundWidth/self.numberOfVerticalLines))
-			self.background.create_line(xposition,0,xposition,self.backgroundHeight,fill = 'white')
-
-		for i in range(1,(self.numberOfHorizontalLines + 1)):
-			yPosition = (i * (self.backgroundHeight/self.numberOfHorizontalLines))
-			self.background.create_line(0,yPosition,self.backgroundWidth,yPosition,fill = 'white')
 	def SetUpControls(self):
 		#This procedure makes all of the keybinds to be used in game. It makes them using what the player input for their controls
 		self.bind(("<" + self.myPlayer.controls[0] + ">"),self.myPlayer.snake.UpAction)
@@ -1023,16 +1073,26 @@ class GameScreen(Tk):
 		#snakes in their new positions. The final instruction is used to make the delay between moves and to carry on the iterative procedure.
 		if ((not self.paused) and (not self.gameOver)):
 			self.background.delete(ALL)
-			# self.DisplayGrid()
+
+			self.CheckForDeadEnemySnakes()
 
 			self.myPlayer.snake.Move(self)
+
+			for i in range(len(self.enemySnakes)):
+				self.enemySnakes[i].DoEnemySnakeMove(self)
+
 			if (self.checkIfPlayerTooSmall):
 				self.CheckIfPlayerTooSmall()
 			if (not self.gameOver):
 
 				self.DisplaySnake(self.myPlayer.snake)
+				for i in range(len(self.enemySnakes)):
+					self.DisplaySnake(self.enemySnakes[i])
+
 				self.DisplayPowerUps()
 				self.IncreasePlayerScore()
+
+				self.AddEnemySnake()
 
 				self.gameCycleCount +=1
 				self.AddPowerUps()
@@ -1120,7 +1180,21 @@ class GameScreen(Tk):
 			self.myPlayer.IncreaseScore(self.pointModifier)
 			self.DisplayScore()
 
-	#Cheat codes below
+	def AddEnemySnake(self):
+		if (len(self.enemySnakes) < 5):
+			chance = random.randint(0,10)
+			if (chance == 0):
+				tempSnake = Snake("Enemy")
+				tempSnake.RandomlyGenerate(self)
+				self.enemySnakes.append(tempSnake)
+
+	def CheckForDeadEnemySnakes(self):
+		i = 0
+		while (i < len(self.enemySnakes)):
+			if (self.enemySnakes[i].moving == False):#Enemy snake will be still if they are dead. Only then remove them
+				self.enemySnakes.remove(self.enemySnakes[i])
+			else:
+				i += 1
 
 
 
