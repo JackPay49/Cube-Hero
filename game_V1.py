@@ -194,29 +194,35 @@ class Snake:
 	#The procedures will then change which direction the head of the snake, the first block, is moving and will add the turning point to the list. It
 	#adds the turning point after changing the direction the head is moving as otherwise the rest of the body would keep on moving
 	def UpAction(self,event):
-		self.TurnUp()
-	def TurnUp(self):
-		if ((self.body[0].facing == "Right") or (self.body[0].facing == "Left")):
-			self.body[0].facing = "Up"
-			self.turningPoints.append(Block(self.body[0].x,self.body[0].y,self.body[0].facing))
+		self.Turn("Up")		
 	def LeftAction(self,event):
-		self.TurnLeft()
-	def TurnLeft(self):
-		if ((self.body[0].facing == "Up") or (self.body[0].facing == "Down")):
-			self.body[0].facing = "Left"
-			self.turningPoints.append(Block(self.body[0].x,self.body[0].y,self.body[0].facing))
+		self.Turn("Left")
 	def DownAction(self,event):
-		self.TurnDown()
-	def TurnDown(self):
-		if ((self.body[0].facing == "Right") or (self.body[0].facing == "Left")):
-			self.body[0].facing = "Down"
-			self.turningPoints.append(Block(self.body[0].x,self.body[0].y,self.body[0].facing))
+		self.Turn("Down")
 	def RightAction(self,event):
-		self.TurnRight()
-	def TurnRight(self):
-		if ((self.body[0].facing == "Up") or (self.body[0].facing == "Down")):
-			self.body[0].facing = "Right"
+		self.Turn("Right")
+
+	def Turn(self,direction):
+		valid = False
+		if (direction == "Right"):
+			if ((self.body[0].facing == "Up") or (self.body[0].facing == "Down")):
+				self.body[0].facing = "Right"
+				valid = True
+		elif (direction == "Left"):
+			if ((self.body[0].facing == "Up") or (self.body[0].facing == "Down")):
+				self.body[0].facing = "Left"
+				valid = True
+		elif (direction == "Up"):
+			if ((self.body[0].facing == "Right") or (self.body[0].facing == "Left")):
+				self.body[0].facing = "Up"
+				valid = True
+		elif (direction == "Down"):
+			if ((self.body[0].facing == "Right") or (self.body[0].facing == "Left")):
+				self.body[0].facing = "Down"
+				valid = True
+		if (valid):
 			self.turningPoints.append(Block(self.body[0].x,self.body[0].y,self.body[0].facing))
+
 
 	def CheckPosition(self,gameScreen,x,y):
 		#This will ensure that the position input in is legal. It checks that the position isn't
@@ -380,21 +386,19 @@ class Snake:
 		#This procedure will randomly decide whether to make the enmy snake turn or keep going in a straight line. This procedure should validate where they're moving next
 		#if they're moving straight on and turn them if the next position isn't a valid one. When turning the snake should also move one place forwards
 		choice = random.randint(0,10)
+		directionToTurnInto = ["Up","Down","Left","Right"]
+		if ((self.body[0].facing == "Up") or (self.body[0].facing == "Down")):
+			directionToTurnInto.remove("Up")
+			directionToTurnInto.remove("Down")
+		elif ((self.body[0].facing == "Left") or (self.body[0].facing == "Right")):
+			directionToTurnInto.remove("Left")
+			directionToTurnInto.remove("Right")
 		repeat = True
 		while ( repeat):
 			repeat = False		
 			if (choice == 0):#then turn a random direction
-				direction = random.randint(0,1)
-				if ((self.body[0].facing == "Up") or (self.body[0].facing == "Down")):
-					if (direction == 0):
-						self.TurnRight()
-					elif (direction == 1):
-						self.TurnLeft()
-				elif ((self.body[0].facing == "Left") or (self.body[0].facing == "Right")):
-					if (direction == 0):
-						self.TurnUp()
-					elif (direction == 1):
-						self.TurnDown()
+				direction = random.randint(0,len(directionToTurnInto) - 1)
+				self.Turn(directionToTurnInto[direction])
 				self.Move(gameScreen)
 			else:#then go straight
 				xPosition = self.body[0].x
@@ -413,6 +417,8 @@ class Snake:
 					self.Move(gameScreen)
 				else:
 					choice = 0
+					if (self.body[0].facing in directionToTurnInto):
+						directionToTurnInto.remove(self.body[0].facing)
 					repeat = True
 
 
