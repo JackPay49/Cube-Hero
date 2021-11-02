@@ -116,6 +116,10 @@ class PowerUp:
 		for i in range(len(gameScreen.powerUps)):
 			if ((x == gameScreen.powerUps[i].position.x) and (y == gameScreen.powerUps[i].position.y)):
 				return False
+		for i in range(len(gameScreen.enemySnakes)):
+			for j in range(gameScreen.enemySnakes[i].length):
+				if ((x == gameScreen.enemySnakes[i].body[j].x) and (y == gameScreen.enemySnakes[i].body[j].y)):
+					return False
 		return True
 
 
