@@ -39,16 +39,16 @@ class PowerUp:
 	def RandomyType(self):
 		#This will randomly pick which type of powerup it is and will then set the color based
 		#on the color
-		typeNumber = random.randint(1,numberOfPowerUpTypes)
-		if (typeNumber == 1):
+		randomNumber = random.randint(0,9)
+		if (randomNumber < 5):
 			self.powerUpType = "Grow"
-		elif (typeNumber == 2):
+		elif (randomNumber == 6):
 			self.powerUpType = "SpeedUp"
-		elif (typeNumber == 3):
+		elif (randomNumber == 7):
 			self.powerUpType = "SlowDown"
-		elif (typeNumber == 4):
+		elif (randomNumber == 8):
 			self.powerUpType = "Shrink"
-		elif (typeNumber == 5):
+		elif (randomNumber == 9):
 			self.powerUpType = "Random"
 		self.SetColor()
 
