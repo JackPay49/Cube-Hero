@@ -350,6 +350,59 @@ class Snake:
 				gameScreen.powerUps[count].PowerUpConsumed(gameScreen,self)
 			else:
 				count +=1
+		self.CheckCollisionsWithOtherSnakes(gameScreen)
+
+	def CheckCollisionsWithOtherSnakes(self,gameScreen):
+		#This procedure is used for both enemy and player snake collisions. If the snake is an enemy one then it will check
+		#to see if the head of the enemy has intercepted any part of the player snake. If it is the head of the player it 
+		# will instantly kill them. Otherwise it will decrease the length of the player from where the enemy hit and add
+		#half of that amount to the enemy's length
+		# If it is the player snake then it will do the same for enemies except it will also add score for the more of
+		#the enemy's body that is eaten.
+		count = 0
+		length = 0
+		if (self.snakeType == "Enemy"):
+			length = gameScreen.myPlayer.snake.length
+			while(count < gameScreen.myPlayer.snake.length):
+				if ((self.body[0].x == gameScreen.myPlayer.snake.body[count].x) and (self.body[0].y == gameScreen.myPlayer.snake.body[count].y)):
+					if (count <= 1):
+						gameScreen.myPlayer.KillSnake(gameScreen)
+						break
+					else:
+						diff = length - count
+						length -= count
+						gameScreen.myPlayer.snake.DecreaseLength(gameScreen,diff)
+						self.IncreaseLength(gameScreen, int(diff / 2))
+				else:
+					count += 1
+		elif(self.snakeType == "Player"):
+			count1 = 0 #count1 is used to cycle through each of the enemy snakes. Count is used to move through each body section
+			while(count1 < len(gameScreen.enemySnakes)):
+				leaveLoop = False
+				killedASnake = False
+				count = 0
+				length = gameScreen.enemySnakes[count1].length
+				while((count < gameScreen.enemySnakes[count1].length) and (not leaveLoop)):
+					if ((self.body[0].x == gameScreen.enemySnakes[count1].body[count].x) and (self.body[0].y == gameScreen.enemySnakes[count1].body[count].y)):
+						if (count <= 1):
+							self.KillSnake(gameScreen)
+							break
+						else:
+							diff = length - count
+							length -= count
+							gameScreen.enemySnakes[count1].DecreaseLength(gameScreen,diff)
+							self.IncreaseLength(gameScreen, int(diff / 2))
+							gameScreen.myPlayer.IncreaseScore(diff * 100)
+							leaveLoop = True#Leave loop is used to exit the loop for checking if the player has intercepted
+							#any part of the enemy snake body. This is because they can only intercept one section at a time
+						if (count <= 2):
+							killedASnake = True#Killed a snake vairable is used to tell the count whether or not to iterate
+							#If a snake was killed then we shouldn't iterate as the length of the loop will have decreased
+							# and so we don't want to increment the count variable as then we will get an error
+					else:
+						count += 1
+				if (not killedASnake):
+					count1 +=1
 
 	def IncreaseSpeed(self,amount):
 		for i in range(amount):
