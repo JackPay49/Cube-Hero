@@ -187,11 +187,12 @@ class Snake:
 						self.KillSnake(gameScreen)
 
 					else:
-						self.CheckCollisions(gameScreen)#This will check for collisions such as if the player intercepts a powerup
 						if (i < self.length):
 							self.body[i].x = xPosition
 							self.body[i].y = yPosition
 					i +=1
+				self.CheckCollisions(gameScreen)#This will check for collisions such as if the player intercepts a powerup
+
 
 	def KillSnake(self,gameScreen):
 		if (self.snakeType == "Player"):#This will only cause a game over if the snake is the player. It will make the snake flash white and stop moving
@@ -353,56 +354,47 @@ class Snake:
 		self.CheckCollisionsWithOtherSnakes(gameScreen)
 
 	def CheckCollisionsWithOtherSnakes(self,gameScreen):
-		#This procedure is used for both enemy and player snake collisions. If the snake is an enemy one then it will check
-		#to see if the head of the enemy has intercepted any part of the player snake. If it is the head of the player it 
-		# will instantly kill them. Otherwise it will decrease the length of the player from where the enemy hit and add
-		#half of that amount to the enemy's length
-		# If it is the player snake then it will do the same for enemies except it will also add score for the more of
-		#the enemy's body that is eaten.
-		count = 0
+		#This procedure will check whether snakes collide with each other. If the snake is an enemy snake it will check to
+		#see if the enemy head intercepts any part of the player's body. It will kill the player instantly if it hits
+		# their head or a bit less than that (whilst snakes must be atleast 3 long). If it will hit them then it saves the
+		# place and will subtract the length past that point from the total player snake's length. It will add half of
+		#this length to its own length. 
+		#The same happens for the player except it will check for each enemy snake too and will add score
+		count = -1
 		length = 0
 		if (self.snakeType == "Enemy"):
 			length = gameScreen.myPlayer.snake.length
-			while(count < gameScreen.myPlayer.snake.length):
-				if ((self.body[0].x == gameScreen.myPlayer.snake.body[count].x) and (self.body[0].y == gameScreen.myPlayer.snake.body[count].y)):
-					if (count <= 1):
-						gameScreen.myPlayer.KillSnake(gameScreen)
-						break
-					else:
-						diff = length - count
-						length -= count
-						gameScreen.myPlayer.snake.DecreaseLength(gameScreen,diff)
-						self.IncreaseLength(gameScreen, int(diff / 2))
+			for i in range(length):
+				if ((self.body[0].x == gameScreen.myPlayer.snake.body[i].x) and (self.body[0].y == gameScreen.myPlayer.snake.body[i].y)):
+					count = i
+			if (count != -1):
+				if (count <= 1):
+					gameScreen.myPlayer.snake.KillSnake(gameScreen)
 				else:
-					count += 1
+					diff = length - count
+					length -= count
+					gameScreen.myPlayer.snake.DecreaseLength(gameScreen,diff)
+					self.IncreaseLength(gameScreen, int(diff / 2))
+
 		elif(self.snakeType == "Player"):
-			count1 = 0 #count1 is used to cycle through each of the enemy snakes. Count is used to move through each body section
-			while(count1 < len(gameScreen.enemySnakes)):
-				leaveLoop = False
-				killedASnake = False
-				count = 0
-				length = gameScreen.enemySnakes[count1].length
-				while((count < gameScreen.enemySnakes[count1].length) and (not leaveLoop)):
-					if ((self.body[0].x == gameScreen.enemySnakes[count1].body[count].x) and (self.body[0].y == gameScreen.enemySnakes[count1].body[count].y)):
-						if (count <= 1):
-							self.KillSnake(gameScreen)
-							break
-						else:
-							diff = length - count
-							length -= count
-							gameScreen.enemySnakes[count1].DecreaseLength(gameScreen,diff)
-							self.IncreaseLength(gameScreen, int(diff / 2))
-							gameScreen.myPlayer.IncreaseScore(diff * 100)
-							leaveLoop = True#Leave loop is used to exit the loop for checking if the player has intercepted
-							#any part of the enemy snake body. This is because they can only intercept one section at a time
-						if (count <= 2):
-							killedASnake = True#Killed a snake vairable is used to tell the count whether or not to iterate
-							#If a snake was killed then we shouldn't iterate as the length of the loop will have decreased
-							# and so we don't want to increment the count variable as then we will get an error
-					else:
-						count += 1
-				if (not killedASnake):
-					count1 +=1
+			count = -1
+			bodyCount = -1
+			for i in range(len(gameScreen.enemySnakes)):
+				for j in range(gameScreen.enemySnakes[i].length):
+					if ((gameScreen.enemySnakes[i].body[j].x == gameScreen.myPlayer.snake.body[0].x) and (gameScreen.enemySnakes[i].body[j].y == gameScreen.myPlayer.snake.body[0].y)):
+						count = i
+						bodyCount = j
+			if ((count != -1) and (bodyCount != -1)):
+				if (bodyCount == 0):
+					self.KillSnake(gameScreen)
+				else:
+					length = gameScreen.enemySnakes[count].length
+					diff = length - bodyCount
+					length -= bodyCount
+					gameScreen.enemySnakes[count].DecreaseLength(gameScreen,diff)
+					self.IncreaseLength(gameScreen, int(diff / 2))
+					gameScreen.myPlayer.IncreaseScore(diff * 100)
+
 
 	def IncreaseSpeed(self,amount):
 		for i in range(amount):
@@ -1092,7 +1084,6 @@ class GameScreen(Tk):
 		self.background.place(relx = 0.5,rely = 0.5, anchor = CENTER)
 		self.background.configure(bg = 'black')
 		self.background.pack()
-		# self.DisplayGrid()
 
 		self.lbScore = Label(self,text = "Score: ",font = ("Default",20,"bold"))
 		self.lbScore.place(relx = 0.4,rely = 0.95,anchor = CENTER)
@@ -1182,7 +1173,8 @@ class GameScreen(Tk):
 			self.myPlayer.snake.Move(self)
 
 			for i in range(len(self.enemySnakes)):
-				self.enemySnakes[i].DoEnemySnakeMove(self)
+				if (not self.gameOver):
+					self.enemySnakes[i].DoEnemySnakeMove(self)
 
 			self.CheckIfSnakesTooSmall()
 			if (not self.gameOver):
@@ -1339,7 +1331,7 @@ class GameScreen(Tk):
 			self.DisplayScore()
 
 	def AddEnemySnake(self):
-		if (len(self.enemySnakes) < 3):
+		if (len(self.enemySnakes) < 2):
 			chance = random.randint(0,10)
 			if (chance == 0):
 				tempSnake = Snake("Enemy")
