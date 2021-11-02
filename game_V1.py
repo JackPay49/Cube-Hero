@@ -80,13 +80,16 @@ class PowerUp:
 		if (self.powerUpType == "Grow"):
 			if (gameScreen.checkIfPlayerTooSmall == True):#This is so that the length isn't increased if the player has entered the cheat code to keep them at a length of 1
 				snake.IncreaseLength(gameScreen,1)
-			gameScreen.myPlayer.IncreaseScore(100)
+			if (snake.snakeType != "Enemy"):
+				gameScreen.myPlayer.IncreaseScore(100)
 		elif (self.powerUpType == "SpeedUp"):
-			snake.IncreaseSpeed(1)
-			gameScreen.myPlayer.IncreaseScore(50)
+			if (snake.snakeType != "Enemy"):
+				snake.IncreaseSpeed(1)
+				gameScreen.myPlayer.IncreaseScore(50)
 		elif (self.powerUpType == "SlowDown"):
-			snake.DecreaseSpeed(1)
-			gameScreen.myPlayer.IncreaseScore(50)
+			snake.DecreaseSpeed(1)	
+			if (snake.snakeType != "Enemy"):
+				gameScreen.myPlayer.IncreaseScore(50)
 		elif (self.powerUpType == "Shrink"):
 			if (gameScreen.checkIfPlayerTooSmall == True):#This is to ensure the player isn't made into a size of 0, if they entered the cheat code to make them a size of 1 then keep them at that size
 				snake.DecreaseLength(gameScreen,1)
@@ -100,7 +103,9 @@ class PowerUp:
 				snake.DecreaseSpeed(1)
 			elif (randomPowerNumber == 4):
 				snake.DecreaseLength(gameScreen,1)
-			gameScreen.myPlayer.IncreaseScore(150)
+
+			if (snake.snakeType != "Enemy"):
+				gameScreen.myPlayer.IncreaseScore(150)
 		gameScreen.powerUps.remove(self)
 
 	def CheckPosition(self,gameScreen,x,y):
@@ -174,11 +179,8 @@ class Snake:
 					#these happen it will cause the game over sequence. If the move doesn't cause a collision then we can carry on moving and so set
 					#the new position of the snake. It only validating colliding with something on i==0 as this is the head. Only this can collide with
 					#something.
-					if ((not self.CheckPosition(gameScreen,xPosition,yPosition)) and (i == 0)):
-						if (self.snakeType == "Player"):#This will only cause a game over if the snake is the player. It will make the snake flash white and stop moving
-							gameScreen.GameOver()
-						self.moving = False
-						self.color = "white"
+					if ((not self.CheckPosition(gameScreen,xPosition,yPosition,"Moving")) and (i == 0)):
+						self.KillSnake(gameScreen)
 
 					else:
 						self.CheckCollisions(gameScreen)#This will check for collisions such as if the player intercepts a powerup
@@ -187,7 +189,11 @@ class Snake:
 							self.body[i].y = yPosition
 					i +=1
 
-
+	def KillSnake(self,gameScreen):
+		if (self.snakeType == "Player"):#This will only cause a game over if the snake is the player. It will make the snake flash white and stop moving
+			gameScreen.GameOver()
+		self.moving = False
+		self.color = "white"
 
 	#The below procedures all do the same function for the different directions. They will check to ensure that the movement is valid. So for example
 	#the snake can only turn right if it is moving up or down. Otherwise it is already going right or it cannot do a full 180 degree turn
@@ -224,7 +230,7 @@ class Snake:
 			self.turningPoints.append(Block(self.body[0].x,self.body[0].y,self.body[0].facing))
 
 
-	def CheckPosition(self,gameScreen,x,y):
+	def CheckPosition(self,gameScreen,x,y,checkType):
 		#This will ensure that the position input in is legal. It checks that the position isn't
 		#outside of the grid and then checks to see whether the position is already part of the
 		#current snakes body. This second part is to check whether the player has run into
@@ -235,21 +241,35 @@ class Snake:
 			for i in range(0,len(self.body)):
 				if ((x == self.body[i].x) and (y == self.body[i].y)):
 					return False
+		if (self.snakeType == "Enemy"):
+			for i in range(len(gameScreen.enemySnakes)):
+				if (gameScreen.enemySnakes[i] != self):
+					for j in range(gameScreen.enemySnakes[i].length):
+						if ((gameScreen.enemySnakes[i].body[j].x == x) and (gameScreen.enemySnakes[i].body[j].y == y)):
+							return False
+		if ((checkType == "Spawning") and (self.snakeType == "Enemy")):
+			for i in range(gameScreen.myPlayer.snake.length):
+				if ((gameScreen.myPlayer.snake.body[i].x == x) and (gameScreen.myPlayer.snake.body[i].y == y)):
+					return False
+
 		return True
 
 	def RandomlyGenerate(self,gameScreen):
 		self.length = random.randint(3,20)#Minimum size a snake can be is 3 long, as it reaches 2 it will die
 		self.RandomlyPlace(gameScreen)
 	def RandomlyPlace(self,gameScreen):
-		x = random.randint(1,gameScreen.numberOfHorizontalLines)
-		y = random.randint(1,gameScreen.numberOfVerticalLines)
-		self.GenerateSnakeBody(gameScreen,x,y,self.length)
+		#This procedure will repeat until the snake is palced into a valid position
+		valid = False
+		while (not valid):
+			x = random.randint(1,gameScreen.numberOfHorizontalLines)
+			y = random.randint(1,gameScreen.numberOfVerticalLines)
+			valid = self.GenerateSnakeBody(gameScreen,x,y,self.length)
 
 
 	def GenerateSnakeBody(self,gameScreen,x,y,lValue):
 		#This procedure will generate all the positions of the body of a snake based on the position of its head and its length. It first checks what direction to generate in
 		# and won't generate running straight into the side of the screen. It then will then place the head of the snake and just increase in length, using this pther procedure
-		#to grow in a legal way 						 
+		#to grow in a legal way. It will return true or false based on whether it could be palced on the board or not successfully						 
 		xPosition = x
 		yPosition = y
 		directions = ["Up","Left","Down","Right"]
@@ -265,7 +285,7 @@ class Snake:
 		directionOfMovement = random.choice(directions)
 		self.body.append(Block(x,y,directionOfMovement))
 		self.length = 1
-		self.IncreaseLength(gameScreen,(lValue - 1))
+		return self.IncreaseLength(gameScreen,(lValue - 1))
 
 
 
@@ -273,6 +293,7 @@ class Snake:
 		#This procedure will increase the length of the snake and will chekc to make sure it doesn't run off of the edge of the screen or collide with any powerups. The snake must already have atleast a length of 1 and have the head placed already
 		#It generates the new position of the next body section and the direction it is generating in based off of that head piece. It will check if the position is legal and place the new body part at this position if so. If it is not legal then
 		#it will remove this direction from the list of all possible directions, will randomly pick a new one and attempt to generate this way. When the snake begins generating in a new direction it will create a turning point at the last body part
+		#This has a return. It will return false if the snake could not be possibly placed or its length couldn't be increased into any area
 		xPosition = self.body[len(self.body) - 1].x		
 		yPosition = self.body[len(self.body) - 1].y		
 		facing = self.body[len(self.body) - 1].facing #direction of movement		
@@ -292,7 +313,7 @@ class Snake:
 					newXPosition += 1
 				elif(facing == "Right"):
 					newXPosition -= 1
-				if (self.CheckPosition(gameScreen,newXPosition,newYPosition)):
+				if (self.CheckPosition(gameScreen,newXPosition,newYPosition,"Spawning")):
 					valid = True
 					xPosition = newXPosition
 					yPosition = newYPosition
@@ -303,15 +324,17 @@ class Snake:
 						self.turningPoints.append(turningPoint)
 				else:
 					valid = False
-					allDirections.remove(facing)
+					if (facing in allDirections):
+						allDirections.remove(facing)
 
 					if (len(allDirections) == 0):
-						print("Error!")
+						return False
 					else:
 						facing = random.choice(allDirections)
 						if (i != 1):#This is used as an error will be caused if we make a turning point of the previous body part, as obviously it doesn't exist. Also there's no need to have a turning point
 						#ahead of the head as at this point it is just changing the direction it will move off in
 		 					changedDirections = True
+		return True 
 
 
 
@@ -358,6 +381,9 @@ class Snake:
 			file.write(str(self.turningPoints[i].y) + "\n")
 			file.write(self.turningPoints[i].facing + "\n")
 
+		file.write(str(self.speed) + "\n")
+
+
 
 	def LoadSnake(self,gameScreen,myPlayer):
 		file = open("gameFiles/" + myPlayer.name + "Snake.txt","r")
@@ -379,50 +405,67 @@ class Snake:
 			facing = file.readline().strip()
 			self.turningPoints.append(Block(xPosition,yPosition,facing))
 
+		self.speed = int(file.readline().strip())
+
 		if (self.length == 1):
 			gameScreen.checkIfPlayerTooSmall = False
 
 	def DoEnemySnakeMove(self,gameScreen):
-		#This procedure will randomly decide whether to make the enmy snake turn or keep going in a straight line. This procedure should validate where they're moving next
-		#if they're moving straight on and turn them if the next position isn't a valid one. When turning the snake should also move one place forwards
-		choice = random.randint(0,10)
-		directionToTurnInto = ["Up","Down","Left","Right"]
-		if ((self.body[0].facing == "Up") or (self.body[0].facing == "Down")):
-			directionToTurnInto.remove("Up")
-			directionToTurnInto.remove("Down")
-		elif ((self.body[0].facing == "Left") or (self.body[0].facing == "Right")):
-			directionToTurnInto.remove("Left")
-			directionToTurnInto.remove("Right")
-		repeat = True
-		while ( repeat):
-			repeat = False		
-			if (choice == 0):#then turn a random direction
-				direction = random.randint(0,len(directionToTurnInto) - 1)
-				self.Turn(directionToTurnInto[direction])
-				self.Move(gameScreen)
-			else:#then go straight
-				xPosition = self.body[0].x
-				yPosition = self.body[0].y
-				facing = self.body[0].facing
-				if (facing == "Right"):
-					xPosition +=1
-				elif (facing == "Left"):
-					xPosition -=1
-				elif (facing == "Down"):
-					yPosition +=1
-				elif (facing == "Up"):
-					yPosition -=1
+		#This procedure will make a random choice every single game cycle of whether to turn the snake or not. There's a
+		#higher chance that the snake will keep moving in the direction it is moving in. If the snake is made to turn then
+		#it will randomly pick which direction to turn into. It isn't possible to turn into directions that the snake is
+		#already moving in or backwards so these directions are automatically removed from the pool of possible directions
+		#It will then check if the new position is a valid one. This is the case of whether the snake is moving forwards
+		#or turning. If it is valid then it will do the move. If it is not then , if the snake is moving straight it will
+		#attempt to turn. If a turn is unsuccessful then that direction is removed from the pool of possible directions to
+		#turn into. If the snake runs out of directions to turn into then it will be killed
+		choice = random.randint(0,20)
+		facing = self.body[0].facing
+		xPosition = self.body[0].x
+		yPosition = self.body[0].y
 
-				if(self.CheckPosition(gameScreen,xPosition,yPosition)):
-					self.Move(gameScreen)
+
+		allDirections = ["Up","Down","Left","Right"]
+		if ((self.body[0].facing == "Up") or (self.body[0].facing == "Down")):
+			allDirections.remove("Up")
+			allDirections.remove("Down")
+		if ((self.body[0].facing == "Left") or (self.body[0].facing == "Right")):
+			allDirections.remove("Right")
+			allDirections.remove("Left")
+
+		repeat = True
+		while(repeat):
+			repeat = False
+			xPosition = self.body[0].x
+			yPosition = self.body[0].y
+			if (choice == 0):#then turn in a random direction
+
+				randomNumber = random.randint(0,len(allDirections) - 1)
+				facing = allDirections[randomNumber]
+
+			if (facing == "Right"):
+				xPosition +=1
+			elif (facing == "Left"):
+				xPosition -=1
+			elif (facing == "Down"):
+				yPosition +=1
+			elif (facing == "Up"):
+				yPosition -=1
+
+			if (self.CheckPosition(gameScreen,xPosition,yPosition,"Moving")):
+				if (choice == 0):
+					self.Turn(facing)
+				self.Move(gameScreen)
+			else:
+				if (choice == 0):
+					allDirections.remove(facing)
 				else:
 					choice = 0
-					if (self.body[0].facing in directionToTurnInto):
-						directionToTurnInto.remove(self.body[0].facing)
+				if (len(allDirections) <= 0):
+					self.KillSnake(gameScreen)
+					repeat = False
+				else:
 					repeat = True
-
-
-
 
 class Scoreboard:
 
@@ -792,9 +835,6 @@ class PauseSceen(Tk):
 				gameScreen.myPlayer.snake.turningPoints.remove(gameScreen.myPlayer.snake.turningPoints[0])		
 		if (self.cheatCodes[5] in userInput):
 			gameScreen.pointModifier = 2500	
-
-
-
 class RulesScreen(Tk):
 	btnBack = Button
 
@@ -1072,7 +1112,7 @@ class GameScreen(Tk):
 			rightCornerX = (snake.body[i].x + 1) * gridBoxWidth
 			rightCornerY = (snake.body[i].y + 1) * gridBoxWidth
 
-			self.background.create_rectangle(leftCornerX,leftCornerY,rightCornerX,rightCornerY,outline = snake.color,fill = snake.color)
+			self.background.create_rectangle(leftCornerX,leftCornerY,rightCornerX,rightCornerY,outline = "black",fill = snake.color)
 
 	def StartGameCycle(self):
 		#This procedure does the game loop. On every iteration it clears the entire board, moves each of the snakes and will then redraw all of the
@@ -1087,8 +1127,7 @@ class GameScreen(Tk):
 			for i in range(len(self.enemySnakes)):
 				self.enemySnakes[i].DoEnemySnakeMove(self)
 
-			if (self.checkIfPlayerTooSmall):
-				self.CheckIfPlayerTooSmall()
+			self.CheckIfSnakesTooSmall()
 			if (not self.gameOver):
 
 				self.DisplaySnake(self.myPlayer.snake)
@@ -1139,9 +1178,13 @@ class GameScreen(Tk):
 
 			self.powerUpImages.append(PhotoImage(file = "gameRes/" + self.powerUps[i].powerUpType +".gif"))
 			self.background.create_image(leftCornerX,leftCornerY,image = self.powerUpImages[len(self.powerUpImages) - 1])
-	def CheckIfPlayerTooSmall(self):
-		if (self.myPlayer.snake.length <= 2):
-			self.GameOver()
+	def CheckIfSnakesTooSmall(self):
+		if (self.checkIfPlayerTooSmall):
+			if (self.myPlayer.snake.length <= 2):
+				self.GameOver()
+		for i in range(len(self.enemySnakes)):
+			if (self.enemySnakes[i].length <=2):
+				self.enemySnakes[i].KillSnake(self)
 
 	def LoadGame(self):
 		#This procedure will load in the player, their snake and the full gameboard. The only detail from the game bpard to really load in is all of the powerups on the
@@ -1160,6 +1203,37 @@ class GameScreen(Tk):
 			newPowerup.MakePowerUp(xPosition,yPosition,tempType)
 			self.powerUps.append(newPowerup)
 
+		file.readline()
+
+		number = int(file.readline().strip())
+		self.enemySnakes = []
+		for i in range(number):
+			tempSnake = Snake("Enemy")
+			tempSnake.length = int(file.readline().strip())
+			tempSnake.body = []
+			tempSnake.turningPoints = []
+			for j in range(tempSnake.length):
+				xPosition = int(file.readline().strip())
+				yPosition = int(file.readline().strip())
+				facing = file.readline().strip()
+
+				tempSnake.body.append(Block(xPosition,yPosition,facing))
+
+			file.readline()
+
+			numberOfTurningPoints = int(file.readline().strip())
+			for j in range(numberOfTurningPoints):
+				xPosition = int(file.readline().strip())
+				yPosition = int(file.readline().strip())
+				facing = file.readline().strip()
+
+				tempSnake.turningPoints.append(Block(xPosition,yPosition,facing))
+
+			tempSnake.speed = int(file.readline().strip())
+
+			self.enemySnakes.append(tempSnake)
+		file.close()
+
 	def SaveGame(self):
 		self.myPlayer.midLevel = True
 		self.myPlayer.SavePlayer()
@@ -1172,6 +1246,27 @@ class GameScreen(Tk):
 			file.write(str(self.powerUps[i].position.y) + "\n")
 			file.write(self.powerUps[i].powerUpType + "\n")
 
+		file.write("\n")
+
+		file.write(str(len(self.enemySnakes)) + "\n")
+		for i in range(len(self.enemySnakes)):
+			file.write(str(self.enemySnakes[i].length) + "\n")
+			for j in range(self.enemySnakes[i].length):
+				file.write(str(self.enemySnakes[i].body[j].x) + "\n")
+				file.write(str(self.enemySnakes[i].body[j].y) + "\n")
+				file.write(self.enemySnakes[i].body[j].facing + "\n")
+
+			file.write("\n")
+
+			file.write(str(len(self.enemySnakes[i].turningPoints)) + "\n")
+			for j in range(len(self.enemySnakes[i].turningPoints)):
+				file.write(str(self.enemySnakes[i].turningPoints[j].x) + "\n")
+				file.write(str(self.enemySnakes[i].turningPoints[j].y) + "\n")
+				file.write(self.enemySnakes[i].turningPoints[j].facing + "\n")
+
+			file.write(str(self.enemySnakes[i].speed) + "\n")
+
+		file.close()
 		messagebox.showinfo("Saved","Game has been saved!")
 
 	def DisplayScore(self):
@@ -1187,7 +1282,7 @@ class GameScreen(Tk):
 			self.DisplayScore()
 
 	def AddEnemySnake(self):
-		if (len(self.enemySnakes) < 5):
+		if (len(self.enemySnakes) < 3):
 			chance = random.randint(0,10)
 			if (chance == 0):
 				tempSnake = Snake("Enemy")
