@@ -576,9 +576,8 @@ class Scoreboard:
 		#2: in this case the scorebaord isn't full. In this case the new score can just be added to the end of the scorebaord and it can be sorted and saved.
 		self.RemoveScoreFromScoreboard(newPlayer)#This will first check to see if the player has already featured on the scorebaord. It will remove them if they have, to reposition them
 		if (len(self.scores) >= self.maxNumberOfScores):
-			if (newPlayer.highestScore > self.scores[maxNumberOfScores - 1].highestScore):
-				self.scores[maxNumberOfScores - 1] = newPlayer
-				self.numberOfScores += 1
+			if (newPlayer.highestScore > self.scores[self.maxNumberOfScores - 1].highestScore):
+				self.scores[self.maxNumberOfScores - 1] = newPlayer
 				self.SortScores(0,(self.numberOfScores - 1))
 				self.SaveScoreboard()
 		else:
@@ -805,8 +804,8 @@ class ScoreboardScreen(Tk):
 		for i in range(0 ,self.scoreboard.numberOfScores):
 			self.scoreBox.insert(INSERT,str(i + 1) + ".")
 			self.scoreBox.insert(INSERT,self.scoreboard.scores[i].name + " : " + str(self.scoreboard.scores[i].score))
-			for j in range(0,3):
-				self.scoreBox.insert(INSERT, "\n")
+			self.scoreBox.insert(INSERT, "\n")
+			self.scoreBox.insert(INSERT, "\n")
 		self.scoreBox.configure(state = 'disabled')
 
 def OpenScoreboard():
