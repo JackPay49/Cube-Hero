@@ -1,6 +1,6 @@
 This is a snake type game where the aim is to last as long as you can!
 In Cube Hero you will appear on the screen at first with a length of 3. You can get points by collecting Powerups. There are 5 different types of Powerup, that each do something different. Some Powerups also give you points!
-The main source of points is staying alive. You will earn points every turn you are alive, but note that the larger you are the more points you will earn! Be careful though as if you hit the side of the screen or your own body you will lose!
-You can save your game half way through by opening the menu and clicking Save. This save can be continued any time by reloading the game. If you lose the game though your current run will end! You will not lose any points from losing a run. 
-The top ten highest scores are recorded within the scoreboard. Your score will be automatically added to this board whenever you save or lose a run!
+The main source of points is staying alive. You will earn points every turn you are alive, but note that the larger you are the more points you will earn! Be careful though as if you hit the side of the screen, hit your own body or you are too small you will die. Snakes must be 3 sections long as a minimum to be alive.
+There are also enemy snakes! Your snake will be green whilst they will be orange. You can bite into enemy snakes and grow by half the length you manage to eat. Careful though as if you run into the head of an enemy snake they will eat you!
+You can save your game half way through by opening the menu and clicking Save. This save can be continued any time by reloading the game. If you lose the game though your current save will be lost! Your highest score will be added to the scoreboard. All progress is lost when you lose a game.
 You can also customise the controls to whatever you prefer by using the Controls window.

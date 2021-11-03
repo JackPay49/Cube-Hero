@@ -1085,6 +1085,9 @@ class GameScreen(Tk):
 
 	def __init__(self,myPlayer):
 		super().__init__()
+		self.enemySnakes = []
+		self.powerUps = []
+		self.powerUpImages = []
 		self.title("Game screen")
 		self.geometry(screenResolution)
 
@@ -1101,6 +1104,7 @@ class GameScreen(Tk):
 		self.myPlayer = myPlayer
 		if (self.myPlayer.midLevel == False): #Here if the player is mid way through the level, only then will their game be loaded in and
 		#displayed. If they're not midlevel then they will always be randomly placed and be given a length of 3
+			self.myPlayer.snake = Snake("Player")
 			self.myPlayer.snake.length = 3
 			self.myPlayer.snake.RandomlyPlace(self)
 		else:
@@ -1201,6 +1205,7 @@ class GameScreen(Tk):
 		#canvas and will close the window. It then also reopens the menu window.
 		self.background.delete(ALL)
 		self.DisplayAllElements()
+
 		self.myPlayer.midLevel = False
 		self.myPlayer.SavePlayer()
 		messagebox.showinfo("Game Over","GAME OVER!!!!")
@@ -1252,6 +1257,7 @@ class GameScreen(Tk):
 	def LoadGame(self):
 		#This procedure will load in the player, their snake and the full gameboard. The only detail from the game bpard to really load in is all of the powerups on the
 		#screen
+		print("Loading Game")
 		self.myPlayer.LoadPlayer(self.myPlayer.name)
 		self.myPlayer.snake.LoadSnake(self,self.myPlayer)
 		file = open("gameFiles/" + self.myPlayer.name + "Level.txt","r")
