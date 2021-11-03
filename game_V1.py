@@ -195,10 +195,11 @@ class Snake:
 
 
 	def KillSnake(self,gameScreen):
-		if (self.snakeType == "Player"):#This will only cause a game over if the snake is the player. It will make the snake flash white and stop moving
-			gameScreen.GameOver()
 		self.moving = False
 		self.color = "white"
+		if (self.snakeType == "Player"):#This will only cause a game over if the snake is the player. It will make the snake flash white and stop moving
+			gameScreen.GameOver()
+		
 
 	#The below procedures all do the same function for the different directions. They will check to ensure that the movement is valid. So for example
 	#the snake can only turn right if it is moving up or down. Otherwise it is already going right or it cannot do a full 180 degree turn
@@ -525,11 +526,11 @@ class Scoreboard:
 	def SortScores(self,low,high):#This is a basic quicksort that sorts the algorithm from greatest score to smallest, 0 to 9. Based on the scores of each player
 		tempLow = low
 		tempHigh = high
-		pivot = self.scores[int((low + high)/2)].score
+		pivot = self.scores[int((low + high)/2)].highestScore
 		while(tempLow <= tempHigh):
-			while(self.scores[tempLow].score > pivot and tempLow < high):
+			while(self.scores[tempLow].highestScore > pivot and tempLow < high):
 				tempLow += 1
-			while(self.scores[tempHigh].score < pivot and tempHigh > low):
+			while(self.scores[tempHigh].highestScore < pivot and tempHigh > low):
 				tempHigh -= 1
 			if (tempLow <= tempHigh):
 				tempPlayer = self.scores[tempLow]
@@ -550,7 +551,7 @@ class Scoreboard:
 		file.write(str(self.numberOfScores))
 		for i in range(0,len(self.scores)):
 			file.write("\n" + self.scores[i].name)
-			file.write("\n" + str(self.scores[i].score))
+			file.write("\n" + str(self.scores[i].highestScore))
 			file.write("\n")
 		file.close()
 
@@ -562,7 +563,9 @@ class Scoreboard:
 		for i in range(0,self.numberOfScores):
 			tempPlayer = Player()
 			tempPlayer.name = file.readline().strip()
-			tempPlayer.score = int(file.readline())
+			tempScore = int(file.readline())
+			tempPlayer.score = tempScore
+			tempPlayer.highestScore = tempScore
 			file.readline()
 			self.scores.append(tempPlayer)
 		file.close()
@@ -573,7 +576,7 @@ class Scoreboard:
 		#2: in this case the scorebaord isn't full. In this case the new score can just be added to the end of the scorebaord and it can be sorted and saved.
 		self.RemoveScoreFromScoreboard(newPlayer)#This will first check to see if the player has already featured on the scorebaord. It will remove them if they have, to reposition them
 		if (len(self.scores) >= self.maxNumberOfScores):
-			if (newPlayer.score > self.scores[maxNumberOfScores - 1].score):
+			if (newPlayer.highestScore > self.scores[maxNumberOfScores - 1].highestScore):
 				self.scores[maxNumberOfScores - 1] = newPlayer
 				self.numberOfScores += 1
 				self.SortScores(0,(self.numberOfScores - 1))
@@ -588,14 +591,15 @@ class Scoreboard:
 		i = 0
 		while i < len(self.scores):
 			if (self.scores[i].name == myPlayer.name):
-				self.scores.remove(self.scores[i])
-				self.numberOfScores -=1
+					self.scores.remove(self.scores[i])
+					self.numberOfScores -=1
 			else:
 				i+=1
 
 class Player:
 	name = ""
 	score = 0
+	highestScore = 0
 	password = ""
 	controls = ['w','a','s','d','e','b']#This stores the player controls for up, left, down, right, pause and boss screen respectively. These will be used when actraully assigning controls in the game screen
 	midLevel = False#Midlevel is used to tell the program whether the player is mid way through a level already. If they are then it will actually load the level details in, but if they're not then it won't.
@@ -609,9 +613,10 @@ class Player:
 		file = open("gameFiles/" + self.name + ".txt","rt")
 		file.readline()
 		self.password = (file.readline()).strip()
+		self.highestScore = int(file.readline())
 		self.score = int(file.readline())
-		self.controls = ConvertToList(file.readline())
 		midLevelState = file.readline().strip()
+		self.controls = ConvertToList(file.readline())
 		file.close()
 		if (midLevelState == "1"):
 			self.midLevel = True
@@ -620,12 +625,14 @@ class Player:
 		file = open("gameFiles/" + self.name + ".txt","wt")
 		file.write(self.name + "\n")
 		file.write(str(self.password) + "\n")
-		file.write(str(self.score) + "\n")
-		file.write(str(self.controls) + "\n")
+		file.write(str(self.highestScore) + "\n")
 		if (self.midLevel == True):#In the player file the midlevel boolean is stored as either a 0 or 1
-			file.write("1\n")
+			file.write(str(self.score) + "\n")#The player score
+			file.write("1\n")#whether they're in a game
 		else:
+			file.write("0\n")#score of 0
 			file.write("0\n")
+		file.write(str(self.controls) + "\n")
 		file.close()
 
 		scoreboard = Scoreboard()
@@ -647,6 +654,8 @@ class Player:
 
 	def IncreaseScore(self,amount):
 		self.score += amount
+		if (self.score > self.highestScore):
+			self.highestScore = self.score
 
 #Screen Classes:
 class Menu(Tk):
@@ -1166,8 +1175,6 @@ class GameScreen(Tk):
 		#This procedure does the game loop. On every iteration it clears the entire board, moves each of the snakes and will then redraw all of the
 		#snakes in their new positions. The final instruction is used to make the delay between moves and to carry on the iterative procedure.
 		if ((not self.paused) and (not self.gameOver)):
-			self.background.delete(ALL)
-
 			self.CheckForDeadEnemySnakes()
 
 			self.myPlayer.snake.Move(self)
@@ -1177,13 +1184,11 @@ class GameScreen(Tk):
 					self.enemySnakes[i].DoEnemySnakeMove(self)
 
 			self.CheckIfSnakesTooSmall()
+			
 			if (not self.gameOver):
 
-				self.DisplaySnake(self.myPlayer.snake)
-				for i in range(len(self.enemySnakes)):
-					self.DisplaySnake(self.enemySnakes[i])
+				self.DisplayAllElements()
 
-				self.DisplayPowerUps()
 				self.IncreasePlayerScore()
 
 				self.AddEnemySnake()
@@ -1195,11 +1200,21 @@ class GameScreen(Tk):
 	def GameOver(self):
 		#This procedure is used to end the game, like if the player collides witht their own body or a wall. It will delete everything on the
 		#canvas and will close the window. It then also reopens the menu window.
+		self.background.delete(ALL)
+		self.DisplayAllElements()
 		self.myPlayer.midLevel = False
 		self.myPlayer.SavePlayer()
 		messagebox.showinfo("Game Over","GAME OVER!!!!")
 		self.gameOver = True
 		self.CloseWindow(False)
+
+	def DisplayAllElements(self):
+		self.background.delete(ALL)
+		self.DisplaySnake(self.myPlayer.snake)
+		for i in range(len(self.enemySnakes)):
+			self.DisplaySnake(self.enemySnakes[i])
+		self.DisplayPowerUps()
+
 
 	def CloseWindow(self,askToSave):
 		#This will check if the player wants to save on certain occasions. This is because we don't need to save if they lose a round of the game
@@ -1331,7 +1346,7 @@ class GameScreen(Tk):
 			self.DisplayScore()
 
 	def AddEnemySnake(self):
-		if (len(self.enemySnakes) < 2):
+		if (len(self.enemySnakes) < 5):
 			chance = random.randint(0,10)
 			if (chance == 0):
 				tempSnake = Snake("Enemy")
