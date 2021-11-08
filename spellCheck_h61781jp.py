@@ -7,7 +7,7 @@ for line in file:
 	dictionary.append(line)
 file.close()
 
-file = open(sys.argv[2],"r")#1 is english words, 2 is input, 3 is output
+file = open(sys.argv[2],"r")
 fullString = file.read()
 file.close()
 
