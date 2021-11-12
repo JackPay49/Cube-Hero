@@ -27,6 +27,7 @@ for filename in os.listdir(sys.argv[2]):
 	while (i <len(fullString)):
 		amountToIncrement = 1
 		addWord = False
+
 		if (fullString[i] in (".","?","!",",",":",";","-","—","(",")","{","}","[","]","'",'"')):
 			if (fullString[i] == "."):
 				if ((i + 2) < (len(fullString) - 1)):
@@ -37,7 +38,6 @@ for filename in os.listdir(sys.argv[2]):
 				addWord = True
 		elif (fullString[i] in ("1","2","3","4","5","6","7","8","9","0")):
 			nNumbers +=1
-			addWord = True
 		elif (fullString[i] in uppcaseLetters):
 			nUpperCase += 1
 			currentWord += fullString[i].lower()
@@ -57,6 +57,7 @@ for filename in os.listdir(sys.argv[2]):
 			allwords.append(currentWord)
 			currentWord = ""
 		i += amountToIncrement
+
 	for i in range(nWords):
 		if (allwords[i] in dictionary):
 			nCorrectWords +=1
