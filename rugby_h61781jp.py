@@ -1,4 +1,4 @@
-import sys,os
+import sys, os
 
 for filename in os.listdir(sys.argv[1]):
 	file = open((sys.argv[1] + filename),"r")
