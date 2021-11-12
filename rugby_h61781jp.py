@@ -29,7 +29,9 @@ for filename in os.listdir(sys.argv[1]):
 				team1Score += scoreQuantity
 			elif(teamNumber == 2):
 				team2Score += scoreQuantity
-		i += 3
+			i += 3
+		else:
+			i += 1
 
 	newFileName = filename[0:(len(filename) - 4):1]
 	file = open((sys.argv[2] + newFileName + "_h61781jp.txt"),"w")
