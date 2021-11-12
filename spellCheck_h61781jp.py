@@ -23,9 +23,15 @@ for filename in os.listdir(sys.argv[2]):
 	uppcaseLetters = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"]
 
 	currentWord = ""
-	for i in range(len(fullString)):
+	i = 0
+	while (i <len(fullString)):
+		amountToIncrement = 1
 		addWord = False
-		if (fullString[i] in ("!","?",",",".","(",")",":",";","[","]",'"',"'","-","/","@","{","}","*","|","£","$","%","^","=","+","_","~","#","<",">",)):
+		if (fullString[i] in (".","?","!",",",":",";","-","—","(",")","{","}","[","]","'",'"')):
+			if (fullString[i] == "."):
+				if ((i + 2) < (len(fullString) - 1)):
+					if (fullString[i] == fullString[i + 1] == fullString[i + 2] == "."):#if its an elipisis then skip the next two characters as they are part of it
+						amountToIncrement = 3
 			nPunctuation +=1
 			if (fullString[i] not in ("'","-")):
 				addWord = True
@@ -40,16 +46,17 @@ for filename in os.listdir(sys.argv[2]):
 		else:
 			currentWord += fullString[i]
 
-		if (currentWord == ""):
+		currentWord = currentWord.strip()
+		if ((currentWord == "")):
 			addWord = False
 		elif(i == len(fullString) - 1):
 			addWord = True
 
 		if (addWord):
 			nWords +=1
-			allwords.append(currentWord.strip())
+			allwords.append(currentWord)
 			currentWord = ""
-
+		i += amountToIncrement
 	for i in range(nWords):
 		if (allwords[i] in dictionary):
 			nCorrectWords +=1
@@ -59,7 +66,7 @@ for filename in os.listdir(sys.argv[2]):
 
 	file.write("h61781jp\n")
 	file.write("Formatting ###################\n")
-	file.write("Number of upper case words changed: " + str(nUpperCase) + "\n")
+	file.write("Number of upper case letters changed: " + str(nUpperCase) + "\n")
 	file.write("Number of punctuations removed: " + str(nPunctuation)+ "\n")
 	file.write("Number of numbers removed: " + str(nNumbers)+ "\n")
 	file.write("Spellchecking ###################\n")
