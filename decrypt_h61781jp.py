@@ -18,7 +18,7 @@ for filename in os.listdir(sys.argv[1]):
 		else:
 			algorithm = tempString
 			tempString = ""
-	ciphertext = tempString.lower()
+	ciphertext = tempString.lower().rstrip()
 	plaintext = ""
 
 	if (algorithm == "Morse Code"):
