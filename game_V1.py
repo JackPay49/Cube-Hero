@@ -1,10 +1,9 @@
 import tkinter,time,random
-from tkinter import *
-from tkinter import messagebox
+from tkinter import Tk, Button as btn, Label as lb, Canvas as cv, Text as txt, Entry as ent, PhotoImage as img, messagebox as msgb
 
-#Screen Resolution is 1600x900
-screenWidth = 1600
-screenHeight = 900
+#Screen Resolution is 1920x1080. All screens are smaller than or equal to this resolution.
+screenWidth = 1920
+screenHeight = 1080
 screenResolution = (str(screenWidth) + "x" + str(screenHeight))
 
 numberOfPowerUpTypes = 5
@@ -34,12 +33,11 @@ class PowerUp:
 	def MakePowerUp(self,xPosition,yPosition,type):
 		self.position = Block(xPosition,yPosition,"Null")
 		self.powerUpType = type
-		self.SetColor()
 
 	def RandomyType(self):
 		#This will randomly pick which type of powerup it is and will then set the color based
 		#on the color
-		randomNumber = random.randint(0,9)
+		randomNumber = random.randint(0,11)
 		if (randomNumber < 5):
 			self.powerUpType = "Grow"
 		elif (randomNumber == 6):
@@ -50,21 +48,10 @@ class PowerUp:
 			self.powerUpType = "Shrink"
 		elif (randomNumber == 9):
 			self.powerUpType = "Random"
-		self.SetColor()
-
-	def SetColor(self):
-		#Changes the color based on the type of powerup
-		if (self.powerUpType == "Grow"):
-			self.color = 'blue'
-		elif (self.powerUpType == "SpeedUp"):
-			self.color = 'green'
-		elif (self.powerUpType == "SlowDown"):
-			self.color = 'red'
-		elif (self.powerUpType == "Shrink"):
-			self.color = 'yellow'
-		elif (self.powerUpType == "Random"):
-			self.color = 'purple'
-
+		elif (randomNumber == 10):
+			self.powerUpType = "Kill"
+		elif (randomNumber == 11):
+			self.powerUpType = "BoostScore"
 	def RandomlyPlace(self,gameScreen):
 		#This procedure is easy. It randomly finds a position on the board and will validate it. It will only place the powerup in that position if it is valid
 		valid = False
@@ -106,6 +93,11 @@ class PowerUp:
 
 			if (snake.snakeType != "Enemy"):
 				gameScreen.myPlayer.IncreaseScore(150)
+		elif (self.powerUpType == "Kill"):
+			snake.KillSnake(gameScreen)
+		elif (self.powerUpType == "BoostScore"):
+			if (snake.snakeType == "Player"):
+				gameScreen.myPlayer.IncreaseScore(1000)
 		gameScreen.powerUps.remove(self)
 
 	def CheckPosition(self,gameScreen,x,y):
@@ -141,6 +133,10 @@ class Snake:
 	turningPoints = []
 
 	def __init__(self,stValue):
+		body = []
+		turningPoints = []
+		length = 0
+		speed = 1
 		self.snakeType = stValue
 		if (self.snakeType == "Player"):
 			self.color = '#0FFF50'
@@ -193,10 +189,10 @@ class Snake:
 					i +=1
 				self.CheckCollisions(gameScreen)#This will check for collisions such as if the player intercepts a powerup
 
-
 	def KillSnake(self,gameScreen):
 		self.moving = False
 		self.color = "white"
+		self.turningPoints = []
 		if (self.snakeType == "Player"):#This will only cause a game over if the snake is the player. It will make the snake flash white and stop moving
 			gameScreen.GameOver()
 		
@@ -266,11 +262,12 @@ class Snake:
 	def RandomlyPlace(self,gameScreen):
 		#This procedure will repeat until the snake is palced into a valid position
 		valid = False
+		x = 0
+		y = 0
 		while (not valid):
-			x = random.randint(1,gameScreen.numberOfHorizontalLines)
-			y = random.randint(1,gameScreen.numberOfVerticalLines)
+			x = random.randint(1,gameScreen.numberOfHorizontalLines - 1)
+			y = random.randint(1,gameScreen.numberOfVerticalLines - 1)
 			valid = self.GenerateSnakeBody(gameScreen,x,y,self.length)
-
 
 	def GenerateSnakeBody(self,gameScreen,x,y,lValue):
 		#This procedure will generate all the positions of the body of a snake based on the position of its head and its length. It first checks what direction to generate in
@@ -280,13 +277,13 @@ class Snake:
 		yPosition = y
 		directions = ["Up","Left","Down","Right"]
 		self.body = []
-		if (x <= 5):
+		if (x <= 10):
 			directions.remove("Left")
-		elif (y <= 5):
+		elif (y <= 10):
 			directions.remove("Up")
-		elif (x >= (gameScreen.numberOfHorizontalLines - 5)):
+		elif (x >= (gameScreen.numberOfHorizontalLines - 10)):
 			directions.remove("Right")
-		elif (y <= (gameScreen.numberOfVerticalLines - 5)):
+		elif (y <= (gameScreen.numberOfVerticalLines - 10)):
 			directions.remove("Down")
 		directionOfMovement = random.choice(directions)
 		self.body.append(Block(x,y,directionOfMovement))
@@ -409,9 +406,14 @@ class Snake:
 
 	def DecreaseLength(self,gameScreen,amount):
 		for i in range(amount):
+			count = 0
+			while (count < len(self.turningPoints)):
+				if ((self.body[self.length - 1].x == self.turningPoints[count].x) and (self.body[self.length - 1].y == self.turningPoints[count].y)):
+					self.turningPoints.remove(self.turningPoints[count])
+				else:
+					count +=1
 			self.body.remove(self.body[self.length - 1])
 			self.length -=1
-
 
 	def SaveSnake(self,myPlayer):
 		#This procedure writes up all of the details about the snake, which come down to each
@@ -658,12 +660,12 @@ class Player:
 
 #Screen Classes:
 class Menu(Tk):
-	lbTitle = Label
+	lbTitle = lb
 
-	btnLoadGame = Button
-	btnCreateNewGame = Button
-	btnScoreboard = Button
-	btnClose = Button
+	btnLoadGame = btn
+	btnCreateNewGame = btn
+	btnScoreboard = btn
+	btnClose = btn
 
 	def __init__(self):
 		super().__init__()
@@ -676,15 +678,15 @@ class Menu(Tk):
 		self.lbTitle = TitleLabel(self,"Cube Hero!")
 
 		#Buttons
-		self.btnLoadGame = Button(self,text = "Load Game", command = lambda: (self.destroy(),LoadGame()),font = fontNormal)
-		self.btnLoadGame.place(relx = 0.5, rely = 0.3, anchor = CENTER)
+		self.btnLoadGame = btn(self,text = "Load Game", command = lambda: (self.destroy(),LoadGame()),font = fontNormal)
+		self.btnLoadGame.place(relx = 0.5, rely = 0.3, anchor = tkinter.CENTER)
 
-		self.btnCreateNewGame = Button(self,text = "Create new Game",command = lambda: (self.destroy(),NewGame()),font = fontNormal)
-		self.btnCreateNewGame.place(relx = 0.5, rely = 0.5, anchor = CENTER)
+		self.btnCreateNewGame = btn(self,text = "Create new Game",command = lambda: (self.destroy(),NewGame()),font = fontNormal)
+		self.btnCreateNewGame.place(relx = 0.5, rely = 0.5, anchor = tkinter.CENTER)
 
 
-		self.btnScoreboard = Button(self,text = "Scoreboard",command = OpenScoreboard,font = fontNormal)
-		self.btnScoreboard.place(relx = 0.5, rely = 0.7, anchor = CENTER)
+		self.btnScoreboard = btn(self,text = "Scoreboard",command = OpenScoreboard,font = fontNormal)
+		self.btnScoreboard.place(relx = 0.5, rely = 0.7, anchor = tkinter.CENTER)
 
 		self.btnClose = BackButton(self,"Close",False)
 
@@ -694,18 +696,18 @@ def LoadGame():
 def NewGame():
 	windowLogin = LoginScreen(True)#Opens the login screen. NewGame variable is set to true as we are making a new game
 class LoginScreen(Tk):
-	lbTitle = Label
-	lbName = Label
-	lbPassword = Label
+	lbTitle = lb
+	lbName = lb
+	lbPassword = lb
 
-	txtName = Entry
-	txtPassword = Entry
+	txtName = ent
+	txtPassword = ent
 
-	btnBeginGame = Button
-	btnControls = Button
-	btnClose = Button
-	btnLogin = Button
-	btnRules = Button
+	btnBeginGame = btn
+	btnControls = btn
+	btnClose = btn
+	btnLogin = btn
+	btnRules = btn
 
 	def __init__(self,newGame):
 		#Important to note here. The newGame parameter is a boolean used to tell us whether the login screen should be to login or to create a new game. Based on this the title of the screen and the
@@ -726,30 +728,30 @@ class LoginScreen(Tk):
 
 		self.lbTitle = TitleLabel(self,titleText)
 
-		self.lbName = Label(self,text = "Name:",font = fontBold)
-		self.lbName.place(relx = 0.2,rely = 0.2, anchor = CENTER)
-		self.txtName = Entry(self,font = fontNormal)
-		self.txtName.place(relx = 0.5,rely = 0.2, anchor = CENTER)
+		self.lbName = lb(self,text = "Name:",font = fontBold)
+		self.lbName.place(relx = 0.2,rely = 0.2, anchor = tkinter.CENTER)
+		self.txtName = ent(self,font = fontNormal)
+		self.txtName.place(relx = 0.5,rely = 0.2, anchor = tkinter.CENTER)
 
-		self.lbPassword = Label(self,text = "Password:",font = fontBold)
-		self.lbPassword.place(relx = 0.2,rely = 0.3, anchor = CENTER)
-		self.txtPassword = Entry(self,show = "*",font = fontNormal)
-		self.txtPassword.place(relx = 0.5,rely = 0.3, anchor = CENTER)
+		self.lbPassword = lb(self,text = "Password:",font = fontBold)
+		self.lbPassword.place(relx = 0.2,rely = 0.3, anchor = tkinter.CENTER)
+		self.txtPassword = ent(self,show = "*",font = fontNormal)
+		self.txtPassword.place(relx = 0.5,rely = 0.3, anchor = tkinter.CENTER)
 
 		if (newGame):
-			self.btnLogin = Button(self,text = "Create new game",font = fontBold, command = lambda: self.CreateNewPlayer(myPlayer,self.txtName.get(),self.txtPassword.get()))
+			self.btnLogin = btn(self,text = "Create new game",font = fontBold, command = lambda: self.CreateNewPlayer(myPlayer,self.txtName.get(),self.txtPassword.get()))
 		else:
-			self.btnLogin = Button(self,text = "Login",font = fontBold, command = lambda: self.Login(myPlayer,self.txtName.get(),self.txtPassword.get()) )
-		self.btnLogin.place(relx = 0.5,rely = 0.4, anchor = CENTER)
+			self.btnLogin = btn(self,text = "Login",font = fontBold, command = lambda: self.Login(myPlayer,self.txtName.get(),self.txtPassword.get()) )
+		self.btnLogin.place(relx = 0.5,rely = 0.4, anchor = tkinter.CENTER)
 
-		self.btnBeginGame = Button(self,text = "Begin Game",command = lambda:(self.destroy(),OpenGameScreen(myPlayer)), font = fontBold)
-		self.btnBeginGame.place(relx = 0.7,rely = 0.6,anchor = CENTER)
+		self.btnBeginGame = btn(self,text = "Begin Game",command = lambda:(self.destroy(),OpenGameScreen(myPlayer)), font = fontBold)
+		self.btnBeginGame.place(relx = 0.7,rely = 0.6,anchor = tkinter.CENTER)
 
-		self.btnControls = Button(self,text = "Controls",command = lambda:(OpenControlsScreen(myPlayer)), font = fontBold)
-		self.btnControls.place(relx = 0.3,rely = 0.6, anchor = CENTER)
+		self.btnControls = btn(self,text = "Controls",command = lambda:(OpenControlsScreen(myPlayer)), font = fontBold)
+		self.btnControls.place(relx = 0.3,rely = 0.6, anchor = tkinter.CENTER)
 
-		self.btnRules = Button(self,text = "Rules",command = OpenRulesScreen, font = fontBold)
-		self.btnRules.place(relx = 0.3,rely = 0.8, anchor = CENTER)
+		self.btnRules = btn(self,text = "Rules",command = OpenRulesScreen, font = fontBold)
+		self.btnRules.place(relx = 0.3,rely = 0.8, anchor = tkinter.CENTER)
 
 		self.btnClose = BackButton(self,"Back",True)
 		self.mainloop()
@@ -758,9 +760,9 @@ class LoginScreen(Tk):
 		#This is a basic login function. It loads the player in and checks if their entered password matches the saved one
 		myPlayer.LoadPlayer(name)
 		if (myPlayer.password == password):
-			messagebox.showinfo("Login","Logged in!")
+			msgb.showinfo("Login","Logged in!")
 		else:
-			messagebox.showinfo("Login","Password incorrect, try again!")
+			msgb.showinfo("Login","Password incorrect, try again!")
 
 	def CreateNewPlayer(self,myPlayer,name,password):
 		#This sub will create a player file for the new player. Doing this will create an eror if the player exists already. Therefore this will be caught and an error message displayed. If it is a new player
@@ -769,15 +771,15 @@ class LoginScreen(Tk):
 			file = open("gameFiles/" + name + ".txt","xt")
 			file.close()
 			myPlayer.CreatePlayer(name,password)
-			messagebox.showinfo("Login","Account has been made!")
+			msgb.showinfo("Login","Account has been made!")
 
 		except FileExistsError:
-			messagebox.showinfo("Login","User already exists! Please use a different name")
+			msgb.showinfo("Login","User already exists! Please use a different name")
 
 class ScoreboardScreen(Tk):
-	lbTitle = Label
-	btnClose = Button
-	scorebox = Text
+	lbTitle = lb
+	btnClose = btn
+	scorebox = txt
 
 	scoreboard = Scoreboard()
 	def __init__(self):
@@ -790,8 +792,8 @@ class ScoreboardScreen(Tk):
 
 		self.btnClose = BackButton(self,"Back",False)
 
-		self.scoreBox = Text(self, font = ("Default",12))
-		self.scoreBox.place(relx = 0.5,rely = 0.5,anchor = CENTER)
+		self.scoreBox = txt(self, font = ("Default",12))
+		self.scoreBox.place(relx = 0.5,rely = 0.5,anchor = tkinter.CENTER)
 
 		self.DisplayScoreboard()
 		self.mainloop()
@@ -802,25 +804,25 @@ class ScoreboardScreen(Tk):
 		self.scoreboard.LoadInScoreboard()
 		scoreText = ""
 		for i in range(0 ,self.scoreboard.numberOfScores):
-			self.scoreBox.insert(INSERT,str(i + 1) + ".")
-			self.scoreBox.insert(INSERT,self.scoreboard.scores[i].name + " : " + str(self.scoreboard.scores[i].score))
-			self.scoreBox.insert(INSERT, "\n")
-			self.scoreBox.insert(INSERT, "\n")
+			self.scoreBox.insert(tkinter.INSERT,str(i + 1) + ".")
+			self.scoreBox.insert(tkinter.INSERT,self.scoreboard.scores[i].name + " : " + str(self.scoreboard.scores[i].score))
+			self.scoreBox.insert(tkinter.INSERT, "\n")
+			self.scoreBox.insert(tkinter.INSERT, "\n")
 		self.scoreBox.configure(state = 'disabled')
 
 def OpenScoreboard():
 	windowScoreboard = ScoreboardScreen()
 
 class PauseSceen(Tk):
-	btnResumeGame =  Button
-	btnSaveGame = Button
-	btnControls = Button
-	btnRules = Button
-	btnScoreboard = Button
-	btnBack = Button
-	btnCheatCode = Button
+	btnResumeGame =  btn
+	btnSaveGame = btn
+	btnControls = btn
+	btnRules = btn
+	btnScoreboard = btn
+	btnBack = btn
+	btnCheatCode = btn
 
-	txtCheatCode = Entry
+	txtCheatCode = ent
 	cheatCodes = []
 
 	def __init__(self,parentWindow):
@@ -834,34 +836,34 @@ class PauseSceen(Tk):
 
 		self.lbTitle = TitleLabel(self,"Game Pause")
 
-		self.btnResumeGame = Button(self,text = "Resume Game",font = fontButton)
-		self.btnResumeGame.place(relx = 0.5, rely = 0.2, anchor = CENTER)
+		self.btnResumeGame = btn(self,text = "Resume Game",font = fontButton)
+		self.btnResumeGame.place(relx = 0.5, rely = 0.2, anchor = tkinter.CENTER)
 		self.btnResumeGame.configure(command = lambda:(parentWindow.Unpause(),self.destroy()))
 
-		self.btnSaveGame = Button(self,text = "Save Game",font = fontButton)
-		self.btnSaveGame.place(relx = 0.5, rely = 0.3, anchor = CENTER)
+		self.btnSaveGame = btn(self,text = "Save Game",font = fontButton)
+		self.btnSaveGame.place(relx = 0.5, rely = 0.3, anchor = tkinter.CENTER)
 		self.btnSaveGame.configure(command = parentWindow.SaveGame)
 
-		self.btnControls = Button(self,text = "Controls",font = fontButton)
-		self.btnControls.place(relx = 0.5, rely = 0.4, anchor = CENTER)
+		self.btnControls = btn(self,text = "Controls",font = fontButton)
+		self.btnControls.place(relx = 0.5, rely = 0.4, anchor = tkinter.CENTER)
 		self.btnControls.configure(command = lambda:(OpenControlsScreen(parentWindow.myPlayer)))
 
-		self.btnRules = Button(self,text = "Rules",font = fontButton)
-		self.btnRules.place(relx = 0.5, rely = 0.5, anchor = CENTER)
+		self.btnRules = btn(self,text = "Rules",font = fontButton)
+		self.btnRules.place(relx = 0.5, rely = 0.5, anchor = tkinter.CENTER)
 		self.btnRules.configure(command = OpenRulesScreen)
 
-		self.btnScoreboard = Button(self,text = "Scoreboard",font = fontButton)
-		self.btnScoreboard.place(relx = 0.5, rely = 0.6, anchor = CENTER)
+		self.btnScoreboard = btn(self,text = "Scoreboard",font = fontButton)
+		self.btnScoreboard.place(relx = 0.5, rely = 0.6, anchor = tkinter.CENTER)
 		self.btnScoreboard.configure(command = OpenScoreboard)
 
-		self.btnCheatCode = Button(self,text = "Enter Cheat Code",font = fontButton)
-		self.btnCheatCode.place(relx = 0.5, rely = 0.7, anchor = CENTER)
+		self.btnCheatCode = btn(self,text = "Enter Cheat Code",font = fontButton)
+		self.btnCheatCode.place(relx = 0.5, rely = 0.7, anchor = tkinter.CENTER)
 		self.btnCheatCode.configure(command = lambda:(self.EnterCheatCode(parentWindow)))
-		self.txtCheatCode = Entry(self,font = fontNormal)
-		self.txtCheatCode.place(relx = 0.5,rely = 0.8, anchor = CENTER)
+		self.txtCheatCode = ent(self,font = fontNormal)
+		self.txtCheatCode.place(relx = 0.5,rely = 0.8, anchor = tkinter.CENTER)
 
-		self.btnBack = Button(self,text = "Quit Game",font = fontButton)
-		self.btnBack.place(relx = 0.5, rely = 0.9, anchor = CENTER)
+		self.btnBack = btn(self,text = "Quit Game",font = fontButton)
+		self.btnBack.place(relx = 0.5, rely = 0.9, anchor = tkinter.CENTER)
 		self.btnBack.configure(command = lambda:(self.destroy(),parentWindow.CloseWindow(True)))
 
 		self.mainloop()
@@ -893,11 +895,11 @@ class PauseSceen(Tk):
 		if (self.cheatCodes[5] in userInput):
 			gameScreen.pointModifier = 2500	
 class RulesScreen(Tk):
-	btnBack = Button
+	btnBack = btn
 
-	lbTitle = Label
+	lbTitle = lb
 
-	txtRules = Text
+	txtRules = txt
 
 	def __init__(self):
 		super().__init__()
@@ -911,9 +913,9 @@ class RulesScreen(Tk):
 		rules = file.read()
 		file.close()
 
-		self.txtRules = Text(self, font = ("Default",12))
-		self.txtRules.place(relx = 0.5,rely = 0.5,anchor = CENTER)
-		self.txtRules.insert(INSERT,rules)
+		self.txtRules = txt(self, font = ("Default",12))
+		self.txtRules.place(relx = 0.5,rely = 0.5,anchor = tkinter.CENTER)
+		self.txtRules.insert(tkinter.INSERT,rules)
 		self.txtRules.pack(pady = 100)
 
 		self.mainloop()
@@ -923,24 +925,25 @@ def OpenRulesScreen():
 
 
 class ControlsScreen(Tk):
-	lbUpControl = Label
-	lbRightControl = Label
-	lbLeftControl = Label
-	lbDownControl = Label
-	lbPauseControl = Label
-	lbBossControl = Label
-	lbTitle = Label
+	lbUpControl = lb
+	lbRightControl = lb
+	lbLeftControl = lb
+	lbDownControl = lb
+	lbPauseControl = lb
+	lbBossControl = lb
+	lbTitle = lb
 
-	txtUpControl = Entry
-	txtRightControl = Entry
-	txtLeftControl = Entry
-	txtDownControl = Entry
-	txtPauseControl = Entry
-	txtBossControl = Entry
+	txtUpControl = ent
+	txtRightControl = ent
+	txtLeftControl = ent
+	txtDownControl = ent
+	txtPauseControl = ent
+	txtBossControl = ent
 
-	btnClose = Button
-	btnResetControls = Button
-	btnSaveChanges = Button
+	btnClose = btn
+	btnResetControls = btn
+	btnSaveChanges = btn
+	btnInfo = btn
 
 	def __init__(self,myPlayer):
 		super().__init__()
@@ -953,47 +956,53 @@ class ControlsScreen(Tk):
 
 		self.lbTitle = TitleLabel(self,"Controls")
 
-		self.lbUpControl = Label(self,text = "Up Control:",font = fontBold)
-		self.lbUpControl.place(relx = 0.2,rely = 0.2, anchor = CENTER)
-		self.txtUpControl = Entry(self,font = fontNormal)
-		self.txtUpControl.place(relx = 0.5,rely = 0.2, anchor = CENTER)
+		self.lbUpControl = lb(self,text = "Up Control:",font = fontBold)
+		self.lbUpControl.place(relx = 0.2,rely = 0.2, anchor = tkinter.CENTER)
+		self.txtUpControl = ent(self,font = fontNormal)
+		self.txtUpControl.place(relx = 0.5,rely = 0.2, anchor = tkinter.CENTER)
 
-		self.lbLeftControl = Label(self,text = "Left Control:",font = fontBold)
-		self.lbLeftControl.place(relx = 0.2,rely = 0.3, anchor = CENTER)
-		self.txtLeftControl = Entry(self,font = fontNormal)
-		self.txtLeftControl.place(relx = 0.5,rely = 0.3, anchor = CENTER)
+		self.lbLeftControl = lb(self,text = "Left Control:",font = fontBold)
+		self.lbLeftControl.place(relx = 0.2,rely = 0.3, anchor = tkinter.CENTER)
+		self.txtLeftControl = ent(self,font = fontNormal)
+		self.txtLeftControl.place(relx = 0.5,rely = 0.3, anchor = tkinter.CENTER)
 
 
-		self.lbDownControl = Label(self,text = "Down Control:",font = fontBold)
-		self.lbDownControl.place(relx = 0.2,rely = 0.4, anchor = CENTER)
-		self.txtDownControl = Entry(self,font = fontNormal)
-		self.txtDownControl.place(relx = 0.5,rely = 0.4, anchor = CENTER)
+		self.lbDownControl = lb(self,text = "Down Control:",font = fontBold)
+		self.lbDownControl.place(relx = 0.2,rely = 0.4, anchor = tkinter.CENTER)
+		self.txtDownControl = ent(self,font = fontNormal)
+		self.txtDownControl.place(relx = 0.5,rely = 0.4, anchor = tkinter.CENTER)
 
-		self.lbRightControl = Label(self,text = "Right Control:",font = fontBold)
-		self.lbRightControl.place(relx = 0.2,rely = 0.5, anchor = CENTER)
-		self.txtRightControl = Entry(self,font = fontNormal)
-		self.txtRightControl.place(relx = 0.5,rely = 0.5, anchor = CENTER)
+		self.lbRightControl = lb(self,text = "Right Control:",font = fontBold)
+		self.lbRightControl.place(relx = 0.2,rely = 0.5, anchor = tkinter.CENTER)
+		self.txtRightControl = ent(self,font = fontNormal)
+		self.txtRightControl.place(relx = 0.5,rely = 0.5, anchor = tkinter.CENTER)
 
-		self.lbPauseControl = Label(self,text = "Pause Control:",font = fontBold)
-		self.lbPauseControl.place(relx = 0.2,rely = 0.6, anchor = CENTER)
-		self.txtPauseControl = Entry(self,font = fontNormal)
-		self.txtPauseControl.place(relx = 0.5,rely = 0.6, anchor = CENTER)
+		self.lbPauseControl = lb(self,text = "Pause Control:",font = fontBold)
+		self.lbPauseControl.place(relx = 0.2,rely = 0.6, anchor = tkinter.CENTER)
+		self.txtPauseControl = ent(self,font = fontNormal)
+		self.txtPauseControl.place(relx = 0.5,rely = 0.6, anchor = tkinter.CENTER)
 
-		self.lbBossControl = Label(self,text = "Boss Control:",font = fontBold)
-		self.lbBossControl.place(relx = 0.2,rely = 0.7, anchor = CENTER)
-		self.txtBossControl = Entry(self,font = fontNormal)
-		self.txtBossControl.place(relx = 0.5,rely = 0.7, anchor = CENTER)
+		self.lbBossControl = lb(self,text = "Boss Control:",font = fontBold)
+		self.lbBossControl.place(relx = 0.2,rely = 0.7, anchor = tkinter.CENTER)
+		self.txtBossControl = ent(self,font = fontNormal)
+		self.txtBossControl.place(relx = 0.5,rely = 0.7, anchor = tkinter.CENTER)
 
 		self.DisplayControls(myPlayer) #This fills in all of the text boxes with the values of the controls
 
-		self.btnResetControls = Button(self,text = "Reset Controls" ,command = lambda:(self.ResetControls(myPlayer)),font = fontBold)
-		self.btnResetControls.place(relx = 0.3,rely = 0.8,anchor = CENTER)
+		self.btnResetControls = btn(self,text = "Reset Controls" ,command = lambda:(self.ResetControls(myPlayer)),font = fontBold)
+		self.btnResetControls.place(relx = 0.2,rely = 0.8,anchor = tkinter.CENTER)
 
-		self.btnSaveChanges = Button(self,text = "Save Changes" ,command = lambda:(self.SaveChanges(myPlayer)),font = fontBold)
-		self.btnSaveChanges.place(relx = 0.7,rely = 0.8,anchor = CENTER)
+		self.btnSaveChanges = btn(self,text = "Save Changes" ,command = lambda:(self.SaveChanges(myPlayer)),font = fontBold)
+		self.btnSaveChanges.place(relx = 0.8,rely = 0.8,anchor = tkinter.CENTER)
+
+		self.btnInfo = btn(self,text = "Info" ,command = self.DisplayInfo,font = fontBold)
+		self.btnInfo.place(relx = 0.5,rely = 0.8,anchor = tkinter.CENTER)
 
 		self.btnClose = BackButton(self,"Back",False)
 		self.mainloop()
+
+	def DisplayInfo(self):
+		msgb.showinfo("Info","You can enter any characters here to set them as your controls for the game. Please note that the case of characters is taken into account. If you wish to use the Arrow keys you must enter 'Up', 'Left', 'Down' or 'Right depending on the key.")
 
 	def ResetControls(self,myPlayer):
 		#This procedure will set and save the player controls to the default. It then redisplays them on screen
@@ -1026,40 +1035,40 @@ class ControlsScreen(Tk):
 		myPlayer.controls[4] = self.txtPauseControl.get().strip()
 		myPlayer.controls[5] = self.txtBossControl.get().strip()
 		myPlayer.SavePlayer()
-		messagebox.showinfo("Saved!","Changes to controls have been saved!")
+		msgb.showinfo("Saved!","Changes to controls have been saved!")
 def OpenControlsScreen(myPlayer):
 	#This procedure only displays if the player is logged in as we need their controls, without that this screen is useless
 	if (myPlayer.name == ""):
-		messagebox.showinfo("Error","Please Login first!")
+		msgb.showinfo("Error","Please Login first!")
 	else:
 		windowControlsScreen = ControlsScreen(myPlayer)
 
 #Classees for general controls
-class BackButton(Button):
+class BackButton(btn):
 	#This is a reusable back button. It will position itself in the same and correct place on screen each time. It's text will change based on the input parameter as some back buttons must say back
 	#Whilst others need to say quit. It also takes the boolean value of openMenu which is used to tell whether we should reopen the menu after closing the parentwindow (the window it is put into)
 	# So if that value is true then it will reopen the menu like for the login screen
 	def __init__(self,parentWindow,textValue,openMenu):
 		super().__init__()
-		self = Button(parentWindow,text = textValue,font = ("Default",12,"bold"))
-		self.place(relx = 0.5, rely = 0.9, anchor = CENTER)
+		self = btn(parentWindow,text = textValue,font = ("Default",12,"bold"))
+		self.place(relx = 0.5, rely = 0.9, anchor = tkinter.CENTER)
 		if (openMenu):
 			self.configure(command = lambda:(parentWindow.destroy(),BeginGame()))
 		else:
 			self.configure(command = lambda:(parentWindow.destroy()))
-class TitleLabel(Label):
+class TitleLabel(lb):
 	#This is a reusable title label. It will fomrat and position the label correctly on the screen and will fill in the text based on the input parameter
 	def __init__(self,parentWindow,textValue):
 		super().__init__()
-		self = Label(parentWindow,text = textValue,font = ("Default",30,"bold","underline"))
-		self.place(relx = 0.5, rely = 0.1, anchor = CENTER)
+		self = lb(parentWindow,text = textValue,font = ("Default",30,"bold","underline"))
+		self.place(relx = 0.5, rely = 0.1, anchor = tkinter.CENTER)
 
 #Main game
 class GameScreen(Tk):
-	background = Canvas
+	background = cv
 
-	lbScore = Label
-	txtScore = Entry
+	lbScore = lb
+	txtScore = ent
 
 	backgroundWidth = 800
 	backgroundHeight = 800
@@ -1091,21 +1100,23 @@ class GameScreen(Tk):
 		self.title("Game screen")
 		self.geometry(screenResolution)
 
-		self.background = Canvas(self,width = self.backgroundWidth,height = self.backgroundHeight)
-		self.background.place(relx = 0.5,rely = 0.5, anchor = CENTER)
+		self.background = cv(self,width = self.backgroundWidth,height = self.backgroundHeight)
+		self.background.place(relx = 0.5,rely = 0.5, anchor = tkinter.CENTER)
 		self.background.configure(bg = 'black')
 		self.background.pack()
 
-		self.lbScore = Label(self,text = "Score: ",font = ("Default",20,"bold"))
-		self.lbScore.place(relx = 0.4,rely = 0.95,anchor = CENTER)
-		self.txtScore = Entry(self,font = ("Default",20,"bold"))
-		self.txtScore.place(relx = 0.6,rely = 0.95,anchor = CENTER)
+		self.lbScore = lb(self,text = "Score: ",font = ("Default",20,"bold"))
+		self.lbScore.place(relx = 0.4,rely = 0.95,anchor = tkinter.CENTER)
+		self.txtScore = ent(self,font = ("Default",20,"bold"))
+		self.txtScore.place(relx = 0.6,rely = 0.95,anchor = tkinter.CENTER)
 
 		self.myPlayer = myPlayer
 		if (self.myPlayer.midLevel == False): #Here if the player is mid way through the level, only then will their game be loaded in and
 		#displayed. If they're not midlevel then they will always be randomly placed and be given a length of 3
 			self.myPlayer.snake = Snake("Player")
 			self.myPlayer.snake.length = 3
+			self.myPlayer.snake.turningPoints = []
+			self.myPlayer.snake.body = []
 			self.myPlayer.snake.RandomlyPlace(self)
 		else:
 			self.LoadGame()
@@ -1149,13 +1160,13 @@ class GameScreen(Tk):
 		#make it look like work is being done.
 		if (self.paused == True):
 			self.background.configure(width = self.backgroundWidth,height = self.backgroundHeight)
-			self.lbScore.place(relx = 0.4,rely = 0.95,anchor = CENTER)
-			self.txtScore.place(relx = 0.6,rely = 0.95,anchor = CENTER)			
+			self.lbScore.place(relx = 0.4,rely = 0.95,anchor = tkinter.CENTER)
+			self.txtScore.place(relx = 0.6,rely = 0.95,anchor = tkinter.CENTER)			
 			self.Unpause()
 		else:
 			self.paused = True
 			self.background.configure(width = screenWidth,height = screenHeight)
-			self.image = PhotoImage(file = "gameRes/bossScreen.png")
+			self.image = img(file = "gameRes/bossScreen.png")
 			self.background.create_image((screenWidth/2),(screenHeight/2),image = self.image)
 			self.txtScore.place_forget()#These two commands are used to hide the score parts
 			self.lbScore.place_forget()
@@ -1203,17 +1214,17 @@ class GameScreen(Tk):
 	def GameOver(self):
 		#This procedure is used to end the game, like if the player collides witht their own body or a wall. It will delete everything on the
 		#canvas and will close the window. It then also reopens the menu window.
-		self.background.delete(ALL)
+		self.background.delete(tkinter.ALL)
 		self.DisplayAllElements()
 
 		self.myPlayer.midLevel = False
 		self.myPlayer.SavePlayer()
-		messagebox.showinfo("Game Over","GAME OVER!!!!")
+		msgb.showinfo("Game Over","GAME OVER!!!!")
 		self.gameOver = True
 		self.CloseWindow(False)
 
 	def DisplayAllElements(self):
-		self.background.delete(ALL)
+		self.background.delete(tkinter.ALL)
 		self.DisplaySnake(self.myPlayer.snake)
 		for i in range(len(self.enemySnakes)):
 			self.DisplaySnake(self.enemySnakes[i])
@@ -1224,10 +1235,10 @@ class GameScreen(Tk):
 		#This will check if the player wants to save on certain occasions. This is because we don't need to save if they lose a round of the game
 		saveGame = ""
 		if (askToSave):
-			saveGame = messagebox.askquestion("Quit","Would you like to save your progress?")
+			saveGame = msgb.askquestion("Quit","Would you like to save your progress?")
 			if (saveGame == 'yes'):
 				self.SaveGame()
-		self.background.delete(ALL)
+		self.background.delete(tkinter.ALL)
 		self.destroy()
 		BeginGame()
 
@@ -1244,7 +1255,7 @@ class GameScreen(Tk):
 			leftCornerX = (self.powerUps[i].position.x + 0.5) * gridBoxWidth
 			leftCornerY = (self.powerUps[i].position.y + 0.5) * gridBoxWidth
 
-			self.powerUpImages.append(PhotoImage(file = "gameRes/" + self.powerUps[i].powerUpType +".gif"))
+			self.powerUpImages.append(img(file = "gameRes/" + self.powerUps[i].powerUpType +".gif"))
 			self.background.create_image(leftCornerX,leftCornerY,image = self.powerUpImages[len(self.powerUpImages) - 1])
 	def CheckIfSnakesTooSmall(self):
 		if (self.checkIfPlayerTooSmall):
@@ -1257,7 +1268,6 @@ class GameScreen(Tk):
 	def LoadGame(self):
 		#This procedure will load in the player, their snake and the full gameboard. The only detail from the game bpard to really load in is all of the powerups on the
 		#screen
-		print("Loading Game")
 		self.myPlayer.LoadPlayer(self.myPlayer.name)
 		self.myPlayer.snake.LoadSnake(self,self.myPlayer)
 		file = open("gameFiles/" + self.myPlayer.name + "Level.txt","r")
@@ -1336,7 +1346,7 @@ class GameScreen(Tk):
 			file.write(str(self.enemySnakes[i].speed) + "\n")
 
 		file.close()
-		messagebox.showinfo("Saved","Game has been saved!")
+		msgb.showinfo("Saved","Game has been saved!")
 
 	def DisplayScore(self):
 		self.txtScore.delete(0,"end")
@@ -1351,10 +1361,12 @@ class GameScreen(Tk):
 			self.DisplayScore()
 
 	def AddEnemySnake(self):
-		if (len(self.enemySnakes) < 5):
+		if (len(self.enemySnakes) < 2):
 			chance = random.randint(0,10)
 			if (chance == 0):
 				tempSnake = Snake("Enemy")
+				tempSnake.body = []
+				tempSnake.turningPoints = []
 				tempSnake.RandomlyGenerate(self)
 				self.enemySnakes.append(tempSnake)
 
