@@ -1,8 +1,3 @@
-#Jack Pay h61781jp
-#16/11/21
-#My game: Cube Hero, is a snake like game. The objective is to earn points and not die. In cube hero you are a snake moving round the baord. You must be atelast of a length of 3 otherwise you will die. In cube hero you will earn points every game cycle. You will earn more points the longer you are. You can also earn points by eating powerups. There are 7 powerups that will each do something different whetehr that's instantly killing you, making you grow or speeding you up. In cube hero there are also enemy snakes. These will try to eat you but you can also eat them by running into their side. You will grow for half of the length you cut off of an enemy snake. You will also die if the player snake runs off of the board.
-#In cube hero there are cheat codes, control customisation, a scoreboard, help documenation and saving and loading features.
-#This module stores all of the screens that are used in game
 import time,random
 from tkinter import Tk, Button as btn, Label as lb, Canvas as cv, Text as txt, Entry as ent, PhotoImage as img, messagebox as msgb, CENTER as algncenter, ALL, INSERT
 from game_classes import Snake, Block as blk, Player, PowerUp, Scoreboard as scrb
@@ -24,8 +19,6 @@ class GameScreen(Tk):
 	numberOfVerticalLines = 50
 	numberOfHorizontalLines = 50
 
-	gridBoxWidth = backgroundWidth / numberOfVerticalLines
-
 	gameCycleLength = 200 #In milliseconds
 	gameCycleCount = 0;
 
@@ -37,12 +30,12 @@ class GameScreen(Tk):
 	checkIfPlayerTooSmall = True
 
 	powerUps = []
+	powerUpImages = []
 
 	pointModifier = 1
 
 	enemySnakes = []
 
-	entitiesToRemove = []
 	def __init__(self,myPlayer):
 		super().__init__()
 		self.enemySnakes = []
@@ -70,6 +63,8 @@ class GameScreen(Tk):
 			self.myPlayer.snake.RandomlyPlace(self)
 		else:
 			self.LoadGame()
+		self.DisplaySnake(self.myPlayer.snake)
+
 		self.SetUpControls()
 		self.StartGameCycle()
 
@@ -106,7 +101,7 @@ class GameScreen(Tk):
 		if (self.paused == True):
 			self.background.configure(width = self.backgroundWidth,height = self.backgroundHeight)
 			self.lbScore.place(relx = 0.4,rely = 0.95,anchor = algncenter)
-			self.txtScore.place(relx = 0.6,rely = 0.95,anchor = algncenter)
+			self.txtScore.place(relx = 0.6,rely = 0.95,anchor = algncenter)			
 			self.Unpause()
 		else:
 			self.paused = True
@@ -116,11 +111,24 @@ class GameScreen(Tk):
 			self.txtScore.place_forget()#These two commands are used to hide the score parts
 			self.lbScore.place_forget()
 
+
+
+	def DisplaySnake(self,snake):
+		#This will display a specific snake onto the screen. It calculates the position on the baord of each section of the snake based on the canvas width and the number of grid lines and will draw each body section onto the canvas. This is used every single game cycle
+		gridBoxWidth = self.backgroundWidth/self.numberOfHorizontalLines
+		for i in range(0,snake.length):
+			leftCornerX = snake.body[i].x * gridBoxWidth
+			leftCornerY = snake.body[i].y * gridBoxWidth
+			rightCornerX = (snake.body[i].x + 1) * gridBoxWidth
+			rightCornerY = (snake.body[i].y + 1) * gridBoxWidth
+
+			self.background.create_rectangle(leftCornerX,leftCornerY,rightCornerX,rightCornerY,outline = "black",fill = snake.color)
+
 	def StartGameCycle(self):
 		#This procedure does the game loop. On every iteration it clears the entire board, moves each of the snakes and will then redraw all of the snakes in their new positions. The final instruction is used to make the delay between moves and to carry on the iterative procedure.
 		if ((not self.paused) and (not self.gameOver)):
 			self.CheckForDeadEnemySnakes()
-			self.RemoveDeadEntities()
+
 			self.myPlayer.snake.Move(self)
 
 			for i in range(len(self.enemySnakes)):
@@ -128,8 +136,11 @@ class GameScreen(Tk):
 					self.enemySnakes[i].DoEnemySnakeMove(self)
 
 			self.CheckIfSnakesTooSmall()
-
+			
 			if (not self.gameOver):
+
+				self.DisplayAllElements()
+
 				self.IncreasePlayerScore()
 
 				self.AddEnemySnake()
@@ -138,17 +149,24 @@ class GameScreen(Tk):
 				self.AddPowerUps()
 				self.after(self.gameCycleLength,self.StartGameCycle)
 
-	def RemoveDeadEntities(self):
-		for i in range(len(self.entitiesToRemove)):
-			self.background.delete(self.entitiesToRemove[i])
-
 	def GameOver(self):
 		#This procedure is used to end the game, like if the player collides witht their own body or a wall. It will delete everything on the canvas and will close the window. It then also reopens the menu window.
+		self.background.delete(ALL)
+		self.DisplayAllElements()
+
 		self.myPlayer.midLevel = False
 		self.myPlayer.SavePlayer()
 		msgb.showinfo("Game Over","GAME OVER!!!!")
 		self.gameOver = True
 		self.CloseWindow(False)
+
+	def DisplayAllElements(self):
+		self.background.delete(ALL)
+		self.DisplaySnake(self.myPlayer.snake)
+		for i in range(len(self.enemySnakes)):
+			self.DisplaySnake(self.enemySnakes[i])
+		self.DisplayPowerUps()
+
 
 	def CloseWindow(self,askToSave):
 		#This will check if the player wants to save on certain occasions. This is because we don't need to save if they lose a round of the game
@@ -167,6 +185,15 @@ class GameScreen(Tk):
 			self.gameCycleCount == 0
 			self.powerUps.append(PowerUp(self))
 
+	def DisplayPowerUps(self):
+		#This just displays and paints each of the powerups on the screen in the same way that snakes are
+		gridBoxWidth = self.backgroundWidth/self.numberOfHorizontalLines
+		for i in range(0,len(self.powerUps)):
+			leftCornerX = (self.powerUps[i].position.x + 0.5) * gridBoxWidth
+			leftCornerY = (self.powerUps[i].position.y + 0.5) * gridBoxWidth
+
+			self.powerUpImages.append(img(file = "gameRes/" + self.powerUps[i].powerUpType +".gif"))
+			self.background.create_image(leftCornerX,leftCornerY,image = self.powerUpImages[len(self.powerUpImages) - 1])
 	def CheckIfSnakesTooSmall(self):
 		if (self.checkIfPlayerTooSmall):
 			if (self.myPlayer.snake.length <= 2):
@@ -188,7 +215,7 @@ class GameScreen(Tk):
 			yPosition =  int(file.readline().strip())
 			tempType =  file.readline().strip()
 			newPowerup = PowerUp(self)
-			newPowerup.MakePowerUp(self,xPosition,yPosition,tempType)
+			newPowerup.MakePowerUp(xPosition,yPosition,tempType)
 			self.powerUps.append(newPowerup)
 
 		file.readline()
@@ -205,7 +232,7 @@ class GameScreen(Tk):
 				yPosition = int(file.readline().strip())
 				facing = file.readline().strip()
 
-				tempSnake.body.append(blk(self,xPosition,yPosition,facing,tempSnake.color))
+				tempSnake.body.append(blk(xPosition,yPosition,facing))
 
 			file.readline()
 
@@ -215,7 +242,7 @@ class GameScreen(Tk):
 				yPosition = int(file.readline().strip())
 				facing = file.readline().strip()
 
-				tempSnake.turningPoints.append(blk(None,xPosition,yPosition,facing,"Nothing"))
+				tempSnake.turningPoints.append(blk(xPosition,yPosition,facing))
 
 			tempSnake.speed = int(file.readline().strip())
 
@@ -318,7 +345,7 @@ class Menu(Tk):
 
 		self.btnClose = BackButton(self,"Close",False)
 
-		self.mainloop()
+		self.mainloop()	
 
 class ScoreboardScreen(Tk):
 	lbTitle = lb
@@ -500,18 +527,18 @@ class PauseSceen(Tk):
 		if (self.cheatCodes[0] in userInput):
 			gameScreen.myPlayer.snake.IncreaseLength(gameScreen,10)
 		if (self.cheatCodes[1] in userInput):
-			gameScreen.myPlayer.snake.DecreaseLength(gameScreen,10)
+			gameScreen.myPlayer.snake.DecreaseLength(gameScreen,10)		
 		if (self.cheatCodes[2] in userInput):
-			gameScreen.myPlayer.snake.IncreaseSpeed(3)
+			gameScreen.myPlayer.snake.IncreaseSpeed(3)		
 		if (self.cheatCodes[3] in userInput):
-			gameScreen.myPlayer.snake.DecreaseSpeed(3)
+			gameScreen.myPlayer.snake.DecreaseSpeed(3)		
 		if (self.cheatCodes[4] in userInput):
 			gameScreen.checkIfPlayerTooSmall = False
 			gameScreen.myPlayer.snake.DecreaseLength(gameScreen,gameScreen.myPlayer.snake.length - 1)
 			while (len(gameScreen.myPlayer.snake.turningPoints) > 0):
-				gameScreen.myPlayer.snake.turningPoints.remove(gameScreen.myPlayer.snake.turningPoints[0])
+				gameScreen.myPlayer.snake.turningPoints.remove(gameScreen.myPlayer.snake.turningPoints[0])		
 		if (self.cheatCodes[5] in userInput):
-			gameScreen.pointModifier = 2500
+			gameScreen.pointModifier = 2500	
 class RulesScreen(Tk):
 	btnBack = btn
 
@@ -666,7 +693,7 @@ class TitleLabel(lb):
 	def __init__(self,parentWindow,textValue):
 		super().__init__()
 		self = lb(parentWindow,text = textValue,font = ("Default",30,"bold","underline"))
-		self.place(relx = 0.5, rely = 0.1, anchor = algncenter)
+		self.place(relx = 0.5, rely = 0.1, anchor = algncenter)	
 
 def OpenScoreboard():
 	windowScoreboard = ScoreboardScreen()
@@ -685,8 +712,7 @@ def NewGame():
 	windowLogin = LoginScreen(True)#Opens the login screen. NewGame variable is set to true as we are making a new game
 def BeginGame():
 	#Main sub that runs the program
-	global screenResolution,screenWidth,screenHeight, gridBoxWidth
-
+	global screenResolution,screenWidth,screenHeight
 	windowMenu = Menu()
 
 BeginGame()#Needed here at the end for the full program to be run. Must be specified last otherwise the other things won't have been declared yet
