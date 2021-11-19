@@ -1,5 +1,5 @@
 import time,random
-from tkinter import Tk, Button as btn, Label as lb, Canvas as cv, Text as txt, Entry as ent, PhotoImage as img, messagebox as msgb, CENTER as algncenter, ALL, INSERT
+from tkinter import Tk, Button as btn, Label as lb, Canvas as cv, Text as txt, Entry as ent, PhotoImage as img, messagebox as msgb, CENTER as algncenter, ALL, INSERT, Spinbox as numericUpDown, StringVar
 #All images are original and made by myself
 #Screen Resolution is 1920x1080. All screens are smaller than or equal to this resolution.
 screenWidth = 1920
@@ -426,7 +426,7 @@ class Player:
 		else:
 			file.write("0\n")#score of 0
 			file.write("0\n")
-		file.write(str(self.difficultyLevel))
+		file.write(str(self.difficultyLevel) + "\n")
 		file.write(str(self.controls) + "\n")
 		file.close()
 
@@ -655,6 +655,7 @@ class GameScreen(Tk):
 	difficultyLevel = 1
 
 	enemySnakes = []
+	numberOfSnakes = [2,3,5,6]#This is the number of snakes in the game based on difficulty level
 
 	def __init__(self,myPlayer):
 		super().__init__()
@@ -871,7 +872,7 @@ class GameScreen(Tk):
 			self.DisplayScore()
 
 	def AddEnemySnake(self):
-		if (len(self.enemySnakes) < 2):
+		if (len(self.enemySnakes) < self.numberOfSnakes[self.difficultyLevel - 1]):
 			chance = random.randint(0,10)
 			if (chance == 0):
 				tempSnake = Snake("Enemy")
@@ -917,7 +918,7 @@ class GameScreen(Tk):
 		#We set up the controls each time after unpausing incase the player decided to change them over the pause. We do the same for difficulty level for the same reason
 		self.paused = False
 		self.SetUpControls()
-		self.difficultyLevel = self.myPlayer.difficultyLevel
+		self.ResetDifficultyLevel()
 		self.StartGameCycle()
 
 	def BossScreen(self,event):
@@ -936,6 +937,15 @@ class GameScreen(Tk):
 			self.background.create_image((screenWidth/2),(screenHeight/2),image = self.image)
 			self.txtScore.place_forget()#These two commands are used to hide the score parts
 			self.lbScore.place_forget()
+
+	def ResetDifficultyLevel(self):
+		self.difficultyLevel = self.myPlayer.difficultyLevel
+		if (len(self.enemySnakes) > self.numberOfSnakes[self.difficultyLevel - 1]):
+			number = (len(self.enemySnakes) - self.numberOfSnakes[self.difficultyLevel - 1])
+			for i in range(number):
+				self.enemySnakes[len(self.enemySnakes) - 1].KillSnake(self)
+				self.enemySnakes.remove(self.enemySnakes[len(self.enemySnakes) - 1])
+
 #Medium sized & importance screens
 class Menu(Tk):
 	lbTitle = lb
@@ -1171,7 +1181,7 @@ class RulesScreen(Tk):
 
 	def __init__(self):
 		super().__init__()
-		self.geometry("700x700")
+		self.geometry(screenResolution)
 		self.title("Rules")
 
 		lbTitle = TitleLabel(self,"Welcome to Cube Hero!")
@@ -1184,7 +1194,6 @@ class RulesScreen(Tk):
 		self.txtRules = txt(self, font = ("Default",12))
 		self.txtRules.place(relx = 0.5,rely = 0.5,anchor = algncenter)
 		self.txtRules.insert(INSERT,rules)
-		self.txtRules.pack(pady = 100)
 
 		self.mainloop()
 class SettingsScreen(Tk):
@@ -1196,6 +1205,8 @@ class SettingsScreen(Tk):
 	lbBossControl = lb
 	lbTitle = lb
 	lbDifficultyLevel = lb
+
+	nudDifficultyLevel = numericUpDown
 
 	txtUpControl = ent
 	txtRightControl = ent
@@ -1211,7 +1222,7 @@ class SettingsScreen(Tk):
 
 	def __init__(self,myPlayer):
 		super().__init__()
-		self.geometry("600x500")
+		self.geometry("600x800")
 		self.title("Settings")
 
 		fontBold = ("Default",12,"bold")
@@ -1226,38 +1237,46 @@ class SettingsScreen(Tk):
 		self.txtUpControl.place(relx = 0.5,rely = 0.2, anchor = algncenter)
 
 		self.lbLeftControl = lb(self,text = "Left Control:",font = fontBold)
-		self.lbLeftControl.place(relx = 0.2,rely = 0.3, anchor = algncenter)
+		self.lbLeftControl.place(relx = 0.2,rely = 0.25, anchor = algncenter)
 		self.txtLeftControl = ent(self,font = fontNormal)
-		self.txtLeftControl.place(relx = 0.5,rely = 0.3, anchor = algncenter)
+		self.txtLeftControl.place(relx = 0.5,rely = 0.25, anchor = algncenter)
 
 
 		self.lbDownControl = lb(self,text = "Down Control:",font = fontBold)
-		self.lbDownControl.place(relx = 0.2,rely = 0.4, anchor = algncenter)
+		self.lbDownControl.place(relx = 0.2,rely = 0.3, anchor = algncenter)
 		self.txtDownControl = ent(self,font = fontNormal)
-		self.txtDownControl.place(relx = 0.5,rely = 0.4, anchor = algncenter)
+		self.txtDownControl.place(relx = 0.5,rely = 0.3, anchor = algncenter)
 
 		self.lbRightControl = lb(self,text = "Right Control:",font = fontBold)
-		self.lbRightControl.place(relx = 0.2,rely = 0.5, anchor = algncenter)
+		self.lbRightControl.place(relx = 0.2,rely = 0.35, anchor = algncenter)
 		self.txtRightControl = ent(self,font = fontNormal)
-		self.txtRightControl.place(relx = 0.5,rely = 0.5, anchor = algncenter)
+		self.txtRightControl.place(relx = 0.5,rely = 0.35, anchor = algncenter)
 
 		self.lbPauseControl = lb(self,text = "Pause Control:",font = fontBold)
-		self.lbPauseControl.place(relx = 0.2,rely = 0.6, anchor = algncenter)
+		self.lbPauseControl.place(relx = 0.2,rely = 0.4, anchor = algncenter)
 		self.txtPauseControl = ent(self,font = fontNormal)
-		self.txtPauseControl.place(relx = 0.5,rely = 0.6, anchor = algncenter)
+		self.txtPauseControl.place(relx = 0.5,rely = 0.4, anchor = algncenter)
 
 		self.lbBossControl = lb(self,text = "Boss Control:",font = fontBold)
-		self.lbBossControl.place(relx = 0.2,rely = 0.7, anchor = algncenter)
+		self.lbBossControl.place(relx = 0.2,rely = 0.45, anchor = algncenter)
 		self.txtBossControl = ent(self,font = fontNormal)
-		self.txtBossControl.place(relx = 0.5,rely = 0.7, anchor = algncenter)
+		self.txtBossControl.place(relx = 0.5,rely = 0.45, anchor = algncenter)
+
+		#StringVar is needed here to be able to set the default value of the difficutly level
+		difficultyLevel = StringVar(self)
+		difficultyLevel.set(str(myPlayer.difficultyLevel))
+		self.lbDifficultyLevel = lb(self,text = "Difficulty Level:",font = fontBold)
+		self.lbDifficultyLevel.place(relx = 0.2,rely = 0.5, anchor = algncenter)
+		self.nudDifficultyLevel = numericUpDown(self, from_=1, to = 4, textvariable = difficultyLevel)
+		self.nudDifficultyLevel.place(relx = 0.5,rely = 0.5, anchor = algncenter)
 
 		self.DisplaySettings(myPlayer) #This fills in all of the text boxes with the values of the controls
 
 		self.btnResetControls = btn(self,text = "Reset Controls" ,command = lambda:(self.ResetControls(myPlayer)),font = fontBold)
-		self.btnResetControls.place(relx = 0.2,rely = 0.8,anchor = algncenter)
+		self.btnResetControls.place(relx = 0.5,rely = 0.6,anchor = algncenter)
 
 		self.btnSaveChanges = btn(self,text = "Save Changes" ,command = lambda:(self.SaveChanges(myPlayer)),font = fontBold)
-		self.btnSaveChanges.place(relx = 0.8,rely = 0.8,anchor = algncenter)
+		self.btnSaveChanges.place(relx = 0.5,rely = 0.7,anchor = algncenter)
 
 		self.btnInfo = btn(self,text = "Info" ,command = self.DisplayInfo,font = fontBold)
 		self.btnInfo.place(relx = 0.5,rely = 0.8,anchor = algncenter)
@@ -1298,6 +1317,7 @@ class SettingsScreen(Tk):
 		myPlayer.controls[3] = self.txtRightControl.get().strip()
 		myPlayer.controls[4] = self.txtPauseControl.get().strip()
 		myPlayer.controls[5] = self.txtBossControl.get().strip()
+		myPlayer.difficultyLevel = int(self.nudDifficultyLevel.get())
 		myPlayer.SavePlayer()
 		msgb.showinfo("Saved!","Changes to controls have been saved!")
 
