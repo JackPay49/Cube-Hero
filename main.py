@@ -397,6 +397,8 @@ class Player:
 
 	snake = Snake("Player")
 
+	difficultyLevel = 1 #Maybe 4 levels of difficulty
+
 	def LoadPlayer(self,nValue):
 		#This jsut loads in the details of the player. Important thing to note here is the loading of the controls. They are read in as a string and then a separate procedure will find the control values and
 		#insert them into the array
@@ -407,6 +409,7 @@ class Player:
 		self.highestScore = int(file.readline())
 		self.score = int(file.readline())
 		midLevelState = file.readline().strip()
+		self.difficultyLevel = int(file.readline().strip())
 		self.controls = ConvertToList(file.readline())
 		file.close()
 		if (midLevelState == "1"):
@@ -423,6 +426,7 @@ class Player:
 		else:
 			file.write("0\n")#score of 0
 			file.write("0\n")
+		file.write(str(self.difficultyLevel))
 		file.write(str(self.controls) + "\n")
 		file.close()
 
@@ -452,7 +456,7 @@ class PowerUp:
 	position = None
 	powerUpType = "Grow"#Later in game dev there will be many different types of powerup like speedup, grow, shrink, slowdown,etc
 	color = 'blue'
-	img = None
+	img = None #Powerups store their own images so that they only have to load in their image once. It can then be added to the screen as much as we need
 
 	def __init__(self,gameScreen):
 		self.RandomlyPlace(gameScreen)
@@ -648,6 +652,7 @@ class GameScreen(Tk):
 	powerUpImages = []
 
 	pointModifier = 1
+	difficultyLevel = 1
 
 	enemySnakes = []
 
@@ -670,6 +675,7 @@ class GameScreen(Tk):
 		self.txtScore.place(relx = 0.6,rely = 0.95,anchor = algncenter)
 
 		self.myPlayer = myPlayer
+		self.difficultyLevel = myPlayer.difficultyLevel#We save the difficulty level lcoally to make it easier to retrieve
 		if (self.myPlayer.midLevel == False): #Here if the player is mid way through the level, only then will their game be loaded in and displayed. If they're not midlevel then they will always be randomly placed and be given a length of 3
 			self.myPlayer.snake = Snake("Player")
 			self.myPlayer.snake.length = 3
@@ -682,51 +688,6 @@ class GameScreen(Tk):
 
 		self.SetUpControls()
 		self.StartGameCycle()
-
-	def SetUpControls(self):
-		#This procedure makes all of the keybinds to be used in game. It makes them using what the player input for their controls
-		self.bind(("<" + self.myPlayer.controls[0] + ">"),self.myPlayer.snake.UpAction)
-		self.bind(("<" + self.myPlayer.controls[1] + ">"),self.myPlayer.snake.LeftAction)
-		self.bind(("<" + self.myPlayer.controls[2] + ">"),self.myPlayer.snake.DownAction)
-		self.bind(("<" + self.myPlayer.controls[3] + ">"),self.myPlayer.snake.RightAction)
-		self.bind(("<" + self.myPlayer.controls[4] + ">"),self.Pause)
-		self.bind(("<" + self.myPlayer.controls[5] + ">"),self.BossScreen)
-
-	def RemoveControls(self):
-		self.unbind(("<" + self.myPlayer.controls[0] + ">"))
-		self.unbind(("<" + self.myPlayer.controls[1] + ">"))
-		self.unbind(("<" + self.myPlayer.controls[2] + ">"))
-		self.unbind(("<" + self.myPlayer.controls[3] + ">"))
-		self.unbind(("<" + self.myPlayer.controls[4] + ">"))
-		self.unbind(("<" + self.myPlayer.controls[5] + ">"))
-
-	def Pause(self,event):
-		#This procedure pauses the game, opens the pause screen but also gets rid of all keybinds. This is incase they are changed within the the pause menu. This is so that the controls can be reassgined again
-		self.paused = True
-		self.RemoveControls()
-		pauseMenu = PauseSceen(self)
-
-	def Unpause(self):
-		self.paused = False
-		self.SetUpControls()
-		self.StartGameCycle()
-
-	def BossScreen(self,event):
-		#This procedure is used whenever the player uses the boss screen control. It will make the screen the boss screen or undo the boss  screen based on the current state. It works the same as pausing the game except it also will paste an image of a word document to  make it look like work is being done.
-		if (self.paused == True):
-			self.background.configure(width = self.backgroundWidth,height = self.backgroundHeight)
-			self.lbScore.place(relx = 0.4,rely = 0.95,anchor = algncenter)
-			self.txtScore.place(relx = 0.6,rely = 0.95,anchor = algncenter)
-			self.DisplayAllElements()			
-			self.Unpause()
-		else:
-			self.paused = True
-			self.background.delete(ALL)
-			self.background.configure(width = screenWidth,height = screenHeight)
-			self.image = img(file = "gameRes/bossScreen.png")
-			self.background.create_image((screenWidth/2),(screenHeight/2),image = self.image)
-			self.txtScore.place_forget()#These two commands are used to hide the score parts
-			self.lbScore.place_forget()
 
 	def StartGameCycle(self):
 		#This procedure does the game loop. On every iteration it clears the entire board, moves each of the snakes and will then redraw all of the snakes in their new positions. The final instruction is used to make the delay between moves and to carry on the iterative procedure.
@@ -744,7 +705,6 @@ class GameScreen(Tk):
 			if (not self.gameOver):
 
 				self.DisplayAllElements()
-
 				self.IncreasePlayerScore()
 
 				self.AddEnemySnake()
@@ -764,6 +724,7 @@ class GameScreen(Tk):
 		self.gameOver = True
 		self.CloseWindow(False)
 
+	#Displaying game elements
 	def DisplayAllElements(self):
 		self.background.delete(ALL)
 		self.DisplaySnake(self.myPlayer.snake)
@@ -771,7 +732,7 @@ class GameScreen(Tk):
 			self.DisplaySnake(self.enemySnakes[i])
 		self.DisplayPowerUps()
 	def DisplayPowerUps(self):
-		#This just displays and paints each of the powerups on the screen in the same way that snakes are
+		#This will redisplay all of the powerup images onto the game board. Don't need to load the image files in each time as they're stored within the powerup objects
 		gridBoxWidth = self.backgroundWidth/self.numberOfHorizontalLines
 		for i in range(0,len(self.powerUps)):
 			leftCornerX = (self.powerUps[i].position.x + 0.5) * gridBoxWidth
@@ -926,6 +887,55 @@ class GameScreen(Tk):
 				self.enemySnakes.remove(self.enemySnakes[i])
 			else:
 				i += 1
+
+	#Controls
+	def SetUpControls(self):
+		#This procedure makes all of the keybinds to be used in game. It makes them using what the player input for their controls
+		self.bind(("<" + self.myPlayer.controls[0] + ">"),self.myPlayer.snake.UpAction)
+		self.bind(("<" + self.myPlayer.controls[1] + ">"),self.myPlayer.snake.LeftAction)
+		self.bind(("<" + self.myPlayer.controls[2] + ">"),self.myPlayer.snake.DownAction)
+		self.bind(("<" + self.myPlayer.controls[3] + ">"),self.myPlayer.snake.RightAction)
+		self.bind(("<" + self.myPlayer.controls[4] + ">"),self.Pause)
+		self.bind(("<" + self.myPlayer.controls[5] + ">"),self.BossScreen)
+
+	def RemoveControls(self):
+		self.unbind(("<" + self.myPlayer.controls[0] + ">"))
+		self.unbind(("<" + self.myPlayer.controls[1] + ">"))
+		self.unbind(("<" + self.myPlayer.controls[2] + ">"))
+		self.unbind(("<" + self.myPlayer.controls[3] + ">"))
+		self.unbind(("<" + self.myPlayer.controls[4] + ">"))
+		self.unbind(("<" + self.myPlayer.controls[5] + ">"))
+
+	#Pause functions
+	def Pause(self,event):
+		#This procedure pauses the game, opens the pause screen but also gets rid of all keybinds. This is incase they are changed within the the pause menu. This is so that the controls can be reassgined again
+		self.paused = True
+		self.RemoveControls()
+		pauseMenu = PauseSceen(self)
+
+	def Unpause(self):
+		#We set up the controls each time after unpausing incase the player decided to change them over the pause. We do the same for difficulty level for the same reason
+		self.paused = False
+		self.SetUpControls()
+		self.difficultyLevel = self.myPlayer.difficultyLevel
+		self.StartGameCycle()
+
+	def BossScreen(self,event):
+		#This procedure is used whenever the player uses the boss screen control. It will make the screen the boss screen or undo the boss  screen based on the current state. It works the same as pausing the game except it also will paste an image of a word document to  make it look like work is being done.
+		if (self.paused == True):
+			self.background.configure(width = self.backgroundWidth,height = self.backgroundHeight)
+			self.lbScore.place(relx = 0.4,rely = 0.95,anchor = algncenter)
+			self.txtScore.place(relx = 0.6,rely = 0.95,anchor = algncenter)
+			self.DisplayAllElements()			
+			self.Unpause()
+		else:
+			self.paused = True
+			self.background.delete(ALL)
+			self.background.configure(width = screenWidth,height = screenHeight)
+			self.image = img(file = "gameRes/bossScreen.png")
+			self.background.create_image((screenWidth/2),(screenHeight/2),image = self.image)
+			self.txtScore.place_forget()#These two commands are used to hide the score parts
+			self.lbScore.place_forget()
 #Medium sized & importance screens
 class Menu(Tk):
 	lbTitle = lb
@@ -1001,7 +1011,7 @@ class LoginScreen(Tk):
 	txtPassword = ent
 
 	btnBeginGame = btn
-	btnControls = btn
+	btnSettings = btn
 	btnClose = btn
 	btnLogin = btn
 	btnRules = btn
@@ -1043,8 +1053,8 @@ class LoginScreen(Tk):
 		self.btnBeginGame = btn(self,text = "Begin Game",command = lambda:(self.destroy(),OpenGameScreen(myPlayer)), font = fontBold)
 		self.btnBeginGame.place(relx = 0.7,rely = 0.6,anchor = algncenter)
 
-		self.btnControls = btn(self,text = "Controls",command = lambda:(OpenControlsScreen(myPlayer)), font = fontBold)
-		self.btnControls.place(relx = 0.3,rely = 0.6, anchor = algncenter)
+		self.btnSettings = btn(self,text = "Settings",command = lambda:(OpenSettingsScreen(myPlayer)), font = fontBold)
+		self.btnSettings.place(relx = 0.3,rely = 0.6, anchor = algncenter)
 
 		self.btnRules = btn(self,text = "Rules",command = OpenRulesScreen, font = fontBold)
 		self.btnRules.place(relx = 0.3,rely = 0.8, anchor = algncenter)
@@ -1074,7 +1084,7 @@ class LoginScreen(Tk):
 class PauseSceen(Tk):
 	btnResumeGame =  btn
 	btnSaveGame = btn
-	btnControls = btn
+	btnSettings = btn
 	btnRules = btn
 	btnScoreboard = btn
 	btnBack = btn
@@ -1102,9 +1112,9 @@ class PauseSceen(Tk):
 		self.btnSaveGame.place(relx = 0.5, rely = 0.3, anchor = algncenter)
 		self.btnSaveGame.configure(command = parentWindow.SaveGame)
 
-		self.btnControls = btn(self,text = "Controls",font = fontButton)
-		self.btnControls.place(relx = 0.5, rely = 0.4, anchor = algncenter)
-		self.btnControls.configure(command = lambda:(OpenControlsScreen(parentWindow.myPlayer)))
+		self.btnSettings = btn(self,text = "Settings",font = fontButton)
+		self.btnSettings.place(relx = 0.5, rely = 0.4, anchor = algncenter)
+		self.btnSettings.configure(command = lambda:(OpenSettingsScreen(parentWindow.myPlayer)))
 
 		self.btnRules = btn(self,text = "Rules",font = fontButton)
 		self.btnRules.place(relx = 0.5, rely = 0.5, anchor = algncenter)
@@ -1177,7 +1187,7 @@ class RulesScreen(Tk):
 		self.txtRules.pack(pady = 100)
 
 		self.mainloop()
-class ControlsScreen(Tk):
+class SettingsScreen(Tk):
 	lbUpControl = lb
 	lbRightControl = lb
 	lbLeftControl = lb
@@ -1185,6 +1195,7 @@ class ControlsScreen(Tk):
 	lbPauseControl = lb
 	lbBossControl = lb
 	lbTitle = lb
+	lbDifficultyLevel = lb
 
 	txtUpControl = ent
 	txtRightControl = ent
@@ -1201,13 +1212,13 @@ class ControlsScreen(Tk):
 	def __init__(self,myPlayer):
 		super().__init__()
 		self.geometry("600x500")
-		self.title("Controls")
+		self.title("Settings")
 
 		fontBold = ("Default",12,"bold")
 		fontNormal = ("Default",12)
 
 
-		self.lbTitle = TitleLabel(self,"Controls")
+		self.lbTitle = TitleLabel(self,"Settings")
 
 		self.lbUpControl = lb(self,text = "Up Control:",font = fontBold)
 		self.lbUpControl.place(relx = 0.2,rely = 0.2, anchor = algncenter)
@@ -1240,7 +1251,7 @@ class ControlsScreen(Tk):
 		self.txtBossControl = ent(self,font = fontNormal)
 		self.txtBossControl.place(relx = 0.5,rely = 0.7, anchor = algncenter)
 
-		self.DisplayControls(myPlayer) #This fills in all of the text boxes with the values of the controls
+		self.DisplaySettings(myPlayer) #This fills in all of the text boxes with the values of the controls
 
 		self.btnResetControls = btn(self,text = "Reset Controls" ,command = lambda:(self.ResetControls(myPlayer)),font = fontBold)
 		self.btnResetControls.place(relx = 0.2,rely = 0.8,anchor = algncenter)
@@ -1260,9 +1271,9 @@ class ControlsScreen(Tk):
 	def ResetControls(self,myPlayer):
 		#This procedure will set and save the player controls to the default. It then redisplays them on screen
 		myPlayer.ResetControls()
-		self.DisplayControls(myPlayer)
+		self.DisplaySettings(myPlayer)
 
-	def DisplayControls(self,myPlayer):
+	def DisplaySettings(self,myPlayer):
 		# This procedure will delete all of the text within the entry controls and will then re-insert all of the player controls. Must do this due to the entry control
 		self.txtUpControl.delete(0,"end")
 		self.txtLeftControl.delete(0,"end")
@@ -1327,11 +1338,11 @@ def OpenScoreboard():
 	windowScoreboard = ScoreboardScreen()
 def OpenRulesScreen():
 	rulesScreen = RulesScreen()
-def OpenControlsScreen(myPlayer):
+def OpenSettingsScreen(myPlayer):
 	if (myPlayer.name == ""):
 		msgb.showinfo("Error","Please Login first!")
 	else:
-		windowControlsScreen = ControlsScreen(myPlayer)
+		windowSettingsScreen = SettingsScreen(myPlayer)
 def OpenGameScreen(myPlayer):
 	gameScreen = GameScreen(myPlayer)
 def LoadGame():
