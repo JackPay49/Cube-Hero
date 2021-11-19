@@ -1,3 +1,8 @@
+#Jack Pay h61781jp
+#16/11/21
+#My game: Cube Hero, is a snake like game. The objective is to earn points and not die. In cube hero you are a snake moving round the baord. You must be atelast of a length of 3 otherwise you will die. In cube hero you will earn points every game cycle. You will earn more points the longer you are. You can also earn points by eating powerups. There are 7 powerups that will each do something different whetehr that's instantly killing you, making you grow or speeding you up. In cube hero there are also enemy snakes. These will try to eat you but you can also eat them by running into their side. You will grow for half of the length you cut off of an enemy snake. You will also die if the player snake runs off of the board.
+#In cube hero there are cheat codes, control customisation, a scoreboard, help documenation and saving and loading features.
+
 import time,random
 from tkinter import Tk, Button as btn, Label as lb, Canvas as cv, Text as txt, Entry as ent, PhotoImage as img, messagebox as msgb, CENTER as algncenter, ALL, INSERT, Spinbox as numericUpDown, StringVar
 #All images are original and made by myself
@@ -939,6 +944,7 @@ class GameScreen(Tk):
 			self.lbScore.place_forget()
 
 	def ResetDifficultyLevel(self):
+		#This procedure will set the difficulty level lcoally and will remove any enemy snakes until there are the correct amount of the level for the difficulty level. It kills the snakes and removes them from the game
 		self.difficultyLevel = self.myPlayer.difficultyLevel
 		if (len(self.enemySnakes) > self.numberOfSnakes[self.difficultyLevel - 1]):
 			number = (len(self.enemySnakes) - self.numberOfSnakes[self.difficultyLevel - 1])
