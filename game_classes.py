@@ -1,5 +1,5 @@
 import random
-
+from tkinter import PhotoImage as img
 numberOfPowerUpTypes = 7
 class Block:
 	#Below class is used to store a position on the baord and a direction. This is to store a single section of a snake. This is used when the snake is turninng and moving and just within a snake class
@@ -446,7 +446,7 @@ class PowerUp:
 	position = None
 	powerUpType = "Grow"#Later in game dev there will be many different types of powerup like speedup, grow, shrink, slowdown,etc
 	color = 'blue'
-
+	img = None
 
 	def __init__(self,gameScreen):
 		self.RandomlyPlace(gameScreen)
@@ -455,6 +455,7 @@ class PowerUp:
 	def MakePowerUp(self,xPosition,yPosition,type):
 		self.position = Block(xPosition,yPosition,"Null")
 		self.powerUpType = type
+		self.img = img(file = "gameRes/" + self.powerUpType +".gif")
 
 	def RandomyType(self):
 		#This will randomly pick which type of powerup it is and will then set the color based on the color
@@ -473,6 +474,8 @@ class PowerUp:
 			self.powerUpType = "Kill"
 		elif (randomNumber == 11):
 			self.powerUpType = "BoostScore"
+		self.img = img(file = "gameRes/" + self.powerUpType +".gif")
+
 	def RandomlyPlace(self,gameScreen):
 		#This procedure is easy. It randomly finds a position on the board and will validate it. It will only place the powerup in that position if it is valid
 		valid = False

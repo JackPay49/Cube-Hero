@@ -101,28 +101,17 @@ class GameScreen(Tk):
 		if (self.paused == True):
 			self.background.configure(width = self.backgroundWidth,height = self.backgroundHeight)
 			self.lbScore.place(relx = 0.4,rely = 0.95,anchor = algncenter)
-			self.txtScore.place(relx = 0.6,rely = 0.95,anchor = algncenter)			
+			self.txtScore.place(relx = 0.6,rely = 0.95,anchor = algncenter)
+			self.DisplayAllElements()			
 			self.Unpause()
 		else:
 			self.paused = True
+			self.background.delete(ALL)
 			self.background.configure(width = screenWidth,height = screenHeight)
 			self.image = img(file = "gameRes/bossScreen.png")
 			self.background.create_image((screenWidth/2),(screenHeight/2),image = self.image)
 			self.txtScore.place_forget()#These two commands are used to hide the score parts
 			self.lbScore.place_forget()
-
-
-
-	def DisplaySnake(self,snake):
-		#This will display a specific snake onto the screen. It calculates the position on the baord of each section of the snake based on the canvas width and the number of grid lines and will draw each body section onto the canvas. This is used every single game cycle
-		gridBoxWidth = self.backgroundWidth/self.numberOfHorizontalLines
-		for i in range(0,snake.length):
-			leftCornerX = snake.body[i].x * gridBoxWidth
-			leftCornerY = snake.body[i].y * gridBoxWidth
-			rightCornerX = (snake.body[i].x + 1) * gridBoxWidth
-			rightCornerY = (snake.body[i].y + 1) * gridBoxWidth
-
-			self.background.create_rectangle(leftCornerX,leftCornerY,rightCornerX,rightCornerY,outline = "black",fill = snake.color)
 
 	def StartGameCycle(self):
 		#This procedure does the game loop. On every iteration it clears the entire board, moves each of the snakes and will then redraw all of the snakes in their new positions. The final instruction is used to make the delay between moves and to carry on the iterative procedure.
@@ -166,6 +155,24 @@ class GameScreen(Tk):
 		for i in range(len(self.enemySnakes)):
 			self.DisplaySnake(self.enemySnakes[i])
 		self.DisplayPowerUps()
+	def DisplayPowerUps(self):
+		#This just displays and paints each of the powerups on the screen in the same way that snakes are
+		gridBoxWidth = self.backgroundWidth/self.numberOfHorizontalLines
+		for i in range(0,len(self.powerUps)):
+			leftCornerX = (self.powerUps[i].position.x + 0.5) * gridBoxWidth
+			leftCornerY = (self.powerUps[i].position.y + 0.5) * gridBoxWidth
+			self.background.create_image(leftCornerX,leftCornerY,image = self.powerUps[i].img)
+
+	def DisplaySnake(self,snake):
+		#This will display a specific snake onto the screen. It calculates the position on the baord of each section of the snake based on the canvas width and the number of grid lines and will draw each body section onto the canvas. This is used every single game cycle
+		gridBoxWidth = self.backgroundWidth/self.numberOfHorizontalLines
+		for i in range(0,snake.length):
+			leftCornerX = snake.body[i].x * gridBoxWidth
+			leftCornerY = snake.body[i].y * gridBoxWidth
+			rightCornerX = (snake.body[i].x + 1) * gridBoxWidth
+			rightCornerY = (snake.body[i].y + 1) * gridBoxWidth
+
+			self.background.create_rectangle(leftCornerX,leftCornerY,rightCornerX,rightCornerY,outline = "black",fill = snake.color)
 
 
 	def CloseWindow(self,askToSave):
@@ -185,15 +192,6 @@ class GameScreen(Tk):
 			self.gameCycleCount == 0
 			self.powerUps.append(PowerUp(self))
 
-	def DisplayPowerUps(self):
-		#This just displays and paints each of the powerups on the screen in the same way that snakes are
-		gridBoxWidth = self.backgroundWidth/self.numberOfHorizontalLines
-		for i in range(0,len(self.powerUps)):
-			leftCornerX = (self.powerUps[i].position.x + 0.5) * gridBoxWidth
-			leftCornerY = (self.powerUps[i].position.y + 0.5) * gridBoxWidth
-
-			self.powerUpImages.append(img(file = "gameRes/" + self.powerUps[i].powerUpType +".gif"))
-			self.background.create_image(leftCornerX,leftCornerY,image = self.powerUpImages[len(self.powerUpImages) - 1])
 	def CheckIfSnakesTooSmall(self):
 		if (self.checkIfPlayerTooSmall):
 			if (self.myPlayer.snake.length <= 2):
