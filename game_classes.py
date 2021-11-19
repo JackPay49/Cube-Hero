@@ -1,15 +1,26 @@
 import random
-
+from tkinter import Tk, Button as btn, Label as lb, Canvas as cv, Text as txt, Entry as ent, PhotoImage, messagebox as msgb, CENTER as algncenter, ALL, INSERT
 numberOfPowerUpTypes = 7
 class Block:
 	#Below class is used to store a position on the baord and a direction. This is to store a single section of a snake. This is used when the snake is turninng and moving and just within a snake class
 	x = 0
 	y = 0
 	facing = "Up"
-	def __init__(self,xValue,yValue,fValue):
+
+	img = None
+	def __init__(self,gameScreen,xValue,yValue,fValue,fill):
 		self.x = xValue
 		self.y = yValue
 		self.facing = fValue
+		if (fill != "Nothing"):
+			width = gameScreen.gridBoxWidth
+			if ("#" in fill):
+				self.img = gameScreen.background.create_rectangle(0,0,width,width,fill = fill)
+				gameScreen.background.move(self.img, (xValue * width),(yValue * width))
+			else:
+				self.img = gameScreen.background.create_image(0,0,image = PhotoImage(file = ("gameRes/" + fill + ".gif")))
+				gameScreen.background.move(self.img,(xValue * width),(yValue * width))
+
 class Snake:
 	color = '#0FFF50'
 	length = 0
@@ -45,6 +56,8 @@ class Snake:
 				indexToRemove = -1 #Below is used to validate whether the body has reached a turning point and then chagning the direction of movement
 				i = 0
 				while(i < self.length):#This is used rather than a For loop as the length may change throughout this (like if the player find a shrink or grow powerup)
+					xAmount = 0
+					yAmount = 0
 					for j in range(0,len(self.turningPoints)):
 						if ((self.body[i].x == self.turningPoints[j].x) and (self.body[i].y == self.turningPoints[j].y)):
 							self.body[i].facing = self.turningPoints[j].facing
@@ -58,19 +71,27 @@ class Snake:
 					yPosition = self.body[i].y
 					if (self.body[i].facing == "Up"):
 						yPosition -= 1
+						xAmount = 0
+						yAmount = - gameScreen.gridBoxWidth
 					elif (self.body[i].facing == "Down"):
 						yPosition += 1
+						xAmount = 0
+						yAmount = gameScreen.gridBoxWidth
 					elif (self.body[i].facing == "Right"):
 						xPosition += 1
+						xAmount = gameScreen.gridBoxWidth
+						yAmount = 0
 					elif (self.body[i].facing == "Left"):
 						xPosition -= 1
+						xAmount = - gameScreen.gridBoxWidth
+						yAmount = 0
 
 					#This will check for any game ending collisions such as colliding with the walls or colliding with the snakes own body. If either of these happen it will cause the game over sequence. If the move doesn't cause a collision then we can carry on moving and so set the new position of the snake. It only validating colliding with something on i==0 as this is the head. Only this can collide with something.
 					if ((not self.CheckPosition(gameScreen,xPosition,yPosition,"Moving")) and (i == 0)):
 						self.KillSnake(gameScreen)
-
 					else:
 						if (i < self.length):
+							gameScreen.background.move(self.body[i].img,xAmount,yAmount)
 							self.body[i].x = xPosition
 							self.body[i].y = yPosition
 					i +=1
@@ -80,6 +101,9 @@ class Snake:
 		self.moving = False
 		self.color = "white"
 		self.turningPoints = []
+		for i in range(self.length):
+			gameScreen.entitiesToRemove.append(self.body[i].img)
+			gameScreen.background.itemconfig(self.body[i].img, fill = self.color)
 		if (self.snakeType == "Player"):#This will only cause a game over if the snake is the player. It will make the snake flash white and stop moving
 			gameScreen.GameOver()
 		
@@ -113,7 +137,7 @@ class Snake:
 				self.body[0].facing = "Down"
 				valid = True
 		if (valid):
-			self.turningPoints.append(Block(self.body[0].x,self.body[0].y,self.body[0].facing))
+			self.turningPoints.append(Block(None,self.body[0].x,self.body[0].y,self.body[0].facing,"Nothing"))
 
 
 	def CheckPosition(self,gameScreen,x,y,checkType):
@@ -165,7 +189,7 @@ class Snake:
 		elif (y <= (gameScreen.numberOfVerticalLines - 10)):
 			directions.remove("Down")
 		directionOfMovement = random.choice(directions)
-		self.body.append(Block(x,y,directionOfMovement))
+		self.body.append(Block(gameScreen,x,y,directionOfMovement,self.color))
 		self.length = 1
 		return self.IncreaseLength(gameScreen,(lValue - 1))
 
@@ -196,9 +220,9 @@ class Snake:
 					valid = True
 					xPosition = newXPosition
 					yPosition = newYPosition
-					self.body.append(Block(xPosition,yPosition,facing))
+					self.body.append(Block(gameScreen,xPosition,yPosition,facing,self.color))
 					if (changedDirections):
-						turningPoint = Block(self.body[len(self.body) - 2].x,self.body[len(self.body) - 2].y,self.body[len(self.body) - 2].facing)#We save the previous block as this is the one that is actually on the bend of the snake. It must be made in a new instance of Block() to ensure that it isn't updated like the body part is, when the snake moves next
+						turningPoint = Block(gameScreen,self.body[len(self.body) - 2].x,self.body[len(self.body) - 2].y,self.body[len(self.body) - 2].facing,"Nothing")#We save the previous block as this is the one that is actually on the bend of the snake. It must be made in a new instance of Block() to ensure that it isn't updated like the body part is, when the snake moves next
 						self.turningPoints.append(turningPoint)
 				else:
 					valid = False
@@ -281,6 +305,7 @@ class Snake:
 					self.turningPoints.remove(self.turningPoints[count])
 				else:
 					count +=1
+			gameScreen.background.delete((self.body[self.length - 1].img))
 			self.body.remove(self.body[self.length - 1])
 			self.length -=1
 
@@ -315,7 +340,7 @@ class Snake:
 			xPosition = int(file.readline().strip())
 			yPosition = int(file.readline().strip())
 			facing = file.readline().strip()
-			self.body.append(Block(xPosition,yPosition,facing))
+			self.body.append(Block(gameScreen,xPosition,yPosition,facing,self.color))
 
 		file.readline()
 
@@ -324,7 +349,7 @@ class Snake:
 			xPosition = int(file.readline().strip())
 			yPosition = int(file.readline().strip())
 			facing = file.readline().strip()
-			self.turningPoints.append(Block(xPosition,yPosition,facing))
+			self.turningPoints.append(Block(gameScreen,xPosition,yPosition,facing,"Nothing"))
 
 		self.speed = int(file.readline().strip())
 
@@ -452,8 +477,8 @@ class PowerUp:
 		self.RandomlyPlace(gameScreen)
 		self.RandomyType()
 
-	def MakePowerUp(self,xPosition,yPosition,type):
-		self.position = Block(xPosition,yPosition,"Null")
+	def MakePowerUp(self,gameScreen,xPosition,yPosition,type):
+		self.position = Block(gameScreen,xPosition,yPosition,"Null",type)
 		self.powerUpType = type
 
 	def RandomyType(self):
@@ -480,7 +505,7 @@ class PowerUp:
 			x = random.randint(0,gameScreen.numberOfHorizontalLines)
 			y = random.randint(0,gameScreen.numberOfVerticalLines)
 			valid = self.CheckPosition(gameScreen,x,y)
-		self.position = Block(x,y,"Null")
+		self.position = Block(gameScreen,x,y,"Null",self.powerUpType)
 
 	def PowerUpConsumed(self,gameScreen,snake):
 		#This procedure is simple currently but should become far more complex. It will carry out the actual function of the powerup. So it will increase size of the player if it is type grow, etc, etc. The Shrink powerup gives no points as it makes the game easier to play
@@ -613,18 +638,18 @@ class Scoreboard:
 			else:
 				i+=1
 
-def ConvertToList(string):
-	"""This is used to convert a string to a list. It will move through each item skipping them if they are any of the list parts like [], etc. If they are not those characters it will add them to a temp string value. This is to allow longer strings for the controls. When the end of these strings have been reached, so when they're not blank and there's the second ' from ['a'] only then will it add the string to the list aas the current control. Must also reset the value of the temp item here"""
-	Mylist = []
-	currentItem = ""
-	for i in range(0,len(string)):
-		if ((string[i] != "[") and (string[i] != ",") and (string[i] != "]") and (string[i] != "'") and (string[i] != " ")):
-			currentItem += string[i]
-		elif ((string[i] == "'") and (currentItem != "")):
-			Mylist.append(currentItem)
-			currentItem = ""
-	return Mylist
-	self.numberOfScores = int(file.readline())
+	def ConvertToList(string):
+		"""This is used to convert a string to a list. It will move through each item skipping them if they are any of the list parts like [], etc. If they are not those characters it will add them to a temp string value. This is to allow longer strings for the controls. When the end of these strings have been reached, so when they're not blank and there's the second ' from ['a'] only then will it add the string to the list aas the current control. Must also reset the value of the temp item here"""
+		Mylist = []
+		currentItem = ""
+		for i in range(0,len(string)):
+			if ((string[i] != "[") and (string[i] != ",") and (string[i] != "]") and (string[i] != "'") and (string[i] != " ")):
+				currentItem += string[i]
+			elif ((string[i] == "'") and (currentItem != "")):
+				Mylist.append(currentItem)
+				currentItem = ""
+		return Mylist
+		self.numberOfScores = int(file.readline())
 		for i in range(0,self.numberOfScores):
 			tempPlayer = Player()
 			tempPlayer.name = file.readline().strip()
