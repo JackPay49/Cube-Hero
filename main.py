@@ -1067,10 +1067,10 @@ class LoginScreen(Tk):
 		self.btnLogin.place(relx = 0.5,rely = 0.4, anchor = algncenter)
 
 		self.btnBeginGame = btn(self,text = "Begin Game",command = lambda:(self.destroy(),OpenGameScreen(myPlayer)), font = fontBold)
-		self.btnBeginGame.place(relx = 0.7,rely = 0.6,anchor = algncenter)
+		self.btnBeginGame.place(relx = 0.5,rely = 0.6,anchor = algncenter)
 
 		self.btnSettings = btn(self,text = "Settings",command = lambda:(OpenSettingsScreen(myPlayer)), font = fontBold)
-		self.btnSettings.place(relx = 0.3,rely = 0.6, anchor = algncenter)
+		self.btnSettings.place(relx = 0.7,rely = 0.8, anchor = algncenter)
 
 		self.btnRules = btn(self,text = "Rules",command = OpenRulesScreen, font = fontBold)
 		self.btnRules.place(relx = 0.3,rely = 0.8, anchor = algncenter)
