@@ -1,5 +1,5 @@
 import time,random
-from tkinter import Tk, Button as btn, Label as lb, Canvas as cv, Text as txt, Entry as ent, PhotoImage as img, messagebox as msgb, CENTER as algncenter, ALL, INSERT
+from tkinter import Tk, Button as btn, Label as lb, Canvas as cv, Text as txt, Entry as ent, PhotoImage, messagebox as msgb, CENTER as algncenter, ALL, INSERT
 from game_classes import Snake, Block as blk, Player, PowerUp, Scoreboard as scrb
 #All images are original and made by myself
 #Screen Resolution is 1920x1080. All screens are smaller than or equal to this resolution.
@@ -18,6 +18,8 @@ class GameScreen(Tk):
 	backgroundHeight = 800
 	numberOfVerticalLines = 50
 	numberOfHorizontalLines = 50
+	gridBoxWidth = backgroundWidth / numberOfVerticalLines
+
 
 	gameCycleLength = 200 #In milliseconds
 	gameCycleCount = 0;
@@ -35,6 +37,8 @@ class GameScreen(Tk):
 	pointModifier = 1
 
 	enemySnakes = []
+
+	entitiesToRemove = []
 
 	def __init__(self,myPlayer):
 		super().__init__()
@@ -63,7 +67,7 @@ class GameScreen(Tk):
 			self.myPlayer.snake.RandomlyPlace(self)
 		else:
 			self.LoadGame()
-		self.DisplaySnake(self.myPlayer.snake)
+		# self.DisplaySnake(self.myPlayer.snake)
 
 		self.SetUpControls()
 		self.StartGameCycle()
@@ -111,24 +115,11 @@ class GameScreen(Tk):
 			self.txtScore.place_forget()#These two commands are used to hide the score parts
 			self.lbScore.place_forget()
 
-
-
-	def DisplaySnake(self,snake):
-		#This will display a specific snake onto the screen. It calculates the position on the baord of each section of the snake based on the canvas width and the number of grid lines and will draw each body section onto the canvas. This is used every single game cycle
-		gridBoxWidth = self.backgroundWidth/self.numberOfHorizontalLines
-		for i in range(0,snake.length):
-			leftCornerX = snake.body[i].x * gridBoxWidth
-			leftCornerY = snake.body[i].y * gridBoxWidth
-			rightCornerX = (snake.body[i].x + 1) * gridBoxWidth
-			rightCornerY = (snake.body[i].y + 1) * gridBoxWidth
-
-			self.background.create_rectangle(leftCornerX,leftCornerY,rightCornerX,rightCornerY,outline = "black",fill = snake.color)
-
 	def StartGameCycle(self):
 		#This procedure does the game loop. On every iteration it clears the entire board, moves each of the snakes and will then redraw all of the snakes in their new positions. The final instruction is used to make the delay between moves and to carry on the iterative procedure.
 		if ((not self.paused) and (not self.gameOver)):
 			self.CheckForDeadEnemySnakes()
-
+			self.RemoveDeadEntities()
 			self.myPlayer.snake.Move(self)
 
 			for i in range(len(self.enemySnakes)):
@@ -138,8 +129,6 @@ class GameScreen(Tk):
 			self.CheckIfSnakesTooSmall()
 			
 			if (not self.gameOver):
-
-				self.DisplayAllElements()
 
 				self.IncreasePlayerScore()
 
@@ -152,7 +141,7 @@ class GameScreen(Tk):
 	def GameOver(self):
 		#This procedure is used to end the game, like if the player collides witht their own body or a wall. It will delete everything on the canvas and will close the window. It then also reopens the menu window.
 		self.background.delete(ALL)
-		self.DisplayAllElements()
+		# self.DisplayAllElements()
 
 		self.myPlayer.midLevel = False
 		self.myPlayer.SavePlayer()
@@ -160,12 +149,12 @@ class GameScreen(Tk):
 		self.gameOver = True
 		self.CloseWindow(False)
 
-	def DisplayAllElements(self):
-		self.background.delete(ALL)
-		self.DisplaySnake(self.myPlayer.snake)
-		for i in range(len(self.enemySnakes)):
-			self.DisplaySnake(self.enemySnakes[i])
-		self.DisplayPowerUps()
+	def RemoveDeadEntities(self):
+		i = 0
+		while (i < len(self.entitiesToRemove)):
+			self.background.delete(self.entitiesToRemove[i])
+			self.entitiesToRemove.remove(self.entitiesToRemove[i])
+
 
 
 	def CloseWindow(self,askToSave):
@@ -184,16 +173,6 @@ class GameScreen(Tk):
 		if ((self.gameCycleCount % 20)== 0):
 			self.gameCycleCount == 0
 			self.powerUps.append(PowerUp(self))
-
-	def DisplayPowerUps(self):
-		#This just displays and paints each of the powerups on the screen in the same way that snakes are
-		gridBoxWidth = self.backgroundWidth/self.numberOfHorizontalLines
-		for i in range(0,len(self.powerUps)):
-			leftCornerX = (self.powerUps[i].position.x + 0.5) * gridBoxWidth
-			leftCornerY = (self.powerUps[i].position.y + 0.5) * gridBoxWidth
-
-			self.powerUpImages.append(img(file = "gameRes/" + self.powerUps[i].powerUpType +".gif"))
-			self.background.create_image(leftCornerX,leftCornerY,image = self.powerUpImages[len(self.powerUpImages) - 1])
 	def CheckIfSnakesTooSmall(self):
 		if (self.checkIfPlayerTooSmall):
 			if (self.myPlayer.snake.length <= 2):
@@ -215,7 +194,7 @@ class GameScreen(Tk):
 			yPosition =  int(file.readline().strip())
 			tempType =  file.readline().strip()
 			newPowerup = PowerUp(self)
-			newPowerup.MakePowerUp(xPosition,yPosition,tempType)
+			newPowerup.MakePowerUp(self,xPosition,yPosition,tempType)
 			self.powerUps.append(newPowerup)
 
 		file.readline()
@@ -232,8 +211,7 @@ class GameScreen(Tk):
 				yPosition = int(file.readline().strip())
 				facing = file.readline().strip()
 
-				tempSnake.body.append(blk(xPosition,yPosition,facing))
-
+				tempSnake.body.append(blk(self,xPosition,yPosition,facing,tempSnake.color))
 			file.readline()
 
 			numberOfTurningPoints = int(file.readline().strip())
@@ -242,7 +220,7 @@ class GameScreen(Tk):
 				yPosition = int(file.readline().strip())
 				facing = file.readline().strip()
 
-				tempSnake.turningPoints.append(blk(xPosition,yPosition,facing))
+				tempSnake.turningPoints.append(blk(self,xPosition,yPosition,facing,tempSnake.color))
 
 			tempSnake.speed = int(file.readline().strip())
 
@@ -313,6 +291,20 @@ class GameScreen(Tk):
 				self.enemySnakes.remove(self.enemySnakes[i])
 			else:
 				i += 1
+
+	def CreateImage(self,x,y,fill):
+		img = None
+		width = self.gridBoxWidth
+		if ("#" in fill):
+			img = self.background.create_rectangle(0,0,width,width,fill = fill)
+			self.background.move(img, (x * width),(y * width))
+		else:
+			self.powerUpImages.append(PhotoImage(file = ("gameRes/" + fill + ".gif")))
+			img = self.background.create_image(0,0,image = self.powerUpImages[len(self.powerUpImages) - 1])
+			self.background.move(img,((x + 0.5) * width),((y + 0.5) * width))
+		return img
+
+
 #Medium sized & importance screens
 class Menu(Tk):
 	lbTitle = lb
@@ -457,6 +449,8 @@ class LoginScreen(Tk):
 
 		except FileExistsError:
 			msgb.showinfo("Login","User already exists! Please use a different name")
+
+
 #Small screens
 class PauseSceen(Tk):
 	btnResumeGame =  btn

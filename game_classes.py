@@ -13,13 +13,7 @@ class Block:
 		self.y = yValue
 		self.facing = fValue
 		if (fill != "Nothing"):
-			width = gameScreen.gridBoxWidth
-			if ("#" in fill):
-				self.img = gameScreen.background.create_rectangle(0,0,width,width,fill = fill)
-				gameScreen.background.move(self.img, (xValue * width),(yValue * width))
-			else:
-				self.img = gameScreen.background.create_image(0,0,image = PhotoImage(file = ("gameRes/" + fill + ".gif")))
-				gameScreen.background.move(self.img,(xValue * width),(yValue * width))
+			self.img = gameScreen.CreateImage(xValue,yValue,fill)
 
 class Snake:
 	color = '#0FFF50'
@@ -545,6 +539,7 @@ class PowerUp:
 			if (snake.snakeType == "Player"):
 				gameScreen.myPlayer.IncreaseScore(1000)
 		gameScreen.powerUps.remove(self)
+		gameScreen.powerUpImages.remove()
 
 	def CheckPosition(self,gameScreen,x,y):
 		#This just checks if the powerup if ontop of the player snake or is ontop of another powerup
