@@ -624,8 +624,8 @@ class GameScreen(Tk):
 
 	backgroundWidth = 800
 	backgroundHeight = 800
-	numberOfVerticalLines = 50
-	numberOfHorizontalLines = 50
+	numberOfVerticalLines = 40
+	numberOfHorizontalLines = 40
 
 	gameCycleLength = 300 #In milliseconds
 	allSpeeds = [[300,275,250,225],[250,225,200,175],[200,175,150,125],[150,125,100,75]]#This stores all 4 levels of speed for each of the difficulty levels
@@ -1001,6 +1001,7 @@ class ScoreboardScreen(Tk):
 		super().__init__()
 		self.geometry("1000x700")
 		self.title("Scoreboard")
+		self.configure(background = "black")
 
 		self.lbTitle = TitleLabel(self,"Scoreboard")
 
@@ -1037,6 +1038,8 @@ class LoginScreen(Tk):
 	btnLogin = btn
 	btnRules = btn
 
+	backgroundImage = lb
+
 	def __init__(self,newGame):
 		#Important to note here. The newGame parameter is a boolean used to tell us whether the login screen should be to login or to create a new game. Based on this the title of the screen and the function of the login button will be changed
 		super().__init__()
@@ -1047,6 +1050,10 @@ class LoginScreen(Tk):
 		else:
 			titleText = "Login"
 		self.title(titleText)
+
+		image = img(file = "gameRes/background.png")
+		self.backgroundImage = lb(self,image = image)
+		self.backgroundImage.place(x = 0, y= 0, relwidth = 1, relheight = 1)
 
 		self.lbTitle = TitleLabel(self,titleText)
 
@@ -1107,6 +1114,7 @@ class PauseSceen(Tk):
 		super().__init__()
 		self.geometry("300x700")
 		self.title("Pause")
+		self.configure(background = "black")
 
 		fontButton = ("Default",12,"bold")
 		fontNormal = ("Default",12)
@@ -1179,6 +1187,8 @@ class RulesScreen(Tk):
 		super().__init__()
 		self.geometry(screenResolution)
 		self.title("Rules")
+		self.configure(background = "black")
+
 
 		lbTitle = TitleLabel(self,"Welcome to Cube Hero!")
 		btnBack = BackButton(self,"Back",False)
@@ -1220,6 +1230,7 @@ class SettingsScreen(Tk):
 		super().__init__()
 		self.geometry("600x800")
 		self.title("Settings")
+		self.configure(background = "black")
 
 		fontNormal = ("Default",12)
 
