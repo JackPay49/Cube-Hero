@@ -26,8 +26,6 @@ class Snake:
 	length = 0
 	moving = True
 
-	speed = 1
-
 	snakeType = "Player"
 
 	#The below list stores the actual body of the snake. It stores the position on the board of each section and the direction that block is moving in as the different parts can be moving in different ways
@@ -41,7 +39,6 @@ class Snake:
 		body = []
 		turningPoints = []
 		length = 0
-		speed = 1
 		self.snakeType = stValue
 		if (self.snakeType == "Player"):
 			self.color = '#0FFF50'
@@ -51,41 +48,40 @@ class Snake:
 
 	def Move(self,gameScreen):
 		#This sub moves the snake. For each section of the snake's body it will first check if the body has reached a turning point on the baord. If the body section has then it will turn it's direction to the one stored in the turning point. If the final section of the snake passes a turning point then that turning point is no longer needed and therefore it is remvoed from the turning point list. This sub will then move the body of snake by just adding or subtracting from the position of the body. This procedure is used every single game cycle
-		for k in range(self.speed):#It will move multiple times in one turn depending on the speed
-			if (self.moving):
-				indexToRemove = -1 #Below is used to validate whether the body has reached a turning point and then chagning the direction of movement
-				i = 0
-				while(i < self.length):#This is used rather than a For loop as the length may change throughout this (like if the player find a shrink or grow powerup)
-					for j in range(0,len(self.turningPoints)):
-						if ((self.body[i].x == self.turningPoints[j].x) and (self.body[i].y == self.turningPoints[j].y)):
-							self.body[i].facing = self.turningPoints[j].facing
-							if (i == (self.length - 1)):
-								indexToRemove = j
+		if (self.moving):
+			indexToRemove = -1 #Below is used to validate whether the body has reached a turning point and then chagning the direction of movement
+			i = 0
+			while(i < self.length):#This is used rather than a For loop as the length may change throughout this (like if the player find a shrink or grow powerup)
+				for j in range(0,len(self.turningPoints)):
+					if ((self.body[i].x == self.turningPoints[j].x) and (self.body[i].y == self.turningPoints[j].y)):
+						self.body[i].facing = self.turningPoints[j].facing
+						if (i == (self.length - 1)):
+							indexToRemove = j
 					#Below is used to remove the turning point once the final body section has passed through
-					if (indexToRemove != -1):
-						self.turningPoints.remove(self.turningPoints[indexToRemove])
+				if (indexToRemove != -1):
+					self.turningPoints.remove(self.turningPoints[indexToRemove])
 					#Below does the actual movement
-					xPosition = self.body[i].x
-					yPosition = self.body[i].y
-					if (self.body[i].facing == "Up"):
-						yPosition -= 1
-					elif (self.body[i].facing == "Down"):
-						yPosition += 1
-					elif (self.body[i].facing == "Right"):
-						xPosition += 1
-					elif (self.body[i].facing == "Left"):
-						xPosition -= 1
+				xPosition = self.body[i].x
+				yPosition = self.body[i].y
+				if (self.body[i].facing == "Up"):
+					yPosition -= 1
+				elif (self.body[i].facing == "Down"):
+					yPosition += 1
+				elif (self.body[i].facing == "Right"):
+					xPosition += 1
+				elif (self.body[i].facing == "Left"):
+					xPosition -= 1
 
 					#This will check for any game ending collisions such as colliding with the walls or colliding with the snakes own body. If either of these happen it will cause the game over sequence. If the move doesn't cause a collision then we can carry on moving and so set the new position of the snake. It only validating colliding with something on i==0 as this is the head. Only this can collide with something.
-					if ((not self.CheckPosition(gameScreen,xPosition,yPosition,"Moving")) and (i == 0)):
-						self.KillSnake(gameScreen)
+				if ((not self.CheckPosition(gameScreen,xPosition,yPosition,"Moving")) and (i == 0)):
+					self.KillSnake(gameScreen)
 
-					else:
-						if (i < self.length):
-							self.body[i].x = xPosition
-							self.body[i].y = yPosition
-					i +=1
-				self.CheckCollisions(gameScreen)#This will check for collisions such as if the player intercepts a powerup
+				else:
+					if (i < self.length):
+						self.body[i].x = xPosition
+						self.body[i].y = yPosition
+				i +=1
+			self.CheckCollisions(gameScreen)#This will check for collisions such as if the player intercepts a powerup
 
 	def KillSnake(self,gameScreen):
 		self.moving = False
@@ -274,16 +270,6 @@ class Snake:
 					gameScreen.myPlayer.IncreaseScore(diff * 100)
 
 
-	def IncreaseSpeed(self,amount):
-		for i in range(amount):
-			if (self.speed < 3):
-				self.speed +=1
-
-	def DecreaseSpeed(self,amount):
-		for i in range(amount):
-			if (self.speed > 1):
-				self.speed -=1
-
 	def DecreaseLength(self,gameScreen,amount):
 		for i in range(amount):
 			count = 0
@@ -313,8 +299,6 @@ class Snake:
 			file.write(str(self.turningPoints[i].y) + "\n")
 			file.write(self.turningPoints[i].facing + "\n")
 
-		file.write(str(self.speed) + "\n")
-
 
 
 	def LoadSnake(self,gameScreen,myPlayer):
@@ -336,8 +320,6 @@ class Snake:
 			yPosition = int(file.readline().strip())
 			facing = file.readline().strip()
 			self.turningPoints.append(Block(xPosition,yPosition,facing))
-
-		self.speed = int(file.readline().strip())
 
 		if (self.length == 1):
 			gameScreen.checkIfPlayerTooSmall = False
@@ -419,6 +401,8 @@ class Player:
 		file.close()
 		if (midLevelState == "1"):
 			self.midLevel = True
+		else:
+			self.score = 0
 
 	def SavePlayer(self):
 		file = open("gameFiles/" + self.name + ".txt","wt")
@@ -510,10 +494,10 @@ class PowerUp:
 				gameScreen.myPlayer.IncreaseScore(100)
 		elif (self.powerUpType == "SpeedUp"):
 			if (snake.snakeType != "Enemy"):
-				snake.IncreaseSpeed(1)
+				gameScreen.IncreaseSpeed(1)
 				gameScreen.myPlayer.IncreaseScore(50)
 		elif (self.powerUpType == "SlowDown"):
-			snake.DecreaseSpeed(1)	
+			gameScreen.DecreaseSpeed(1)	
 			if (snake.snakeType != "Enemy"):
 				gameScreen.myPlayer.IncreaseScore(50)
 		elif (self.powerUpType == "Shrink"):
@@ -524,9 +508,9 @@ class PowerUp:
 			if (randomPowerNumber == 1):
 				snake.IncreaseLength(gameScreen,1)
 			elif (randomPowerNumber == 2):
-				snake.IncreaseSpeed(1)
+				gameScreen.IncreaseSpeed(1)
 			elif (randomPowerNumber == 3):
-				snake.DecreaseSpeed(1)
+				gameScreen.DecreaseSpeed(1)	
 			elif (randomPowerNumber == 4):
 				snake.DecreaseLength(gameScreen,1)
 
@@ -643,7 +627,9 @@ class GameScreen(Tk):
 	numberOfVerticalLines = 50
 	numberOfHorizontalLines = 50
 
-	gameCycleLength = 200 #In milliseconds
+	gameCycleLength = 300 #In milliseconds
+	allSpeeds = [[300,275,250,225],[250,225,200,175],[200,175,150,125],[150,125,100,75]]#This stores all 4 levels of speed for each of the difficulty levels
+	gameSpeedLevel = 1
 	gameCycleCount = 0;
 
 	myPlayer = Player()
@@ -661,6 +647,7 @@ class GameScreen(Tk):
 
 	enemySnakes = []
 	numberOfSnakes = [2,3,5,6]#This is the number of snakes in the game based on difficulty level
+
 
 	def __init__(self,myPlayer):
 		super().__init__()
@@ -682,6 +669,8 @@ class GameScreen(Tk):
 
 		self.myPlayer = myPlayer
 		self.difficultyLevel = myPlayer.difficultyLevel#We save the difficulty level lcoally to make it easier to retrieve
+		self.SetSpeed()
+
 		if (self.myPlayer.midLevel == False): #Here if the player is mid way through the level, only then will their game be loaded in and displayed. If they're not midlevel then they will always be randomly placed and be given a length of 3
 			self.myPlayer.snake = Snake("Player")
 			self.myPlayer.snake.length = 3
@@ -789,6 +778,7 @@ class GameScreen(Tk):
 		file = open("gameFiles/" + self.myPlayer.name + "Level.txt","r")
 
 		self.powerUps = []
+		self.gameCycleLength = int(file.readline().strip())
 		number = int(file.readline().strip())
 		for i in range(number):
 			xPosition =  int(file.readline().strip())
@@ -824,8 +814,6 @@ class GameScreen(Tk):
 
 				tempSnake.turningPoints.append(Block(xPosition,yPosition,facing))
 
-			tempSnake.speed = int(file.readline().strip())
-
 			self.enemySnakes.append(tempSnake)
 		file.close()
 
@@ -835,6 +823,7 @@ class GameScreen(Tk):
 		self.myPlayer.snake.SaveSnake(self.myPlayer)
 		file = open("gameFiles/" + self.myPlayer.name + "Level.txt","w")
 
+		file.write(str(self.gameCycleLength) + "\n")
 		file.write(str(len(self.powerUps)) + "\n")
 		for i in range(len(self.powerUps)):
 			file.write(str(self.powerUps[i].position.x) + "\n")
@@ -858,8 +847,6 @@ class GameScreen(Tk):
 				file.write(str(self.enemySnakes[i].turningPoints[j].x) + "\n")
 				file.write(str(self.enemySnakes[i].turningPoints[j].y) + "\n")
 				file.write(self.enemySnakes[i].turningPoints[j].facing + "\n")
-
-			file.write(str(self.enemySnakes[i].speed) + "\n")
 
 		file.close()
 		msgb.showinfo("Saved","Game has been saved!")
@@ -924,6 +911,7 @@ class GameScreen(Tk):
 		self.paused = False
 		self.SetUpControls()
 		self.ResetDifficultyLevel()
+		self.SetSpeed()
 		self.StartGameCycle()
 
 	def BossScreen(self,event):
@@ -951,6 +939,23 @@ class GameScreen(Tk):
 			for i in range(number):
 				self.enemySnakes[len(self.enemySnakes) - 1].KillSnake(self)
 				self.enemySnakes.remove(self.enemySnakes[len(self.enemySnakes) - 1])
+
+	def SetSpeed(self):
+		self.gameCycleLength = self.allSpeeds[self.difficultyLevel - 1][self.gameSpeedLevel - 1]
+
+	def IncreaseSpeed(self,amount):
+		if ((amount + self.gameSpeedLevel) > 4):
+			self.gameSpeedLevel = 4
+		else:
+			self.gameSpeedLevel += amount
+		self.SetSpeed()
+
+	def DecreaseSpeed(self,amount):
+		if ((self.gameSpeedLevel - amount) < 1):
+			self.gameSpeedLevel = 1
+		else:
+			self.gameSpeedLevel -= amount
+		self.SetSpeed()
 
 #Medium sized & importance screens
 class Menu(Tk):
@@ -1161,23 +1166,33 @@ class PauseSceen(Tk):
 			self.cheatCodes.append(tempString)
 
 	def EnterCheatCode(self,gameScreen):
+		takenCheatCode = False
 		self.LoadInCheatCodes()
 		userInput = self.txtCheatCode.get().strip()
 		if (self.cheatCodes[0] in userInput):
 			gameScreen.myPlayer.snake.IncreaseLength(gameScreen,10)
+			takenCheatCode = True
 		if (self.cheatCodes[1] in userInput):
-			gameScreen.myPlayer.snake.DecreaseLength(gameScreen,10)		
+			gameScreen.myPlayer.snake.DecreaseLength(gameScreen,int(gameScreen.myPlayer.snake.length/2))		
+			takenCheatCode = True
 		if (self.cheatCodes[2] in userInput):
-			gameScreen.myPlayer.snake.IncreaseSpeed(3)		
+			gameScreen.IncreaseSpeed(3)	
+			takenCheatCode = True
 		if (self.cheatCodes[3] in userInput):
-			gameScreen.myPlayer.snake.DecreaseSpeed(3)		
+			gameScreen.DecreaseSpeed(3)	
+			takenCheatCode = True
 		if (self.cheatCodes[4] in userInput):
+			takenCheatCode = True
 			gameScreen.checkIfPlayerTooSmall = False
 			gameScreen.myPlayer.snake.DecreaseLength(gameScreen,gameScreen.myPlayer.snake.length - 1)
 			while (len(gameScreen.myPlayer.snake.turningPoints) > 0):
 				gameScreen.myPlayer.snake.turningPoints.remove(gameScreen.myPlayer.snake.turningPoints[0])		
 		if (self.cheatCodes[5] in userInput):
 			gameScreen.pointModifier = 2500	
+			takenCheatCode = True
+		if (takenCheatCode):
+			msgb.showinfo("Accepted!","Cheat code has been accepted!")
+
 class RulesScreen(Tk):
 	btnBack = btn
 
