@@ -668,8 +668,7 @@ class GameScreen(Tk):
 		self.txtScore.place(relx = 0.6,rely = 0.95,anchor = algncenter)
 
 		self.myPlayer = myPlayer
-		self.difficultyLevel = myPlayer.difficultyLevel#We save the difficulty level lcoally to make it easier to retrieve
-		self.SetSpeed()
+		self.difficultyLevel = myPlayer.difficultyLevel#We save the difficulty level lcoally to make it easier to retrieve.
 
 		if (self.myPlayer.midLevel == False): #Here if the player is mid way through the level, only then will their game be loaded in and displayed. If they're not midlevel then they will always be randomly placed and be given a length of 3
 			self.myPlayer.snake = Snake("Player")
@@ -679,6 +678,7 @@ class GameScreen(Tk):
 			self.myPlayer.snake.RandomlyPlace(self)
 		else:
 			self.LoadGame()
+		self.SetSpeed()#Sets the game cycle length based on the loaded in difficulty level and the speed saved within the game that may have just been loaded in
 		self.DisplaySnake(self.myPlayer.snake)
 
 		self.SetUpControls()
@@ -940,6 +940,7 @@ class GameScreen(Tk):
 				self.enemySnakes[len(self.enemySnakes) - 1].KillSnake(self)
 				self.enemySnakes.remove(self.enemySnakes[len(self.enemySnakes) - 1])
 
+	#The below procedures just increase or decrease the game cylce length based on the difficulty level and the speed currently. The speed cannot exceed a level of 4 and cannot go below 1.
 	def SetSpeed(self):
 		self.gameCycleLength = self.allSpeeds[self.difficultyLevel - 1][self.gameSpeedLevel - 1]
 
@@ -966,26 +967,25 @@ class Menu(Tk):
 	btnScoreboard = btn
 	btnClose = btn
 
+	backgroundImage = lb
+
 	def __init__(self):
 		super().__init__()
 		self.geometry("500x500")
 		self.title("Menu")
 
-		#fonts
-		fontNormal = ("Default",12,"bold")
+		image = img(file = "gameRes/background.png")
+		self.backgroundImage = lb(self,image = image)
+		self.backgroundImage.place(x = 0, y= 0, relwidth = 1, relheight = 1)
 
 		self.lbTitle = TitleLabel(self,"Cube Hero!")
 
 		#Buttons
-		self.btnLoadGame = btn(self,text = "Load Game", command = lambda: (self.destroy(),LoadGame()),font = fontNormal)
-		self.btnLoadGame.place(relx = 0.5, rely = 0.3, anchor = algncenter)
+		self.btnLoadGame = CustomButton(self,0.5,0.3,"Load Game",lambda: (self.destroy(),LoadGame()))
 
-		self.btnCreateNewGame = btn(self,text = "Create new Game",command = lambda: (self.destroy(),NewGame()),font = fontNormal)
-		self.btnCreateNewGame.place(relx = 0.5, rely = 0.5, anchor = algncenter)
+		self.btnCreateNewGame = CustomButton(self,0.5,0.5,"Create new Game",lambda: (self.destroy(),NewGame()))
 
-
-		self.btnScoreboard = btn(self,text = "Scoreboard",command = OpenScoreboard,font = fontNormal)
-		self.btnScoreboard.place(relx = 0.5, rely = 0.7, anchor = algncenter)
+		self.btnScoreboard = CustomButton(self,0.5,0.7,"Scoreboard",OpenScoreboard)
 
 		self.btnClose = BackButton(self,"Close",False)
 
@@ -1048,37 +1048,26 @@ class LoginScreen(Tk):
 			titleText = "Login"
 		self.title(titleText)
 
-
-		fontNormal = ("Default",12)
-		fontBold = ("Default",12,"bold")
-
-
 		self.lbTitle = TitleLabel(self,titleText)
 
-		self.lbName = lb(self,text = "Name:",font = fontBold)
-		self.lbName.place(relx = 0.2,rely = 0.2, anchor = algncenter)
-		self.txtName = ent(self,font = fontNormal)
+		self.lbName = CustomLabel(self,0.2,0.2,"Name:", False)
+		self.txtName = ent(self,font = ("Default",12,"bold"), bg = "black", fg = "white")
 		self.txtName.place(relx = 0.5,rely = 0.2, anchor = algncenter)
 
-		self.lbPassword = lb(self,text = "Password:",font = fontBold)
-		self.lbPassword.place(relx = 0.2,rely = 0.3, anchor = algncenter)
-		self.txtPassword = ent(self,show = "*",font = fontNormal)
+		self.lbPassword = CustomLabel(self,0.2,0.3,"Password:", False)
+		self.txtPassword = ent(self,show = "*",font = ("Default",12,"bold"), bg = "black", fg = "white")
 		self.txtPassword.place(relx = 0.5,rely = 0.3, anchor = algncenter)
 
 		if (newGame):
-			self.btnLogin = btn(self,text = "Create new game",font = fontBold, command = lambda: self.CreateNewPlayer(myPlayer,self.txtName.get(),self.txtPassword.get()))
+			self.btnLogin = CustomButton(self,0.5,0.4,"Create new game",lambda: self.CreateNewPlayer(myPlayer,self.txtName.get(),self.txtPassword.get()))
 		else:
-			self.btnLogin = btn(self,text = "Login",font = fontBold, command = lambda: self.Login(myPlayer,self.txtName.get(),self.txtPassword.get()) )
-		self.btnLogin.place(relx = 0.5,rely = 0.4, anchor = algncenter)
+			self.btnLogin = CustomButton(self,0.5,0.4,"Login",lambda: self.Login(myPlayer,self.txtName.get(),self.txtPassword.get()) )
 
-		self.btnBeginGame = btn(self,text = "Begin Game",command = lambda:(self.destroy(),OpenGameScreen(myPlayer)), font = fontBold)
-		self.btnBeginGame.place(relx = 0.5,rely = 0.6,anchor = algncenter)
+		self.btnBeginGame = CustomButton(self,0.5,0.6,"Begin Game",lambda:(self.destroy(),OpenGameScreen(myPlayer)))
 
-		self.btnSettings = btn(self,text = "Settings",command = lambda:(OpenSettingsScreen(myPlayer)), font = fontBold)
-		self.btnSettings.place(relx = 0.7,rely = 0.8, anchor = algncenter)
+		self.btnSettings = CustomButton(self,0.7,0.8,"Settings",lambda:(OpenSettingsScreen(myPlayer)))
 
-		self.btnRules = btn(self,text = "Rules",command = OpenRulesScreen, font = fontBold)
-		self.btnRules.place(relx = 0.3,rely = 0.8, anchor = algncenter)
+		self.btnRules = CustomButton(self,0.3,0.8,"Rules",OpenRulesScreen)
 
 		self.btnClose = BackButton(self,"Back",True)
 		self.mainloop()
@@ -1125,35 +1114,21 @@ class PauseSceen(Tk):
 
 		self.lbTitle = TitleLabel(self,"Game Pause")
 
-		self.btnResumeGame = btn(self,text = "Resume Game",font = fontButton)
-		self.btnResumeGame.place(relx = 0.5, rely = 0.2, anchor = algncenter)
-		self.btnResumeGame.configure(command = lambda:(parentWindow.Unpause(),self.destroy()))
+		self.btnResumeGame = CustomButton(self,0.5,0.2,"Resume Game",lambda:(parentWindow.Unpause(),self.destroy()))
 
-		self.btnSaveGame = btn(self,text = "Save Game",font = fontButton)
-		self.btnSaveGame.place(relx = 0.5, rely = 0.3, anchor = algncenter)
-		self.btnSaveGame.configure(command = parentWindow.SaveGame)
+		self.btnSaveGame = CustomButton(self,0.5,0.3,"Save Game",parentWindow.SaveGame)
 
-		self.btnSettings = btn(self,text = "Settings",font = fontButton)
-		self.btnSettings.place(relx = 0.5, rely = 0.4, anchor = algncenter)
-		self.btnSettings.configure(command = lambda:(OpenSettingsScreen(parentWindow.myPlayer)))
+		self.btnSettings = CustomButton(self,0.5,0.4,"Settings",lambda:(OpenSettingsScreen(parentWindow.myPlayer)))
 
-		self.btnRules = btn(self,text = "Rules",font = fontButton)
-		self.btnRules.place(relx = 0.5, rely = 0.5, anchor = algncenter)
-		self.btnRules.configure(command = OpenRulesScreen)
+		self.btnRules = CustomButton(self,0.5,0.5,"Rules",OpenRulesScreen)
 
-		self.btnScoreboard = btn(self,text = "Scoreboard",font = fontButton)
-		self.btnScoreboard.place(relx = 0.5, rely = 0.6, anchor = algncenter)
-		self.btnScoreboard.configure(command = OpenScoreboard)
+		self.btnScoreboard = CustomButton(self,0.5,0.6,"Scoreboard",OpenScoreboard)
 
-		self.btnCheatCode = btn(self,text = "Enter Cheat Code",font = fontButton)
-		self.btnCheatCode.place(relx = 0.5, rely = 0.7, anchor = algncenter)
-		self.btnCheatCode.configure(command = lambda:(self.EnterCheatCode(parentWindow)))
+		self.btnCheatCode = CustomButton(self,0.5,0.7,"Enter Cheat Code",lambda:(self.EnterCheatCode(parentWindow)))
 		self.txtCheatCode = ent(self,font = fontNormal)
 		self.txtCheatCode.place(relx = 0.5,rely = 0.8, anchor = algncenter)
 
-		self.btnBack = btn(self,text = "Quit Game",font = fontButton)
-		self.btnBack.place(relx = 0.5, rely = 0.9, anchor = algncenter)
-		self.btnBack.configure(command = lambda:(self.destroy(),parentWindow.CloseWindow(True)))
+		self.btnBack = CustomButton(self,0.5,0.9,"Quit Game",lambda:(self.destroy(),parentWindow.CloseWindow(True)))
 
 		self.mainloop()
 
@@ -1186,7 +1161,7 @@ class PauseSceen(Tk):
 			gameScreen.checkIfPlayerTooSmall = False
 			gameScreen.myPlayer.snake.DecreaseLength(gameScreen,gameScreen.myPlayer.snake.length - 1)
 			while (len(gameScreen.myPlayer.snake.turningPoints) > 0):
-				gameScreen.myPlayer.snake.turningPoints.remove(gameScreen.myPlayer.snake.turningPoints[0])		
+				gameScreen.myPlayer.snake.turningPoints.remove(gameScreen.myPlayer.snake.turningPoints[0])	
 		if (self.cheatCodes[5] in userInput):
 			gameScreen.pointModifier = 2500	
 			takenCheatCode = True
@@ -1246,61 +1221,50 @@ class SettingsScreen(Tk):
 		self.geometry("600x800")
 		self.title("Settings")
 
-		fontBold = ("Default",12,"bold")
 		fontNormal = ("Default",12)
 
 
 		self.lbTitle = TitleLabel(self,"Settings")
 
-		self.lbUpControl = lb(self,text = "Up Control:",font = fontBold)
-		self.lbUpControl.place(relx = 0.2,rely = 0.2, anchor = algncenter)
+		self.lbUpControl = CustomLabel(self,0.2,0.2,"Up Control:",False)
 		self.txtUpControl = ent(self,font = fontNormal)
 		self.txtUpControl.place(relx = 0.5,rely = 0.2, anchor = algncenter)
 
-		self.lbLeftControl = lb(self,text = "Left Control:",font = fontBold)
-		self.lbLeftControl.place(relx = 0.2,rely = 0.25, anchor = algncenter)
+		self.lbLeftControl = CustomLabel(self,0.2,0.25,"Left Control:",False)
 		self.txtLeftControl = ent(self,font = fontNormal)
 		self.txtLeftControl.place(relx = 0.5,rely = 0.25, anchor = algncenter)
 
 
-		self.lbDownControl = lb(self,text = "Down Control:",font = fontBold)
-		self.lbDownControl.place(relx = 0.2,rely = 0.3, anchor = algncenter)
+		self.lbDownControl = CustomLabel(self,0.2,0.3,"Down Control:",False)
 		self.txtDownControl = ent(self,font = fontNormal)
 		self.txtDownControl.place(relx = 0.5,rely = 0.3, anchor = algncenter)
 
-		self.lbRightControl = lb(self,text = "Right Control:",font = fontBold)
-		self.lbRightControl.place(relx = 0.2,rely = 0.35, anchor = algncenter)
+		self.lbRightControl = CustomLabel(self,0.2,0.35,"Right Control:",False)
 		self.txtRightControl = ent(self,font = fontNormal)
 		self.txtRightControl.place(relx = 0.5,rely = 0.35, anchor = algncenter)
 
-		self.lbPauseControl = lb(self,text = "Pause Control:",font = fontBold)
-		self.lbPauseControl.place(relx = 0.2,rely = 0.4, anchor = algncenter)
+		self.lbPauseControl = CustomLabel(self,0.2,0.4,"Pause Control:",False)
 		self.txtPauseControl = ent(self,font = fontNormal)
 		self.txtPauseControl.place(relx = 0.5,rely = 0.4, anchor = algncenter)
 
-		self.lbBossControl = lb(self,text = "Boss Control:",font = fontBold)
-		self.lbBossControl.place(relx = 0.2,rely = 0.45, anchor = algncenter)
+		self.lbBossControl = CustomLabel(self,0.2,0.45,"Boss Control:",False)
 		self.txtBossControl = ent(self,font = fontNormal)
 		self.txtBossControl.place(relx = 0.5,rely = 0.45, anchor = algncenter)
 
 		#StringVar is needed here to be able to set the default value of the difficutly level
 		difficultyLevel = StringVar(self)
 		difficultyLevel.set(str(myPlayer.difficultyLevel))
-		self.lbDifficultyLevel = lb(self,text = "Difficulty Level:",font = fontBold)
-		self.lbDifficultyLevel.place(relx = 0.2,rely = 0.5, anchor = algncenter)
+		self.lbDifficultyLevel = CustomLabel(self,0.2,0.5,"Difficulty Level:",False)
 		self.nudDifficultyLevel = numericUpDown(self, from_=1, to = 4, textvariable = difficultyLevel)
 		self.nudDifficultyLevel.place(relx = 0.5,rely = 0.5, anchor = algncenter)
 
 		self.DisplaySettings(myPlayer) #This fills in all of the text boxes with the values of the controls
 
-		self.btnResetControls = btn(self,text = "Reset Controls" ,command = lambda:(self.ResetControls(myPlayer)),font = fontBold)
-		self.btnResetControls.place(relx = 0.5,rely = 0.6,anchor = algncenter)
+		self.btnResetControls = CustomButton(self,0.5,0.6,"Reset Controls",lambda:(self.ResetControls(myPlayer)))
 
-		self.btnSaveChanges = btn(self,text = "Save Changes" ,command = lambda:(self.SaveChanges(myPlayer)),font = fontBold)
-		self.btnSaveChanges.place(relx = 0.5,rely = 0.7,anchor = algncenter)
+		self.btnSaveChanges = CustomButton(self,0.5,0.7,"Save Changes" ,lambda:(self.SaveChanges(myPlayer)))
 
-		self.btnInfo = btn(self,text = "Info" ,command = self.DisplayInfo,font = fontBold)
-		self.btnInfo.place(relx = 0.5,rely = 0.8,anchor = algncenter)
+		self.btnInfo = CustomButton(self,0.5,0.8,"Info" ,self.DisplayInfo)
 
 		self.btnClose = BackButton(self,"Back",False)
 		self.mainloop()
@@ -1347,8 +1311,8 @@ class BackButton(btn):
 	#This is a reusable back button. It will position itself in the same and correct place on screen each time. It's text will change based on the input parameter as some back buttons must say back Whilst others need to say quit. It also takes the boolean value of openMenu which is used to tell whether we should reopen the menu after closing the parentwindow (the window it is put into) So if that value is true then it will reopen the menu like for the login screen
 	def __init__(self,parentWindow,textValue,openMenu):
 		super().__init__()
-		self = btn(parentWindow,text = textValue,font = ("Default",12,"bold"))
-		self.place(relx = 0.5, rely = 0.9, anchor = algncenter)
+		self = btn(parentWindow,text = textValue,font = ("Default",12,"bold"), bg = "black", fg = "white")
+		self.place(relx = 0.5, rely =0.9,anchor = algncenter)		
 		if (openMenu):
 			self.configure(command = lambda:(parentWindow.destroy(),BeginGame()))
 		else:
@@ -1357,8 +1321,23 @@ class TitleLabel(lb):
 	#This is a reusable title label. It will fomrat and position the label correctly on the screen and will fill in the text based on the input parameter
 	def __init__(self,parentWindow,textValue):
 		super().__init__()
-		self = lb(parentWindow,text = textValue,font = ("Default",30,"bold","underline"))
-		self.place(relx = 0.5, rely = 0.1, anchor = algncenter)	
+		self = lb(parentWindow,text = textValue)
+		self.place(relx = 0.5, rely = 0.1, anchor = algncenter)
+		StyleControl(self,"Title")
+
+class CustomButton(btn):
+	def __init__(self,parentWindow,x,y,textValue, command):
+		super().__init__()
+		self = btn(parentWindow,text = textValue,font = ("Default",12,"bold"), bg = "black", fg = "white",command = command)
+		self.place(relx = x, rely =y,anchor = algncenter)
+class CustomLabel(lb):
+	def __init__(self,parentWindow,x,y,textValue, title):
+		super().__init__()
+		if (title):
+			self = lb(parentWindow,text = textValue,font = ("Default",25,"bold","underline"), bg = "black", fg = "white")
+		else:
+			self = lb(parentWindow,text = textValue,font = ("Default",12,"bold"), bg = "black", fg = "white")
+		self.place(relx = x, rely =y,anchor = algncenter)
 
 #General functions
 def ConvertToList(string):
@@ -1372,6 +1351,17 @@ def ConvertToList(string):
 			Mylist.append(currentItem)
 			currentItem = ""
 	return Mylist
+
+def StyleControl(control, type):
+	if (type in ["Button","button","btn","Entry","ent","entry"]):
+		control.configure(font = ("Default",12,"bold"), bg = "black", fg = "white")
+	elif (type in ["Label","label","lb"]):
+		control.configure(font = ("Default",12,"bold","underline"), bg = "black", fg = "white")
+	elif (type in ["Title","Title Label","titleLabel"]):
+		control.configure(font = ("Default",25,"bold","underline"), bg = "black", fg = "white")
+
+
+
 
 
 #Opening screens
